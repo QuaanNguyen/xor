@@ -1,4 +1,7 @@
 # Fine-Tuning Methodology and Benchmark Rankings
+The results below describe an older Sol study and are not measurements of the model in npm 0.1.4.
+The October deployment qualification claim was superseded by the [runtime audit](experiments/checker-runtime-audit-2026-11-02.json).
+Use the [0.1.4 measurements and limitations](model-0.1.4.md) for the released model, its exact identity, and the owner-authorized release exception.
 
 ## Overview
 

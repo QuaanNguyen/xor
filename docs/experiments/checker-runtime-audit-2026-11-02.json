@@ -1,0 +1,43 @@
+{
+  "generatedBy": "node scripts/check-runtime-qualification.js --write",
+  "evidence": {
+    "path": "analysis/checker-v3-2026-10-23/evidence/evaluation.json",
+    "sha256": "835d37f6807c0a472f54b4ae74c099916f3616586191e8a6f10887d35de74b44"
+  },
+  "training": {
+    "path": "analysis/checker-v3-2026-10-23/run.json",
+    "sha256": "43b5f95ab8392cfc2fdfc8d9776a04ee8c1b6e4cd98780de9d195f4340129066"
+  },
+  "supersedes": {
+    "path": "docs/experiments/checker-v3-runtime-qualification-2026-10-23.json",
+    "sha256": "b64800c953ab9ecd4458f96926698e5ed74a3b6cfe43f50f643a35fca9524d57",
+    "modelIdentityMatches": false,
+    "platformMatches": false,
+    "runnerMatches": false
+  },
+  "status": "not-qualified",
+  "failures": [
+    "Saved rows do not identify every exact query and proposed action",
+    "No matched frozen evaluation of the original and candidate on the same Mac is registered in this evidence"
+  ],
+  "modelSha256": "5b08a6869a1a35ed8f2f66726d27095a6d35c922e125a9369b793b2ee393bf0f",
+  "runnerSha256": "f38dc4b0345d66b4e385734ad0f12af43ac6e2cfa1752d0795af5c137200c8e4",
+  "platform": "linux-x64",
+  "settings": {
+    "runnerSha256": "f38dc4b0345d66b4e385734ad0f12af43ac6e2cfa1752d0795af5c137200c8e4",
+    "container": "/scratch/qnguye19/needle/experiments/needle-official-ladder/runtime/evaluation-ubuntu22.sif",
+    "containerSha256": "d98a4b4fa6a200e7db0a32fff28265fff5a3d4d03bd905286aad525900e18eb8",
+    "threads": 1,
+    "maxTokens": 128,
+    "caseTimeoutSeconds": 15
+  },
+  "cases": 1342,
+  "correct": 1179,
+  "directVerdictCases": 1342,
+  "prohibitedCases": 335,
+  "harmfulApprovals": 2,
+  "ordinaryCases": 680,
+  "ordinaryRefusals": 122,
+  "shippedModelSha256": "69a83e3ed5bdda95825684442a87d0142c06fc844a4a9ca55d9cb78b53c8c497",
+  "candidateIsShipped": false
+}

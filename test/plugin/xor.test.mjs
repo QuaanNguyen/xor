@@ -307,6 +307,46 @@ test('OpenCode V2 applies the xor to live tool input', async () => {
 });
 
 
+test('OpenCode V2 tagged messages preserve user intent and completion evidence', async () => {
+  await withWorkdir(async (workdir) => {
+    const previousEvents = process.env.XOR_EVENTS;
+    const eventsFile = path.join(workdir, 'events.jsonl');
+    process.env.XOR_EVENTS = eventsFile;
+    fs.writeFileSync(path.join(workdir, 'output.txt'), 'ready');
+    writePreference(workdir, { done_criteria: [{ id: 'output', claim_mentions: ['output'], checks: [{ type: 'file_exists', path: 'output.txt' }] }] });
+    const gate = gateDouble();
+    const registered = {};
+    let cleanup;
+    try {
+      cleanup = await pluginModule.default.setup({
+        app: { version: '2.2.5' },
+        location: { directory: workdir },
+        session: { context: async () => [
+          { id: 'user', type: 'user', text: 'Read output.txt.' },
+          { id: 'feedback', type: 'synthetic', text: 'Injected feedback.' },
+          { id: 'assistant', type: 'assistant', finish: 'stop', time: { completed: Date.now() }, content: [
+            { type: 'reasoning', text: 'Hidden reasoning.' },
+            { type: 'text', text: 'I fixed the output.' },
+          ] },
+        ] },
+        tool: { hook: async (name, callback) => { registered[name] = callback; } },
+        event: { subscribe: async function* () {
+          yield { type: 'session.idle', sessionID: 'current' };
+        } },
+      }, { gate });
+      await registered['execute.before']({ tool: 'read', sessionID: 'current', input: { path: 'output.txt' } });
+      assert.equal(gate.calls[0].userMessage, 'Read output.txt.');
+      await new Promise((resolve) => setImmediate(resolve));
+      const events = fs.readFileSync(eventsFile, 'utf8').trim().split('\n').map(JSON.parse);
+      assert.ok(events.some((event) => event.type === 'verdict' && event.status === 'pass'));
+    } finally {
+      cleanup?.();
+      if (previousEvents === undefined) delete process.env.XOR_EVENTS;
+      else process.env.XOR_EVENTS = previousEvents;
+    }
+  });
+});
+
 test('retired restrictions withhold tools until the owner migrates them', async () => {
   await withWorkdir(async (workdir) => {
     writeRetiredProtocol(workdir, '.opencode/protocol.json', { task: 'Documentation only.', write_paths: ['docs/**'], deny_commands: ['git push'] });

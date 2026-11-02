@@ -522,17 +522,19 @@ function messageText(parts) {
 function v2Messages(messages) {
   return (messages || []).map((message) => {
     if (message?.info || message?.parts) return message;
-    const parts = message.text ? [{ type: "text", text: message.text }] : [];
+    const parts = Array.isArray(message.content)
+      ? message.content.filter((part) => part.type === "text")
+      : message.text ? [{ type: "text", text: message.text }] : [];
     return {
       info: {
         id: message.id,
-        role: message.role,
+        role: message.role || message.type,
         finish: message.finish,
         time: message.time,
         error: message.error,
       },
       parts,
-      content: message.content || messageText(parts),
+      content: typeof message.content === "string" ? message.content : messageText(parts),
     };
   });
 }

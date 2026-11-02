@@ -25,7 +25,8 @@ npm install --global @quaannguyen/xor
 xor install
 ```
 
-`xor install` sets up the OpenCode plugin, downloads the lightweight local checker model, verifies the file integrity, and gets the desktop companion ready. That is all you need to start working safely.
+`xor install` sets up the OpenCode plugin, downloads the lightweight local checker model, verifies the file integrity, and gets the desktop companion ready.
+The model has known missed confirmations; see the measurements and limitations below.
 
 If you prefer installing from source:
 
@@ -80,17 +81,28 @@ You can write your preferences in plain English. If you do not create this file,
 
 ## Model Performance
 
-The checker uses a specialized 4-bit Needle model fine-tuned for direct permission verdicts without reasoning delay. In evaluations across 1,342 real-world coding agent actions, here is how the fine-tuned model compares to the standard Needle baseline:
+Version 0.1.4 uses the latest Sol-trained model, released with the owner’s explicit exception to the usual replacement requirements.
+It has known confirmation failures and is not a qualified safety improvement.
+The earlier trained comparator below was experimental; npm 0.1.3 actually shipped the original public model, which was not measured on these 122 cases.
 
-| Measurement | Standard Needle Baseline (`needle train`) | Synthesized Model | Net Improvement |
+| Measurement | npm 0.1.3 shipped model | Earlier trained comparator | npm 0.1.4 model |
 | :--- | :--- | :--- | :--- |
-| **Overall Accuracy** | 52.76% (708 / 1,342) | **87.85%** (1,179 / 1,342) | **+35.09%** |
-| **Catching Forbidden Actions (`deny`)** | 31.04% recall | **93.13% recall** | **+62.09%** |
-| **Flagging Ambiguous Actions (`ask`)** | 5.50% recall | **94.50% recall** | **+89.00%** |
-| **Accidental Approvals on Prohibited Actions** | 64.18% (dangerous) | **0.60%** (virtually zero) | **-63.58% safer** |
-| **Average Response Time** | 2.76 seconds | **2.25 seconds** | **18.5% faster** |
+| Model download size, decimal MB | 35.34 | 63.44 | 63.44 |
+| Correct decisions on the same 122 cases | Not measured | 107/122 (87.70%) | 115/122 (94.26%) |
+| Prohibited actions incorrectly approved | Not measured | 1/33 | 1/33 |
+| Required confirmations bypassed | Not measured | 1/31 | 3/31 |
+| Permitted actions refused | Not measured | 9/58 | 1/58 |
+| Invalid, unstable, or failed answers | Not measured | 0/122 | 0/122 |
+| Recorded median native response time | Not measured | 231 ms | 257 ms |
+| Recorded native response-time range | Not measured | 182–354 ms | 186–421 ms |
 
-Everything runs entirely on your local machine with zero external network delays. Read the complete study in the [Methodology and Benchmark Rankings](docs/methodology-and-benchmarks.md).
+These cases were inspected during model development, so the scores do not measure performance on unseen actions.
+The separate final test was not run because the candidate failed the usual acceptance checks.
+The same owner correction applies to both compared models, and the latest model introduces two confirmation bypasses that the comparator handled correctly.
+Timings cover native process launch and response on the same Apple Silicon Mac, with one thread, one warmup, and three recorded runs per case (366 timings per model).
+They exclude OpenCode hook and queue time; the runs were not an alternating controlled performance benchmark, so no speedup is claimed.
+The real OpenCode 2.2.5 read succeeds with standard input but fails with the positional command-line prompt.
+See the [release measurements and limitations](docs/model-0.1.4.md) and [per-case results](docs/experiments/model-0.1.4-results.json).
 
 ---
 

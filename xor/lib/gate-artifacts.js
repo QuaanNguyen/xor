@@ -8,20 +8,27 @@ const { fileURLToPath } = require('node:url');
 
 const NEEDLE_REPOSITORY = 'https://huggingface.co/Cactus-Compute/needle3/resolve';
 
+const NEEDLE_RUNNER_REVISION = '2ae11323dc000f5e70c49f7403efa6af12ba9e67';
+const NEEDLE_RUNNERS = {
+  'darwin-arm64': { path: 'macos-arm64/needle', size: 1089896, sha256: '342fa2c6f140e702354a99c4201c9057535ec908eed35c7382e911a19d1d2724' },
+  'linux-x64': { path: 'linux-x86_64/needle', size: 1541680, sha256: 'f38dc4b0345d66b4e385734ad0f12af43ac6e2cfa1752d0795af5c137200c8e4' },
+  'linux-arm64': { path: 'linux-arm64/needle', size: 1431816, sha256: '6fc25a97def475e1c7d1933a4a219d4e37076be77974e76dd331d9e0cd97f3cb' },
+  'win32-x64': { path: 'windows-x86_64/needle.exe', size: 1563136, sha256: 'e8863ca0c06a47d406777077f1ba728b58e57d77fedff252dbe6827d588acc8c' },
+  'win32-arm64': { path: 'windows-arm64/needle.exe', size: 1352704, sha256: '8a333b4829f4a6f230e26ab1998c17ad442a97c650934448db1c63eed91b0cea' },
+};
+
 const NEEDLE_MANIFEST = Object.freeze({
-  revision: '2ae11323dc000f5e70c49f7403efa6af12ba9e67',
+  revision: 'xor-69a83e3ed5bdda95825684442a87d0142c06fc844a4a9ca55d9cb78b53c8c497',
   weights: {
     path: 'needle3.cact',
-    size: 35335380,
-    sha256: 'c9d915eca282ed42d1a09b143b592adb4cc6744ffe2d294adf5cfc5548170c38',
+    size: 63437076,
+    sha256: '69a83e3ed5bdda95825684442a87d0142c06fc844a4a9ca55d9cb78b53c8c497',
+    url: 'https://github.com/QuaanNguyen/xor/releases/download/needle-2026-11-02-69a83e3e/needle3.cact',
   },
-  runners: {
-    'darwin-arm64': { path: 'macos-arm64/needle', size: 1089896, sha256: '342fa2c6f140e702354a99c4201c9057535ec908eed35c7382e911a19d1d2724' },
-    'linux-x64': { path: 'linux-x86_64/needle', size: 1541680, sha256: 'f38dc4b0345d66b4e385734ad0f12af43ac6e2cfa1752d0795af5c137200c8e4' },
-    'linux-arm64': { path: 'linux-arm64/needle', size: 1431816, sha256: '6fc25a97def475e1c7d1933a4a219d4e37076be77974e76dd331d9e0cd97f3cb' },
-    'win32-x64': { path: 'windows-x86_64/needle.exe', size: 1563136, sha256: 'e8863ca0c06a47d406777077f1ba728b58e57d77fedff252dbe6827d588acc8c' },
-    'win32-arm64': { path: 'windows-arm64/needle.exe', size: 1352704, sha256: '8a333b4829f4a6f230e26ab1998c17ad442a97c650934448db1c63eed91b0cea' },
-  },
+  runners: Object.fromEntries(Object.entries(NEEDLE_RUNNERS).map(([platform, runner]) => [platform, {
+    ...runner,
+    url: `${NEEDLE_REPOSITORY}/${NEEDLE_RUNNER_REVISION}/${runner.path}`,
+  }])),
 });
 
 function gateManifest() {
