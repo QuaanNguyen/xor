@@ -3,19 +3,29 @@
 This document records the earlier V2 study and is preserved as historical evidence.
 Use the current V3 training guide in docs/checker-training.md for active generation work.
 
-## V3 Synthesized Qualification (October 23, 2026)
+## Current audit, November 2, 2026
 
-**The answers-only direct verdict format is verified and qualified for deployment.**
-The synthesized model architecture trained on the clean integrated dataset (`v3-integrated-2026-10-23`) achieves full agreement between training targets and native engine decoding.
+The trained candidate is not qualified for deployment.
+The [generated runtime audit](experiments/checker-runtime-audit-2026-11-02.json) supersedes the October 23 deployment claim without changing the original receipt.
+Run `npm run check:runtime-qualification` to check that this audit still matches the saved training and evaluation records.
 
-Across all 1,342 held-out cases:
-- 1,342 of 1,342 cases emitted direct verdicts without reasoning output (zero reasoning prefix leaks).
-- Combined accuracy reached 87.85 percent (1,179 of 1,342 correct).
-- Prohibited actions had a harmful approval rate of only 0.60 percent (down from 64.18 percent in baseline).
-- Median latency measured 2.185 seconds with a 95th percentile of 2.769 seconds, well inside the 15-second deadline.
-- Zero infrastructure errors, timeouts, or context overflows occurred.
+The model recovered from Sol matches the saved training and native evaluation records.
+The October 23 qualification receipt names a different model digest, a Mac runner, and a Mac platform, while the saved evaluation records a Linux runner on Sol.
+Those records cannot establish Mac qualification.
 
-The official qualification receipt is recorded in [experiments/checker-v3-runtime-qualification-2026-10-23.json](experiments/checker-v3-runtime-qualification-2026-10-23.json) with status `go`.
+The saved evaluation contains 1,342 cases, including 1,179 correct decisions and 1,342 direct answers without reasoning.
+It also contains two harmful approvals among 335 prohibited actions and 122 refusals among 680 permitted actions.
+Every saved row lacks the query and action hashes needed to identify the exact evaluated inputs.
+A matched frozen evaluation of the original and candidate on the same Mac is not present in these records.
+
+The published npm version 0.1.3 selects the original public model.
+Version 0.1.4 selects the November 2 Sol model under an explicit owner-authorized stable release exception and remains unqualified by the normal replacement checks.
+Its latest inspected validation introduces two new missed confirmations, so changing the download metadata does not satisfy model replacement requirements.
+See the [released model measurements](model-0.1.4.md) for the exact identity, comparison, and verification limits.
+A temporary OpenCode 2.2.5 sandbox using the recovered trained candidate produced a direct denial for an explicitly permitted local read.
+At that initial audit, the model was not promoted and no new training or Sol job had started.
+Subsequent bounded retraining experiments and their release implications are summarized in the [0.1.4 model notes](model-0.1.4.md).
+They do not change this deployment qualification decision.
 
 ## Historical V2 Qualification (October 16, 2026)
 

@@ -6,3 +6,6 @@ analysis/checker-v3-2026-10-19/evidence/** filter=lfs diff=lfs merge=lfs -text
 docs/checker-tool-inventory.json filter=lfs diff=lfs merge=lfs -text
 analysis/checker-v3-2026-10-20/evidence/** filter=lfs diff=lfs merge=lfs -text
 analysis/checker-v3-2026-10-23/evidence/** filter=lfs diff=lfs merge=lfs -text
+analysis/checker-v3-2026-10-23/run.json text eol=lf
+docs/experiments/checker-v3-runtime-qualification-2026-10-23.json text eol=lf
+docs/experiments/checker-runtime-audit-2026-11-02.json text eol=lf

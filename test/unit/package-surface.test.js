@@ -4,6 +4,7 @@ const path = require('path')
 
 const ROOT = path.resolve(__dirname, '..', '..')
 const rootPackage = require(path.join(ROOT, 'package.json'))
+const rootLock = require(path.join(ROOT, 'package-lock.json'))
 const petPackage = require(path.join(ROOT, 'pet', 'package.json'))
 const readme = fs.readFileSync(path.join(ROOT, 'README.md'), 'utf8')
 const installationGuide = fs.readFileSync(path.join(ROOT, 'docs', 'archive', 'product-guide.md'), 'utf8')
@@ -16,7 +17,8 @@ const animationPlayer = fs.readFileSync(path.join(ROOT, 'pet', 'src', 'animation
 
 assert.strictEqual(petPackage.scripts['start:demo'], undefined)
 assert.strictEqual(rootPackage.name, '@quaannguyen/xor')
-assert.strictEqual(rootPackage.version, '0.1.3')
+assert.strictEqual(rootPackage.version, rootLock.version)
+assert.strictEqual(rootPackage.version, rootLock.packages[''].version)
 assert.strictEqual(rootPackage.private, undefined)
 assert.deepStrictEqual(rootPackage.repository, {
   type: 'git',
