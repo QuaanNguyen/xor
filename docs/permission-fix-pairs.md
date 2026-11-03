@@ -151,3 +151,6 @@ All 292 repository tests passed, including an actual CLI check that leaves retai
 The new controls have no native model measurements and no case-bound owner labels.
 No model was trained or changed.
 The scoped pair-count target is recovered, while full catalog coverage, qualified export, human verification, fresh blind evaluation, and runtime replacement remain separate requirements.
+
+The supplement preservation hash refers to the isolated pre-formatting owner-receipt snapshot.
+The committed owner receipt corrects spacing only in explanatory metadata; all 24 case-bound labels and the exact owner reply remain unchanged.
