@@ -2,11 +2,15 @@
 
 xor is a safety guard for your AI coding agent.
 
-When you use coding agents like OpenCode, you want them to build features and fix bugs without breaking your project. You do not want them deleting files by mistake, modifying your personal files, or leaking private tokens to the internet. 
+When you use coding agents like OpenCode, you want them to build features and fix bugs without breaking your project.
+You do not want them deleting files by mistake, modifying your personal files, or leaking private tokens to the internet.
 
-xor acts like a polite gatekeeper. Every time the agent wants to run a command or touch a file, xor checks that action against your simple project rules. If it looks safe, xor allows it. If it violates your rules, xor blocks it. If it looks uncertain or risky, xor pauses and asks you for confirmation first.
+xor checks each proposed action against your project rules before the agent runs it.
+The local model can approve, deny, or ask for confirmation.
+Trusted folder and settings checks also remain active.
 
-An optional desktop companion sits on your screen and shows you what your agent is doing in real time.
+The optional desktop companion shows what your agent is doing.
+It starts off until you enable it.
 
 ![xor companion](docs/xor.gif)
 
@@ -16,16 +20,26 @@ An optional desktop companion sits on your screen and shows you what your agent 
 
 ## Quick Start
 
-You only need Node.js 22.12 or newer and OpenCode 2.0.30 or newer. On macOS, make sure you have installed Xcode Command Line Tools (`xcode-select --install`).
+You need Node.js 22.12 or newer and OpenCode 2.0.30 or newer.
+On macOS, install Xcode Command Line Tools (`xcode-select --install`).
 
-Install xor globally and run the setup command:
+Install xor globally:
 
 ```sh
 npm install --global @quaannguyen/xor
-xor install
 ```
 
-`xor install` sets up the OpenCode plugin, downloads the lightweight local checker model, verifies the file integrity, and gets the desktop companion ready.
+Installation sets up the OpenCode plugin, downloads and verifies the local checker model, and prepares the optional companion.
+No separate setup command is needed when npm permits the installation script.
+With npm 12 or newer, allow this package's script during global installation:
+
+```sh
+npm install --global @quaannguyen/xor --allow-scripts=@quaannguyen/xor
+```
+
+For a local npm 12 installation, allow the package in your project's installation-script policy.
+If your package manager blocks scripts, run `xor install` after allowing setup.
+Use `xor debug` to check the installed integration.
 The model has known missed confirmations; see the measurements and limitations below.
 
 If you prefer installing from source:
@@ -34,7 +48,6 @@ If you prefer installing from source:
 git clone https://github.com/QuaanNguyen/xor.git
 cd xor
 npm install
-node scripts/install-plugin.js
 ```
 
 ---
@@ -54,15 +67,21 @@ Everything runs entirely on your local machine. No code, logs, or agent actions 
 
 ## Your Project Rules
 
-Set your rules in `.xor/preference.json` at the root of your project:
+Run `xor preference` from your project folder to edit its rules in your text editor.
+Set your preferred editor before running the command.
+Saving applies the rules to subsequent action checks.
+Cancelling keeps the saved rules.
 
-```json
-{
-  "text": "Work on this repository. Allow local edits and tests. Deny sending source code or secrets to outside services. Ask before deleting files."
-}
-```
+Run `xor preference --all` to edit the global fallback.
+A folder's saved rules take precedence over the global rules.
+Parent-folder rules do not apply automatically.
+Run `xor preference --remove` to remove the current folder's override.
+The command shows the scope being edited and the effective source.
+Existing completion checks survive edits and migration.
 
-You can write your preferences in plain English. If you do not create this file, xor applies safe default rules automatically.
+Without saved folder or global rules, xor uses: "Act like a normal harness. Follow the user's request without adding restrictions."
+The local model still checks actions, and OpenCode permissions still apply.
+Trusted folder and settings checks continue to restrict actions until model replacement is qualified.
 
 ---
 
@@ -70,11 +89,16 @@ You can write your preferences in plain English. If you do not create this file,
 
 | What you want to do | Command |
 | :--- | :--- |
-| Install the OpenCode plugin and checker model | `xor install` |
+| Repair OpenCode setup | `xor install` |
+| Edit this folder's rules | `xor preference` |
+| Edit the global fallback | `xor preference --all` |
+| Remove this folder's override | `xor preference --remove` |
+| Check the installed integration | `xor debug` |
 | Migrate rules from older installations | `xor migrate` |
-| Make the desktop companion smaller | `xor pet size 75` |
-| Make the desktop companion larger | `xor pet size 115` |
-| Reset the desktop companion to default size | `xor pet size reset` |
+| Enable the companion globally | `xor pet on` |
+| Disable the companion globally | `xor pet off` |
+| Change companion size immediately | `xor pet 87.5` |
+| Reset companion size | `xor pet reset` |
 | View command options and help | `xor help` |
 
 ---
@@ -107,7 +131,7 @@ The frozen test split remains unscored, and no speedup is claimed.
 The training diagnostic reports 323/323 verdict leads while actual native generation returns 315/323, so that disagreement remains unresolved.
 
 Download the [0.1.5 weights](https://github.com/QuaanNguyen/xor/releases/download/needle-2026-11-03-e1c8a7c8/needle3.cact) or the [0.1.4 baseline weights](https://github.com/QuaanNguyen/xor/releases/download/needle-2026-11-02-69a83e3e/needle3.cact).
-See the [release measurements and categories](docs/model-0.1.5.md) and [per-case results](docs/experiments/model-0.1.5-results.json).
+See the [release measurements and categories](docs/model-0.1.5.md), [per-case results](docs/experiments/model-0.1.5-results.json), and [runtime replacement audit](docs/model-policy-replacement.md).
 
 ---
 
@@ -122,7 +146,7 @@ If you want to contribute, run test suites, or train models, follow these steps:
 
 ### Setup and Testing
 ```sh
-npm ci
+npm ci --ignore-scripts
 git lfs install
 git lfs pull
 npm run check

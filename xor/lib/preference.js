@@ -5,7 +5,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { defaultConfigRoot } = require('./config');
 
-const DEFAULT_PREFERENCE = Object.freeze({ text: 'Act like a normal harness. Follow the user request without adding restrictions.' });
+const DEFAULT_PREFERENCE = Object.freeze({ text: "Act like a normal harness. Follow the user's request without adding restrictions." });
 const LEGACY_DEFAULTS = Object.freeze({ purpose: "Software work in this folder for the user's request.", allow: "Ordinary local reads, edits, and commands inside this folder that serve the user's request.", disallow: "Sending project contents off the machine, and destructive actions the user's request did not ask for.", ask: '' });
 const PROSE_FIELDS = Object.freeze(['purpose', 'allow', 'disallow', 'ask']);
 const PREFERENCE_FIELDS = Object.freeze(['text', 'done_criteria', ...PROSE_FIELDS]);

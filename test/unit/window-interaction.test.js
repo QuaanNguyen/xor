@@ -5,7 +5,7 @@ const { parseSizeArgument } = require('../../events/size-command')
 
 assert.deepStrictEqual(parseSizeArgument('reset'), { scale: 1, percent: 100 })
 assert.deepStrictEqual(parseSizeArgument('115%'), { scale: 1.15, percent: 115 })
-assert.strictEqual(parseSizeArgument('120'), null)
+assert.deepStrictEqual(parseSizeArgument('120'), { scale: 1.2, percent: 120 })
 
 const pixels = new Uint8ClampedArray(4 * 3 * 4)
 for (const [x, y] of [[0, 0], [1, 0], [0, 1], [3, 2]]) {

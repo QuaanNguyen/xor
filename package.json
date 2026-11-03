@@ -33,7 +33,12 @@
     "README.md",
     "docs/model-0.1.5.md",
     "docs/model-0.1.5-comparison.svg",
-    "docs/experiments/model-0.1.5-results.json"
+    "docs/experiments/model-0.1.5-results.json",
+    "scripts/postinstall.js",
+    "scripts/preference.js",
+    "scripts/pet.js",
+    "scripts/debug.js",
+    "scripts/debug-probe.mjs"
   ],
   "engines": {
     "node": ">=22.12"
@@ -52,7 +57,9 @@
     "prototype:finetune": "node xor/prototype/checker-data.js",
     "check:checker-promotion": "node xor/prototype/checker-promotion.js",
     "check:runtime-qualification": "node scripts/check-runtime-qualification.js",
-    "dev:generate-data": "node xor/prototype/dev-generate-data.js"
+    "dev:generate-data": "node xor/prototype/dev-generate-data.js",
+    "postinstall": "node scripts/postinstall.js",
+    "check:policy-replacement": "node scripts/audit-policy-replacement.js"
   },
   "devDependencies": {
     "ajv": "^8.20.0",

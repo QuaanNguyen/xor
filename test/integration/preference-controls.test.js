@@ -74,7 +74,7 @@ test('Preference resolution uses only the exact folder, then global, then the pe
   save(path.join(context.root, '.xor', 'preference.json'), { text: 'Parent instructions.' });
   const state = readPreference(context.workdir, context.configRoot);
   assert.equal(state.source, 'default');
-  assert.equal(state.preference.text, 'Act like a normal harness. Follow the user request without adding restrictions.');
+  assert.equal(state.preference.text, "Act like a normal harness. Follow the user's request without adding restrictions.");
   save(context.global, { text: 'Global instructions.' });
   assert.equal(readPreference(context.workdir, context.configRoot).source, 'global');
   save(context.folder, { text: 'Folder instructions.' });

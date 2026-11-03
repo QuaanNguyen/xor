@@ -56,7 +56,7 @@ test('a folder without a Preference uses the shipped default and writes nothing'
 
     assert.equal(gate.calls.length, 1);
     assert.equal(gate.calls[0].userMessage, 'fix the parser');
-    assert.match(gate.calls[0].preference.text, /Work on the user's request/);
+    assert.match(gate.calls[0].preference.text, /Act like a normal harness\. Follow the user's request without adding restrictions\./);
     assert.deepEqual(Object.keys(gate.calls[0].preference).sort(), ['done_criteria', 'text']);
     assert.equal(fs.existsSync(path.join(workdir, '.xor')), false);
   });

@@ -8,7 +8,7 @@ const { buildNativePet } = require('./build-native-pet');
 const { retrieveGate } = require('../xor/lib/gate-artifacts');
 
 function defaultPluginsDir() {
-  return path.join(os.homedir(), '.config', 'opencode', 'plugins');
+  return path.join(process.env.XDG_CONFIG_HOME || path.join(os.homedir(), '.config'), 'opencode', 'plugins');
 }
 
 function installEnv() {
@@ -156,7 +156,7 @@ function verifyStagedPlugin(entry, cwd) {
 function verifyOpenCode(cwd, command = process.platform === 'win32' ? 'opencode.exe' : 'opencode') {
   const env = installEnv();
   env.XOR_NO_PET = '1';
-  runCommand(command, ['debug', 'config'], cwd, {
+  runCommand(command, ['--standalone', 'debug', 'config'], cwd, {
     capture: true,
     env,
     timeout: 120000,
