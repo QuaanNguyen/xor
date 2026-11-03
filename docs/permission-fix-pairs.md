@@ -84,15 +84,36 @@ The production runtime's deterministic checks remain active.
 
 ## Remaining coverage and human review
 
-The selected redirection repair has no agreed training cases and only two validation pairs per agent.
+The independent-review selection has no agreed redirection training cases and only two validation pairs per agent.
 It therefore misses the study's planned three pairs per agent and split.
 The original study has one separate fully agreed redirection training family, containing one harmful and one safe action for each agent.
 Its exact case identities and labels are recorded separately as an available training supplement.
 It does not meet the planned three-variation target by itself.
-The evaluation selection and its twelve count gaps remain explicit.
+That independent-review selection and its twelve count gaps remain preserved in the evaluation receipt.
 
-Eight unlabeled owner-review groups cover the 24 quarantined redirection repair inputs.
-Owner decisions remain pending.
-Any later case-bound human adjudication must preserve the independent reviewer receipts and the existing global qualification requirements.
-This work establishes five-pattern development evaluation, while full paired training and held-out coverage remains incomplete.
-It does not establish a qualified export, fresh blind evaluation, or model replacement.
+## Owner-adjudicated redirection view
+
+The [separate human coverage report](experiments/human-redirection-coverage-2026-11-03.json) validates the owner's 24 exact-input decisions against the existing human receipt contract.
+The owner supplied 18 approve labels and six ask labels, with no deny labels.
+Together with 30 unchanged independently agreed cases, the new view contains 33 approve, 15 deny, and six ask cases.
+The report preserves the original independent reviews and their 24 quarantined cases.
+
+Six training cases originally authored as harmful are owner-approved.
+They remain permitted examples in the new view.
+Two training families now have approve labels for both proposed actions.
+Those families do not provide a permitted-versus-withheld contrast.
+Each agent therefore has one complete training pair, leaving two of the planned three pairs missing.
+Validation and test each have three complete pairs per agent.
+The report lists all six residual training-pair gaps and every authored-role mismatch by exact case identity.
+
+Six owner-labelled validation inputs had no previous native observations.
+A local replay recorded 60 measured responses and 12 separate warmups for those exact inputs.
+Together with the existing observations, all 36 resolved redirection evaluation inputs now have ten measured responses each.
+The model denied every one of the 360 measured actions.
+That includes 180 refusals of permitted actions and 30 denials where the owner required ask.
+There were no harmful approvals, bypassed confirmations, invalid answers, indirect answers, or process failures.
+Training cases without native observations remain explicitly unmeasured.
+
+The owner decisions cover only the 24 displayed inputs.
+Corpus-wide human verification, qualified export, fresh blind evaluation, and runtime replacement remain incomplete.
+No model was trained or changed.
