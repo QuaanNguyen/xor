@@ -10,15 +10,27 @@ The desktop companion remains part of the runtime.
 
 ## Core architecture
 
-### 1. The Hook / Catch Gate
-The gate operates as a hook interceptor on agent tool execution (`tool.execute.before`).
-Before any proposed tool call is allowed to run:
-1. **Safety and Boundary Checks**: Enforces folder boundaries in deterministic code (e.g., rejecting paths escaping the project root, attempts to alter `.xor/preference.json`, or unmanaged subagent dispatches).
-2. **Needle Gate Execution**: Evaluates the proposed call against the folder Preference and the active user request using the local Needle model.
-3. **Denial vs. Allowance**:
-   - When the proposed action matches the user preference description for denial, the gate returns `deny`, blocking tool execution and informing the agent of the refusal reason and permitted alternatives.
-   - When the proposed action does not match the denial description, the gate returns `approve` (`allow`), letting the agent proceed through OpenCode's normal permission checks.
-   - If explicit human confirmation is mandated by the preference or the model returns `ask`, execution is blocked and the agent is instructed to ask the owner before retrying.
+### 1. The gate
+
+The gate checks the final decoded action of a registered tool before that tool executes.
+A Verdict applies to one exact tool, argument snapshot, user request, and Preference.
+A rewritten action needs its own check.
+An approval of earlier proposed arguments does not authorize a later replacement.
+
+Folder boundaries and protected settings remain deterministic restrictions.
+An approve decision releases the checked action through OpenCode's remaining permission handling.
+A deny decision withholds the action and explains the governing rule.
+An ask decision withholds the action and returns control to the coding agent to request owner confirmation.
+
+Final Verdict records are local evidence of XOR's release or withholding decision.
+They do not prove that an approved tool completed.
+Denied and unanswered actions retain no raw arguments.
+If required local recording fails, the action remains withheld.
+
+Code Mode's synthesized outer execution is a separate coverage gap.
+Its registered nested tool calls receive their own checks, but checking those calls does not establish a Verdict for the outer wrapper.
+Native plugin implementations remain trusted host code.
+See [the final-action design](docs/final-action-design.md) and [verified scope](docs/final-execution-guard.md) for the implementation and evidence.
 
 ### 2. The local Needle model
 - **Decision format**: The target format is direct `approve`, `deny`, or `ask` tool calls.
@@ -36,8 +48,9 @@ Before any proposed tool call is allowed to run:
 **xor**:
 The verifier product, plugin, and CLI command suite (`xor install`, `xor migrate`, `xor pet size`).
 
-**Gate / Hook**:
-The interceptor that traps every agent tool call before execution, comparing proposed actions against the owner Preference using the system-one Needle model.
+**Gate**:
+The check that compares a supported tool's final decoded action against the owner Preference and current request before execution.
+The Verdict and actual execution use the same checked action snapshot.
 
 **Preference**:
 One free-text statement of the user's project rules (canonical location `.xor/preference.json`), defining what actions are permitted, what must be denied, and what requires owner confirmation. Optional `done_criteria` define deterministic completion verification.

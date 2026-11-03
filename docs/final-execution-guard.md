@@ -78,12 +78,14 @@ Both commands use local fixed response fixtures and the installed pinned native 
 The guarantee covers registered tool implementations that pass through the persistent transform.
 OpenCode synthesizes its outer code-mode `execute` operation outside those registered definitions.
 The registry transform does not establish final decoded authorization of that outer operation.
-Nested registered tool calls still pass through their selected implementations, but direct and nested MCP coverage requires separate real-host evidence.
+The [direct and nested MCP verification](opencode-mcp-verification.md) observes both paths reaching the guard with matching inputs and individual verdict receipts.
+That evidence does not establish a Verdict for the outer wrapper.
 
 A privileged native plugin can replace a guarded implementation outright or perform side effects without using the tool registry.
 The host does not make XOR's transform unreplaceable.
 This integration assumes trusted native plugin implementations and protects against ordinary later before-hook rewrites.
 It does not claim protection against arbitrary native code from another plugin.
 
-Full plugin-module replacement, synthesized outer execution, and unsupported or unwrapped tools remain separate compatibility requirements.
+The [full-reload follow-up](experiments/opencode-location-reload-followup-2026-11-03.json) observes a successful checked read after the new plugin generation starts.
+Cancelling a checker that remains active during full module replacement, synthesized outer execution, and unsupported or unwrapped tools retain separate compatibility requirements.
 These runtime checks do not qualify the selected model or replace the existing deterministic policy checks.

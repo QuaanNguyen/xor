@@ -1,24 +1,24 @@
 # xor
 
-xor is a safety guard for your AI coding agent.
-
-When you use coding agents like OpenCode, you want them to build features and fix bugs without breaking your project.
-You do not want them deleting files by mistake, modifying your personal files, or leaking private tokens to the internet.
-
-xor checks each proposed action against your project rules before the agent runs it.
+xor checks supported coding-agent tools against your project rules before they run.
+The check uses the final inputs that OpenCode is about to execute.
 The local model can approve, deny, or ask for confirmation.
 Trusted folder and settings checks also remain active.
+
+OpenCode's Code Mode can group tool calls into one program.
+xor checks supported tools inside that program, but it does not fully check the enclosing program.
+See the [coverage limits and implementation checks](docs/post-pr98-enhancements.md).
 
 The optional desktop companion shows what your agent is doing.
 It starts off until you enable it.
 
 ![xor companion](docs/xor.gif)
 
-[Quick Start](#quick-start) · [How It Works](#how-it-works) · [Your Project Rules](#your-project-rules) · [Commands](#commands) · [Model Performance](#model-performance) · [For Developers & Contributors](#for-developers--contributors) · [Documentation](#documentation)
+[Quick start](#quick-start) · [How it works](#how-it-works) · [Your project rules](#your-project-rules) · [Commands](#commands) · [Model performance](#model-performance) · [For developers and contributors](#for-developers-and-contributors) · [Documentation](#documentation)
 
 ---
 
-## Quick Start
+## Quick start
 
 You need Node.js 22.12 or newer and OpenCode 2.0.30 or newer.
 On macOS, install Xcode Command Line Tools (`xcode-select --install`).
@@ -53,20 +53,21 @@ npm install
 
 ---
 
-## How It Works
+## How it works
 
-1. **Folder Boundary Lock**: The agent is blocked from modifying files outside your active project folder.
-2. **Rule Protection**: The agent cannot secretly edit your `.xor/preference.json` rules to grant itself extra permissions.
-3. **Local AI Checker**: A tiny, ultra-fast local neural model evaluates each proposed action against your rules and returns one of three verdicts:
-   - **approve**: The action follows your rules and proceeds normally.
-   - **deny**: The action violates your rules. It is blocked immediately, and the agent is informed why.
-   - **ask**: The action needs human confirmation. The action is held while OpenCode asks you whether to permit it.
+1. For supported tools, xor blocks actions outside the active project folder.
+2. The agent cannot edit your saved project rules to grant itself more permission.
+3. The local model checks supported actions against your rules and returns one of three verdicts:
+   - **approve**: The checker permits the action to proceed.
+   - **deny**: The action stays blocked, and the agent receives the refusal reason.
+   - **ask**: The action stays blocked, and the coding agent receives instructions to ask you for confirmation.
 
-Everything runs entirely on your local machine. No code, logs, or agent actions are sent to third-party cloud services for permission checks.
+Permission checks run on your computer.
+The checker sends no code, logs, or agent actions to a cloud service.
 
 ---
 
-## Your Project Rules
+## Your project rules
 
 Run `xor preference` from your project folder to edit its rules in your text editor.
 Set your preferred editor before running the command.
@@ -81,10 +82,15 @@ The command shows the scope being edited and the effective source.
 Existing completion checks survive edits and migration.
 
 Without saved folder or global rules, xor uses: "Act like a normal harness. Follow the user's request without adding restrictions."
-The local model still checks actions, and OpenCode permissions still apply.
+The local model still checks supported tool actions, and OpenCode permissions still apply.
 Trusted folder and settings checks continue to restrict actions until model replacement is qualified.
 
 ---
+
+By default, xor saves final tool decisions on this computer.
+Approved calls retain their inputs.
+Denied calls and unanswered confirmation requests retain metadata and hashes without their raw inputs.
+The [local record guide](docs/post-pr98-enhancements.md#local-verdict-records) explains storage and the off setting.
 
 ## Commands
 
@@ -104,9 +110,9 @@ Trusted folder and settings checks continue to restrict actions until model repl
 
 ---
 
-## Model Performance
+## Model performance
 
-Version 0.1.5 ships the deletion-and-confirmation model accepted by the owner with a native training fit of **315/323**.
+The 0.1.5 package selects the deletion-and-confirmation model accepted by the owner with a native training fit of 315/323.
 That score measures its own training examples.
 The separate development comparison against the 0.1.4 baseline is below.
 
@@ -128,6 +134,9 @@ Trusted filesystem and settings checks still run before model decisions.
 The development suites contain 241 unique inspected cases and overlap with each other.
 Each scored case requires the correct answer in all five native rounds.
 The new model introduces five unsafe approvals relative to the baseline and is not a qualified safety improvement.
+A separate model-only replay approved all 54 distinct harmful challenge inputs in three independently model-reviewed shell-pattern groups.
+The [paired-scenario evidence](docs/permission-fix-pairs.md) records those decisions and their review status.
+This replay measures the model's decisions, while the trusted runtime checks remain active.
 The frozen test split remains unscored, and no speedup is claimed.
 The training diagnostic reports 323/323 verdict leads while actual native generation returns 315/323, so that disagreement remains unresolved.
 
@@ -136,16 +145,18 @@ See the [release measurements and categories](docs/model-0.1.5.md), [per-case re
 
 ---
 
-## For Developers & Contributors
+## For developers and contributors
 
-If you want to contribute, run test suites, or train models, follow these steps:
+To work on xor, install the development dependencies and run the checks below.
 
 ### Prerequisites
+
 - Node.js 22.12 or newer
 - Python 3.10 or newer
 - Git and Git LFS
 
-### Setup and Testing
+### Setup and testing
+
 ```sh
 npm ci --ignore-scripts
 git lfs install
@@ -156,12 +167,14 @@ npm run test:package
 node scripts/check-package-client.js npm
 ```
 
-### Full Desktop Interactive Test Suite
+### Full desktop interactive test suite
+
 ```sh
 node test/run-all-tests.js
 ```
 
-### Training & Architecture Work
+### Training and architecture work
+
 - The synthesized training script is located at `scripts/finetune_v3_synthesized.py`.
 - Training pipeline verification is available via `node scripts/verify-checker-quality.js`.
 - Raw training datasets are maintained separately and must not be committed directly to source control.
@@ -174,9 +187,10 @@ node test/run-all-tests.js
 | :--- | :--- |
 | [Project Context](CONTEXT.md) | Architectural background, terms, and conventions |
 | [Gate Reference](docs/xor-and-gate.md) | Details on action classification, tools, and effects |
-| [Methodology & Benchmarks](docs/methodology-and-benchmarks.md) | Deep dive into fine-tuning techniques and comparative results |
+| [Methodology & Benchmarks](docs/methodology-and-benchmarks.md) | Training methods and comparative results |
 | [Training Guide](docs/checker-training.md) | Model requirements, data validation, and training steps |
-| [Tool Inventory](docs/checker-tool-inventory.json) | Comprehensive list of checked agent tools and schemas |
+| [Tool Inventory](docs/checker-tool-inventory.json) | Pinned tool contracts and explicit coverage gaps |
+| [Post-release work and checks](docs/post-pr98-enhancements.md) | Current implementation, local records, and remaining requirements |
 | [Desktop Companion Events](docs/EVENTS.md) | Event stream formats for the desktop UI |
 | [Contributing Guide](CONTRIBUTION.md) | Contribution standards, code style, and test requirements |
 | [Release Guide](docs/RELEASING.md) | Step-by-step checklist for publishing new versions |
