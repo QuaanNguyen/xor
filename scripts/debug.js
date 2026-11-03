@@ -8,7 +8,7 @@ const { defaultPluginsDir, nativePetReady, electronReady } = require('./install-
 const { readPreference } = require('../xor/lib/preference');
 const { readConfig } = require('../xor/lib/config');
 const { gateManifest, defaultGateRoot, verifyInstalledGate } = require('../xor/lib/gate-artifacts');
-const { assertOpenCodeVersion } = require('../xor/lib/opencode-version');
+const { assertOpenCodeVersion, defaultOpenCodeCommand } = require('../xor/lib/opencode-version');
 const { createNeedleGate } = require('../xor/lib/gate');
 const { proposedCall } = require('../xor/lib/toolcalls');
 
@@ -43,7 +43,7 @@ async function runDiagnostics(options = {}) {
   for (const [key, name] of Object.entries({ XDG_DATA_HOME: 'data', XDG_CACHE_HOME: 'cache', XDG_STATE_HOME: 'state' })) {
     env[key] = path.join(root, name);
   }
-  const command = options.openCodeCommand || (process.platform === 'win32' ? 'opencode.exe' : 'opencode');
+  const command = options.openCodeCommand || defaultOpenCodeCommand();
   const pluginsDir = options.pluginsDir || defaultPluginsDir();
   const entry = path.join(pluginsDir, 'xor', 'index.mjs');
   const modelRoot = options.gateRoot || defaultGateRoot();

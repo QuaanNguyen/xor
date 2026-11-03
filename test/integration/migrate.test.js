@@ -127,7 +127,7 @@ test('migration preserves the global Preference and completion checks without ad
     assert.equal(result.status, 0, result.stderr);
     assert.deepEqual(read(globalFile), global);
     assert.equal(fs.existsSync(path.join(layout.project, '.xor', 'preference.json')), false);
-    assert.match(result.stdout, new RegExp(globalFile));
+    assert.ok(result.stdout.includes(globalFile));
   });
 });
 

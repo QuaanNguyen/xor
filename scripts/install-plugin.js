@@ -3,7 +3,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
-const { assertOpenCodeVersion } = require('../xor/lib/opencode-version');
+const { assertOpenCodeVersion, defaultOpenCodeCommand } = require('../xor/lib/opencode-version');
 const { buildNativePet } = require('./build-native-pet');
 const { retrieveGate, defaultGateRoot } = require('../xor/lib/gate-artifacts');
 
@@ -87,7 +87,7 @@ function runCommand(cmd, args, cwd, options = {}) {
       ? 'timed out'
       : `failed with exit ${result.status}`;
     const diagnostic = capture
-      ? redactDiagnostic(result.stderr?.toString() || result.stdout?.toString())
+      ? redactDiagnostic([result.stdout?.toString(), result.stderr?.toString()].filter(Boolean).join('\n'))
       : '';
     const location = cwd ? ' in ' + cwd : '';
     throw new Error(cmd + ' ' + args.join(' ') + ' ' + outcome + location + (diagnostic ? '\n' + diagnostic : ''));
@@ -153,7 +153,7 @@ function verifyStagedPlugin(entry, cwd) {
   runCommand(process.execPath, ['--input-type=module', '-e', script], cwd, { capture: true });
 }
 
-function verifyOpenCode(cwd, command = process.platform === 'win32' ? 'opencode.exe' : 'opencode') {
+function verifyOpenCode(cwd, command = defaultOpenCodeCommand()) {
   const env = installEnv();
   env.XOR_NO_PET = '1';
   runCommand(command, ['--standalone', 'debug', 'config'], cwd, {
@@ -170,7 +170,7 @@ function verifyStagedSetup(entry, options = {}) {
       entry,
       root,
       modelRoot: options.modelRoot || defaultGateRoot(),
-      command: options.command || (process.platform === 'win32' ? 'opencode.exe' : 'opencode'),
+      command: options.command || defaultOpenCodeCommand(),
       setupOnly: true,
     })], root, { capture: true, timeout: 50000 });
     const report = JSON.parse(result.stdout.toString());
@@ -239,7 +239,7 @@ async function installPlugin(opts = {}) {
   }
 
   if (opts.verifyOpenCode === true) {
-    const version = runCommand(opts.openCodeCommand || (process.platform === 'win32' ? 'opencode.exe' : 'opencode'), ['--version'], repoRoot, { capture: true, timeout: 15000 });
+    const version = runCommand(opts.openCodeCommand || defaultOpenCodeCommand(), ['--version'], repoRoot, { capture: true, timeout: 15000 });
     assertOpenCodeVersion(version.stdout.toString());
   }
 

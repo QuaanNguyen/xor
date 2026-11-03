@@ -34,9 +34,10 @@ function requestsFrom(file) {
 }
 
 function createPlan(specification) {
-  const allowed = ['purpose', 'claim', 'runner', 'baseline', 'candidate', 'requests', 'gateSource', 'rounds', 'warmupPasses', 'threads', 'timeoutMs', 'maxOutputBytes'];
+  const allowed = ['purpose', 'claim', 'runner', 'runnerScript', 'baseline', 'candidate', 'requests', 'gateSource', 'rounds', 'warmupPasses', 'threads', 'timeoutMs', 'maxOutputBytes'];
   assert.ok(Object.keys(specification).every((key) => allowed.includes(key)), 'Unknown specification key');
   assert.ok(['production-comparison', 'fake-runner-smoke'].includes(specification.purpose));
+  if (specification.runnerScript) assert.equal(specification.purpose, 'fake-runner-smoke', 'Production comparisons require the pinned native executable');
   assert.equal(typeof specification.claim, 'string');
   const rounds = specification.rounds ?? 5;
   const warmupPasses = specification.warmupPasses ?? 1;
@@ -57,6 +58,7 @@ function createPlan(specification) {
     harness: pin(__filename),
     gateSource: pin(specification.gateSource),
     runner: pin(specification.runner),
+    ...(specification.runnerScript ? { runnerScript: pin(specification.runnerScript) } : {}),
     models: { baseline: pin(specification.baseline), candidate: pin(specification.candidate) },
     requests: pin(specification.requests),
     requestIdentities: requests.map(({ id, inputHash, expected }) => ({ id, inputHash, expected })),
@@ -173,7 +175,8 @@ async function run(planFile, output) {
     assert.equal(`${process.platform}-${process.arch}`, 'darwin-arm64');
     assert.equal(plan.settings.timeoutMs, 15000);
   }
-  for (const artifact of [plan.harness, plan.gateSource, plan.runner, plan.models.baseline, plan.models.candidate, plan.requests]) assert.equal(fileSha(artifact.path), artifact.sha256, 'Pinned artifact changed: ' + artifact.path);
+  if (plan.runnerScript) assert.equal(plan.purpose, 'fake-runner-smoke', 'Production comparisons require the pinned native executable');
+  for (const artifact of [plan.harness, plan.gateSource, plan.runner, plan.runnerScript, plan.models.baseline, plan.models.candidate, plan.requests].filter(Boolean)) assert.equal(fileSha(artifact.path), artifact.sha256, 'Pinned artifact changed: ' + artifact.path);
   assert.equal(plan.harness.path, __filename, 'Run the pinned harness');
   const requests = requestsFrom(plan.requests.path);
   assert.deepEqual(requests.map(({ id, inputHash, expected }) => ({ id, inputHash, expected })), plan.requestIdentities);
@@ -201,13 +204,14 @@ async function run(planFile, output) {
         if (controller.signal.aborted) throw new Error('Benchmark interrupted');
         const argv = ['--model', plan.models[side].path, '--tools', tools.get(sha(JSON.stringify(request.tools))), '--prompt', request.query, '--max', '128', '--fail-input-overflow'];
         if (plan.settings.threads !== undefined) argv.push('--threads', String(plan.settings.threads));
-        const result = await attempt(plan.runner.path, argv, plan.settings, controller.signal);
-        const row = { phase, round, side, id: request.id, inputHash: request.inputHash, expected: request.expected, runnerSha256: plan.runner.sha256, modelSha256: plan.models[side].sha256, argv, ...result };
+        const invocationArgv = plan.runnerScript ? [plan.runnerScript.path, ...argv] : argv;
+        const result = await attempt(plan.runner.path, invocationArgv, plan.settings, controller.signal);
+        const row = { phase, round, side, id: request.id, inputHash: request.inputHash, expected: request.expected, runnerSha256: plan.runner.sha256, modelSha256: plan.models[side].sha256, argv: invocationArgv, ...result };
         attempts.push(row);
         fs.appendFileSync(path.join(output, 'attempts.jsonl'), JSON.stringify(row) + '\n');
       }
     }
-    for (const artifact of [plan.gateSource, plan.runner, plan.models.baseline, plan.models.candidate, plan.requests]) assert.equal(fileSha(artifact.path), artifact.sha256, 'Artifact changed during benchmark');
+    for (const artifact of [plan.gateSource, plan.runner, plan.runnerScript, plan.models.baseline, plan.models.candidate, plan.requests].filter(Boolean)) assert.equal(fileSha(artifact.path), artifact.sha256, 'Artifact changed during benchmark');
   } catch (error) {
     failure = error.message;
   } finally {

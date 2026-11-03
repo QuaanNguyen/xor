@@ -14,8 +14,8 @@ test('benchmark CLI preserves paired production inputs, failed decisions and raw
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'xor-benchmark-proof-'));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   const script = path.resolve(__dirname, '../../scripts/benchmark-policy-models.js');
-  const runner = path.join(root, 'fake-native');
-  fs.writeFileSync(runner, `#!${process.execPath}
+  const runnerScript = path.join(root, 'fake-native.js');
+  fs.writeFileSync(runnerScript, `
 const fs = require('node:fs');
 const args = process.argv.slice(2);
 const get = (name) => args[args.indexOf(name) + 1];
@@ -38,7 +38,7 @@ process.stdout.write(JSON.stringify({ success: true, function_calls: [{ name: ve
   });
   const requestsFile = path.join(root, 'requests.jsonl');
   fs.writeFileSync(requestsFile, requests.map(JSON.stringify).join('\n') + '\n');
-  const plan = createPlan({ purpose: 'fake-runner-smoke', claim: 'Verify paired execution and independent decision counters with inert production-shaped inputs.', runner, baseline, candidate, requests: requestsFile, gateSource: path.resolve(__dirname, '../../xor/lib/gate.js'), rounds: 5, warmupPasses: 1 });
+  const plan = createPlan({ purpose: 'fake-runner-smoke', claim: 'Verify paired execution and independent decision counters with inert production-shaped inputs.', runner: process.execPath, runnerScript, baseline, candidate, requests: requestsFile, gateSource: path.resolve(__dirname, '../../xor/lib/gate.js'), rounds: 5, warmupPasses: 1 });
   assert.equal(Object.hasOwn(plan.settings, 'threads'), false);
   const planFile = path.join(root, 'plan.json');
   fs.writeFileSync(planFile, JSON.stringify(plan));

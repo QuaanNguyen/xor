@@ -37,6 +37,7 @@ test('packed npm local and global installations run setup and preserve owner set
     XDG_DATA_HOME: path.join(root, 'data'),
     XOR_GATE_ROOT: path.join(root, 'gate'),
     XOR_GATE_MANIFEST: fixture.file,
+    XOR_OPENCODE_COMMAND: command,
     XOR_CONFIG_ROOT: path.join(root, 'xor'),
     npm_config_cache: path.join(root, 'npm-cache'),
   };

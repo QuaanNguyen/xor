@@ -47,7 +47,7 @@ try {
 
   if (client === 'npm') run('npm', ['install', '--ignore-scripts', tarball], installDir);
   if (client === 'pnpm') run('pnpm', ['add', '--ignore-scripts', tarball], installDir);
-  if (client === 'yarn') run('yarn', ['add', tarball], installDir);
+  if (client === 'yarn') run('yarn', ['add', '--ignore-scripts', tarball], installDir);
   if (client === 'bun') run('bun', ['add', tarball], installDir);
 
   const packageDir = path.join(installDir, 'node_modules', ...packageName.split('/'));
