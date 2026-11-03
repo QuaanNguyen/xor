@@ -97,10 +97,16 @@ The broader permissive fresh-installation ticket remains linked to that replacem
 
 ## Verification
 
-The full repository suite passed 276 tests.
+The full repository suite passed 278 tests.
 Syntax, package contents, and the generated runtime-evidence audit passed.
 The policy-replacement audit returned its expected incomplete-qualification status after verifying the repaired contrast and saved native counterexamples.
 Its regression tests reject mismatched review inputs and unsupported qualification claims.
 The exact packed package installed locally and globally in an isolated profile with OpenCode 2.2.5 and the pinned public model and runner.
 The installed diagnostic returned PASS for required checks and SKIP for the disabled pet.
 No merge, npm publication, or personal installation update was performed.
+
+The hosted Windows failures exposed a named-pipe half-close assumption, platform-specific path assertions, and executable test fixtures.
+Pet controls now use bounded newline frames and acknowledgements without relying on client EOF.
+The fake benchmark uses a pinned executable and pinned test script with no shell, and production comparisons continue to require the native executable.
+Yarn package-layout checks skip lifecycle setup consistently with the other layout checks.
+Separate packed npm installation tests continue to exercise automatic setup.

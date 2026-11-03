@@ -40,6 +40,7 @@ npm install --global @quaannguyen/xor --allow-scripts=@quaannguyen/xor
 For a local npm 12 installation, allow the package in your project's installation-script policy.
 If your package manager blocks scripts, run `xor install` after allowing setup.
 Use `xor debug` to check the installed integration.
+For an OpenCode executable outside your normal command search path, set `XOR_OPENCODE_COMMAND` to its full path before installation.
 The model has known missed confirmations; see the measurements and limitations below.
 
 If you prefer installing from source:
