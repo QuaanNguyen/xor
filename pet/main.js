@@ -64,7 +64,7 @@ let windowInteraction = null;
 let dragRegions = [];
 let pointerDrag = null;
 const devHarness = DEV ? createDevHarness() : null;
-const settings = { scale: DEFAULT_SCALE, x: null, y: null };
+const settings = { scale: DEFAULT_SCALE, requestedScale: DEFAULT_SCALE, x: null, y: null };
 let animations = null;
 const pendingEvents = [];
 const runtimeDirectory = path.join(os.tmpdir(), `xor-electron-${process.pid}`);
@@ -75,8 +75,10 @@ app.setPath("userData", runtimeDirectory);
 function applyLayout() {
   if (!win || win.isDestroyed()) return;
   const prev = win.getBounds();
-  const width = Math.round(BASE_W * settings.scale);
-  const height = Math.round(WINDOW_H * settings.scale);
+  const displayArea = screen.getDisplayMatching(prev).workArea;
+  settings.scale = G.renderScale(settings.requestedScale, displayArea, WINDOW_H);
+  const width = Math.max(1, Math.round(BASE_W * settings.scale));
+  const height = Math.max(1, Math.round(WINDOW_H * settings.scale));
   const next = {
     width,
     height,
@@ -95,11 +97,11 @@ function applyLayout() {
 
 function setScale(next) {
   const s = clampScale(next);
-  if (s === settings.scale) return;
-  settings.scale = s;
+  if (s === settings.requestedScale) return;
+  settings.requestedScale = s;
   applyLayout();
   if (win && !win.isDestroyed()) {
-    win.webContents.send("xor:scaled", Math.round(s * 100));
+    win.webContents.send("xor:scaled", settings.scale * 100);
   }
 }
 
@@ -132,8 +134,8 @@ if (!gotLock) {
   function create() {
     const display = screen.getPrimaryDisplay();
     const area = display.workAreaSize;
-    const w = Math.round(BASE_W * settings.scale);
-    const h = Math.round(WINDOW_H * settings.scale);
+    const w = Math.max(1, Math.round(BASE_W * settings.scale));
+    const h = Math.max(1, Math.round(WINDOW_H * settings.scale));
     const start = G.keepOnScreen(
       {
         width: w,

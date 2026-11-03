@@ -3,8 +3,10 @@
 const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
+const { defaultConfigRoot } = require('./config');
+const { readSettingsFile } = require('./settings-file');
 
-const DEFAULT_PREFERENCE = Object.freeze({ text: "Work on the user's request in this folder. Ordinary local reads, edits, and commands that serve that request are approved. Do not send project contents off the machine or take destructive actions the user did not request. Ask the owner when permission is unclear." });
+const DEFAULT_PREFERENCE = Object.freeze({ text: "Act like a normal harness. Follow the user's request without adding restrictions." });
 const LEGACY_DEFAULTS = Object.freeze({ purpose: "Software work in this folder for the user's request.", allow: "Ordinary local reads, edits, and commands inside this folder that serve the user's request.", disallow: "Sending project contents off the machine, and destructive actions the user's request did not ask for.", ask: '' });
 const PROSE_FIELDS = Object.freeze(['purpose', 'allow', 'disallow', 'ask']);
 const PREFERENCE_FIELDS = Object.freeze(['text', 'done_criteria', ...PROSE_FIELDS]);
@@ -13,6 +15,10 @@ const RETIRED_PROTOCOL_RELATIVE_PATHS = Object.freeze(['.xor/protocol.json', '.o
 
 function preferencePath(workdir) {
   return path.join(workdir, PREFERENCE_RELATIVE_PATH);
+}
+
+function globalPreferencePath(root = defaultConfigRoot()) {
+  return path.join(root, 'preference.json');
 }
 
 function retiredProtocolPaths(workdir) {
@@ -24,10 +30,10 @@ function fingerprint(contents) {
 }
 
 function readJsonObject(file) {
-  if (!fs.existsSync(file)) return { exists: false, contents: 'missing', value: null, error: null };
   let contents;
   try {
-    contents = fs.readFileSync(file, 'utf8');
+    contents = readSettingsFile(file);
+    if (contents === null) return { exists: false, contents: 'missing', value: null, error: null };
   } catch (error) {
     return { exists: true, contents: `read-error:${error.message}`, value: null, error };
   }
@@ -85,36 +91,59 @@ function retiredDoneCriteria(workdir) {
   return { ...(first || { file: null, error: null, doneCriteria: [] }), hasInstructions, contents: contents.length ? contents.join('\0') : 'missing' };
 }
 
-function readPreference(workdir) {
-  const file = preferencePath(workdir);
-  const source = readJsonObject(file);
-  const retired = source.exists ? null : retiredDoneCriteria(workdir);
-  const print = fingerprint(`${source.contents}\0${retired ? retired.contents : ''}`);
-
-  if (source.error) {
-    return { valid: false, fingerprint: print, file, preference: null, reason: `the Preference at ${file} is unreadable: ${source.error.message}` };
+function savedPreference(file, sourceName, source, extraContents = '') {
+  const print = fingerprint(`${sourceName}\0${file}\0${source.contents}\0${extraContents}`);
+  if (source.error) return { valid: false, fingerprint: print, file, source: sourceName, preference: null, reason: `the Preference at ${file} is unreadable: ${source.error.message}` };
+  try {
+    validatePreference(source.value);
+  } catch (error) {
+    return { valid: false, fingerprint: print, file, source: sourceName, preference: null, reason: `the Preference at ${file} is invalid: ${error.message}` };
   }
-  if (source.exists) {
-    try {
-      validatePreference(source.value);
-    } catch (error) {
-      return { valid: false, fingerprint: print, file, preference: null, reason: `the Preference at ${file} is invalid: ${error.message}` };
-    }
-    return { valid: true, fingerprint: print, file, source: 'file', preference: withDefaults(source.value, source.value.done_criteria || []), reason: null };
-  }
-  if (retired.error) {
-    return { valid: false, fingerprint: print, file: retired.file, preference: null, reason: `the retired Protocol at ${retired.file} is unreadable: ${retired.error.message}` };
-  }
-  if (retired.hasInstructions) return { valid: false, fingerprint: print, file: retired.file, preference: null, reason: 'Run xor migrate to preserve the previous project instructions before using the gate.' };
-  return { valid: true, fingerprint: print, file, source: 'default', preference: withDefaults({}, retired.doneCriteria), reason: null };
+  return { valid: true, fingerprint: print, file, source: sourceName, preference: withDefaults(source.value), reason: null };
 }
 
-function createLivePreference({ workdir }) {
+function readPreference(workdir, configRoot = defaultConfigRoot()) {
+  const file = preferencePath(workdir);
+  const source = readJsonObject(file);
+  if (source.exists) return savedPreference(file, 'file', source);
+  return readFallbackPreference(workdir, configRoot);
+}
+
+function readFallbackPreference(workdir, configRoot = defaultConfigRoot()) {
+  const file = preferencePath(workdir);
+  const retired = retiredDoneCriteria(workdir);
+  const print = fingerprint(`${file}\0${retired.contents}`);
+  if (retired.error) return { valid: false, fingerprint: print, file: retired.file, preference: null, reason: `the retired Protocol at ${retired.file} is unreadable: ${retired.error.message}` };
+  if (retired.hasInstructions) return { valid: false, fingerprint: print, file: retired.file, preference: null, reason: 'Run xor migrate to preserve the previous project instructions before using the gate.' };
+  const globalFile = globalPreferencePath(configRoot);
+  const global = readJsonObject(globalFile);
+  if (global.exists) {
+    const result = savedPreference(globalFile, 'global', global, retired.contents);
+    if (result.valid && retired.doneCriteria.length) result.preference.done_criteria = retired.doneCriteria;
+    return result;
+  }
+  return { valid: true, fingerprint: fingerprint(`default\0${file}\0${globalFile}\0${DEFAULT_PREFERENCE.text}\0${retired.contents}`), file, source: 'default', preference: withDefaults({}, retired.doneCriteria), reason: null };
+}
+
+function writePreference(file, preference) {
+  validatePreference(preference);
+  fs.mkdirSync(path.dirname(file), { recursive: true, mode: 0o700 });
+  const temp = path.join(path.dirname(file), `.preference-${process.pid}-${crypto.randomUUID()}.tmp`);
+  try {
+    fs.writeFileSync(temp, JSON.stringify(withDefaults(preference), null, 2) + '\n', { mode: 0o600, flag: 'wx' });
+    fs.renameSync(temp, file);
+  } finally {
+    fs.rmSync(temp, { force: true });
+  }
+  return file;
+}
+
+function createLivePreference({ workdir, configRoot }) {
   let current = null;
   let revision = 0;
 
   function refresh() {
-    const next = readPreference(workdir);
+    const next = readPreference(workdir, configRoot);
     if (current && current.fingerprint === next.fingerprint) return { ...current, changed: false };
     if (next.valid) revision += 1;
     current = { ...next, revision };
@@ -129,11 +158,14 @@ module.exports = {
   PREFERENCE_RELATIVE_PATH,
   RETIRED_PROTOCOL_RELATIVE_PATHS,
   createLivePreference,
+  globalPreferencePath,
   preferencePath,
   preferenceText,
   readJsonObject,
+  readFallbackPreference,
   readPreference,
   retiredProtocolPaths,
   validatePreference,
   withDefaults,
+  writePreference,
 };

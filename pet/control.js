@@ -2,18 +2,30 @@
 
 const net = require('node:net');
 const fs = require('node:fs');
+const os = require('node:os');
 const path = require('node:path');
+const { createHash, randomUUID } = require('node:crypto');
 const { defaultConfigRoot } = require('../xor/lib/config');
 
-function controlSocketPath(root = defaultConfigRoot()) {
-  return process.platform === 'win32'
-    ? '\\\\.\\pipe\\xor-pet-control'
-    : path.join(root, 'pet-control.sock');
+function controlDirectory(root) {
+  return path.join(root, 'pet-controls');
 }
 
-function sendControl(control, root = defaultConfigRoot()) {
+function controlSocketPath(root = defaultConfigRoot(), id = 'legacy') {
+  let canonicalRoot;
+  try { canonicalRoot = fs.realpathSync.native(root); } catch (error) {
+    if (error.code !== 'ENOENT') throw error;
+    canonicalRoot = path.resolve(root);
+  }
+  const scope = createHash('sha256').update(canonicalRoot).digest('hex').slice(0, 16);
+  return process.platform === 'win32'
+    ? `\\\\.\\pipe\\xor-pet-${scope}-${id}`
+    : path.join(os.tmpdir().length <= 25 ? os.tmpdir() : '/tmp', `xor-pet-${scope}-${id}.sock`);
+}
+
+function sendOne(control, root, id) {
   return new Promise((resolve) => {
-    const socket = net.createConnection(controlSocketPath(root));
+    const socket = net.createConnection(controlSocketPath(root, id));
     let finished = false;
     const finish = (applied) => {
       if (finished) return;
@@ -21,38 +33,101 @@ function sendControl(control, root = defaultConfigRoot()) {
       socket.destroy();
       resolve(applied);
     };
-    socket.setTimeout(250, () => finish(false));
-    socket.once('error', () => finish(false));
-    socket.once('data', (result) => finish(result.toString() === 'ok'));
-    socket.once('connect', () => socket.end(JSON.stringify(control) + '\n'));
+    socket.setTimeout(1000, () => finish(false));
+    socket.once('error', (error) => {
+      if (['ENOENT', 'ECONNREFUSED'].includes(error.code)) {
+        try { fs.unlinkSync(path.join(controlDirectory(root), id)); } catch {}
+      }
+      finish(false);
+    });
+    let reply = '';
+    socket.setEncoding('utf8');
+    socket.on('data', (result) => {
+      reply += result;
+      if (reply === 'ok') finish(true);
+      else if (!'ok'.startsWith(reply)) finish(false);
+    });
+    socket.once('end', () => finish(false));
+    socket.once('close', () => finish(false));
+    socket.once('connect', () => socket.write(JSON.stringify(control) + '\n'));
   });
 }
 
-function startControlServer(onControl, root = defaultConfigRoot()) {
-  const socket = controlSocketPath(root);
-  if (process.platform !== 'win32') {
-    fs.mkdirSync(root, { recursive: true, mode: 0o700 });
-    try { fs.unlinkSync(socket); } catch (error) { if (error.code !== 'ENOENT') throw error; }
+async function sendControl(control, root = defaultConfigRoot()) {
+  let ids;
+  try {
+    ids = fs.readdirSync(controlDirectory(root)).filter((id) => /^[0-9a-f-]{36}$/.test(id));
+  } catch (error) {
+    if (error.code === 'ENOENT') return false;
+    throw error;
   }
-  const server = net.createServer((connection) => {
+  const results = await Promise.all(ids.map((id) => sendOne(control, root, id)));
+  return results.some(Boolean);
+}
+
+function startControlServer(onControl, root = defaultConfigRoot(), onError = () => {}) {
+  fs.mkdirSync(controlDirectory(root), { recursive: true, mode: 0o700 });
+  const id = randomUUID();
+  const socket = controlSocketPath(root, id);
+  const registry = path.join(controlDirectory(root), id);
+  const connections = new Set();
+  let closed = false;
+  let settleReady;
+  const ready = new Promise((resolve) => { settleReady = resolve; });
+  const server = net.createServer({ allowHalfOpen: true }, (connection) => {
+    connections.add(connection);
+    connection.unref();
+    connection.setTimeout(1000, () => connection.destroy());
     connection.setEncoding('utf8');
     let input = '';
-    connection.on('data', (chunk) => { input += chunk; });
+    let processing = false;
+    connection.on('error', () => {});
+    connection.on('close', () => connections.delete(connection));
+    connection.on('data', (chunk) => {
+      if (processing) return connection.destroy();
+      input += chunk;
+      if (Buffer.byteLength(input, 'utf8') > 4096) return connection.destroy();
+      const newline = input.indexOf('\n');
+      if (newline === -1) return;
+      processing = true;
+      if (newline !== input.length - 1) return connection.end('denied');
+      Promise.resolve().then(() => connection.destroyed ? false : onControl(JSON.parse(input.slice(0, newline))))
+        .then((accepted) => { if (!connection.destroyed) connection.end(accepted === true ? 'ok' : 'denied'); })
+        .catch(() => { if (!connection.destroyed) connection.end('denied'); });
+    });
     connection.on('end', () => {
-      let accepted = false;
-      try { accepted = onControl(JSON.parse(input)) === true; } catch {
-      }
-      connection.end(accepted ? 'ok' : 'denied');
+      if (!processing) connection.end('denied');
     });
   });
-  server.on('error', () => {});
-  server.listen(socket, () => { if (process.platform !== 'win32') fs.chmodSync(socket, 0o600); });
-  return {
-    close() {
+  server.unref();
+  server.on('error', (error) => {
+    settleReady(false);
+    onError(error);
+  });
+  server.listen(socket, () => {
+    if (closed) return;
+    try {
+      if (process.platform !== 'win32') fs.chmodSync(socket, 0o600);
+      fs.writeFileSync(registry, '', { mode: 0o600 });
+      settleReady(true);
+    } catch (error) {
       server.close();
+      if (process.platform !== 'win32') { try { fs.unlinkSync(socket); } catch {} }
+      settleReady(false);
+      onError(error);
+    }
+  });
+  return {
+    ready,
+    close() {
+      if (closed) return;
+      closed = true;
+      settleReady(false);
+      for (const connection of connections) connection.destroy();
+      server.close();
+      try { fs.unlinkSync(registry); } catch {}
       if (process.platform !== 'win32') {
-        try { fs.unlinkSync(socket); } catch {
-        }
+        try { fs.unlinkSync(socket); } catch {}
       }
     },
   };

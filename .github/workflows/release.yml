@@ -23,7 +23,7 @@ jobs:
           node-version: 24
           registry-url: https://registry.npmjs.org
       - run: npm run check
-      - run: npm ci
+      - run: npm ci --ignore-scripts
       - run: npm test
       - run: npm run check:runtime-qualification
       - run: npm run test:package

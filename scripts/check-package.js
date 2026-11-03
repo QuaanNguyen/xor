@@ -24,6 +24,11 @@ try {
   for (const required of [
     'package.json',
     'scripts/xor.js',
+    'scripts/preference.js',
+    'scripts/pet.js',
+    'scripts/postinstall.js',
+    'scripts/debug.js',
+    'scripts/debug-probe.mjs',
     'scripts/check-package-client.js',
     'scripts/check-package.js',
     'scripts/check-syntax.js',

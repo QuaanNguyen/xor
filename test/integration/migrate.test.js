@@ -75,7 +75,7 @@ test('migrate carries done criteria into a new Preference and removes the retire
     assert.match(migrated.text, /src\/\*\*/);
     assert.equal(fs.existsSync(canonical), false);
     assert.equal(fs.existsSync(legacy), false);
-    assert.deepEqual(read(path.join(layout.configRoot, 'config.json')), { schema_version: 3, pet: { scale: 1.35 } });
+    assert.deepEqual(read(path.join(layout.configRoot, 'config.json')), { schema_version: 4, pet: { enabled: false, scale: 1.35 } });
     assert.equal(fs.existsSync(path.join(layout.ownerDir, 'policy.json')), false);
   });
 });
@@ -114,5 +114,76 @@ test('migrate changes nothing when a file it reads is unreadable', () => {
     write(protocol, '{ not json');
     assert.equal(migrate(layout).status, 2);
     assert.equal(fs.existsSync(preferenceFile), false);
+  });
+});
+
+
+test('migration preserves the global Preference and completion checks without adding a folder override', () => {
+  withLayout((layout) => {
+    const globalFile = path.join(layout.configRoot, 'preference.json');
+    const global = { text: 'Only edit documentation.', done_criteria: [CRITERION] };
+    write(globalFile, global);
+    const result = migrate(layout);
+    assert.equal(result.status, 0, result.stderr);
+    assert.deepEqual(read(globalFile), global);
+    assert.equal(fs.existsSync(path.join(layout.project, '.xor', 'preference.json')), false);
+    assert.ok(result.stdout.includes(globalFile));
+  });
+});
+
+test('migration carries global text and completion checks when local legacy instructions need preservation', () => {
+  withLayout((layout) => {
+    write(path.join(layout.configRoot, 'preference.json'), { text: 'Only edit documentation.', done_criteria: [CRITERION] });
+    write(path.join(layout.project, '.xor', 'protocol.json'), { task: 'Fix the manual.' });
+    const result = migrate(layout);
+    assert.equal(result.status, 0, result.stderr);
+    const saved = read(path.join(layout.project, '.xor', 'preference.json'));
+    assert.match(saved.text, /Only edit documentation/);
+    assert.match(saved.text, /Fix the manual/);
+    assert.deepEqual(saved.done_criteria, [CRITERION]);
+  });
+});
+
+test('migration cannot hide an invalid global Preference by creating a folder override', () => {
+  withLayout((layout) => {
+    const globalFile = path.join(layout.configRoot, 'preference.json');
+    const protocolFile = path.join(layout.project, '.xor', 'protocol.json');
+    write(globalFile, { text: 42 });
+    write(protocolFile, { task: 'Fix the manual.' });
+    const result = migrate(layout);
+    assert.equal(result.status, 2);
+    assert.match(result.stderr, /global Preference.*invalid.*Nothing was changed/);
+    assert.equal(fs.existsSync(path.join(layout.project, '.xor', 'preference.json')), false);
+    assert.equal(fs.existsSync(protocolFile), true);
+    assert.deepEqual(read(globalFile), { text: 42 });
+  });
+});
+
+
+test('migration retains distinct global and retired local completion checks', () => {
+  withLayout((layout) => {
+    write(path.join(layout.configRoot, 'preference.json'), { text: 'Docs only', done_criteria: [CRITERION] });
+    const local = { id: 'local-check', checks: [{ type: 'file_exists', path: 'manual.md' }] };
+    write(path.join(layout.project, '.xor', 'protocol.json'), { done_criteria: [local] });
+    const result = migrate(layout);
+    assert.equal(result.status, 0, result.stderr);
+    assert.deepEqual(read(path.join(layout.project, '.xor', 'preference.json')).done_criteria, [CRITERION, local]);
+  });
+});
+
+test('migration rejects conflicting completion check identities before changing files', () => {
+  withLayout((layout) => {
+    const globalFile = path.join(layout.configRoot, 'preference.json');
+    const localFile = path.join(layout.project, '.xor', 'protocol.json');
+    const global = { text: 'Docs only', done_criteria: [CRITERION] };
+    const local = { done_criteria: [{ ...CRITERION, checks: [] }] };
+    write(globalFile, global);
+    write(localFile, local);
+    const result = migrate(layout);
+    assert.equal(result.status, 2);
+    assert.match(result.stderr, /conflicting definitions.*Nothing was changed/);
+    assert.deepEqual(read(globalFile), global);
+    assert.deepEqual(read(localFile), local);
+    assert.equal(fs.existsSync(path.join(layout.project, '.xor', 'preference.json')), false);
   });
 });

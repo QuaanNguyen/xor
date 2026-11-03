@@ -87,9 +87,9 @@ console.log('\nwindow sizing');
 
 const G = require(path.join(ROOT, 'pet/geometry'));
 
-t('clamps requested scale to the supported range', () => {
-  assert.equal(G.clampScale(9), 2);
-  assert.equal(G.clampScale(0.01), 0.6);
+t('accepts positive finite scales without restricting them to presets', () => {
+  assert.equal(G.clampScale(9), 9);
+  assert.equal(G.clampScale(0.01), 0.01);
   assert.equal(G.clampScale('nonsense'), 1);
 });
 

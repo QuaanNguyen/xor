@@ -30,6 +30,119 @@ function response(body, mutate = () => {}) {
 }
 const mock = (mutate) => ({ connection, request: async (_conn, _route, body) => response(body, mutate) });
 
+test('study namespaces produce distinct stable identities without changing legacy identities', (t) => {
+  const legacy = fixture(t);
+  const first = fixture(t, { studyNamespace: 'natural-shell-a' });
+  const retry = fixture(t, { studyNamespace: 'natural-shell-a' });
+  const second = fixture(t, { studyNamespace: 'natural-shell-b' });
+  const tasks = (value) => JSON.parse(fs.readFileSync(path.join(value.directory, 'plan.json'), 'utf8')).tasks;
+  const legacyFamily = `family-${digest({ agent: 'opencode', tool: 'shell', split: 'train', variant: 'base' }).slice(0, 24)}`;
+  assert.ok(tasks(legacy).every((task) => task.family === legacyFamily && task.taskId === `case-${digest({ family: legacyFamily, condition: task.condition }).slice(0, 24)}`));
+  assert.deepEqual(tasks(first), tasks(retry));
+  for (const other of [legacy, second]) {
+    assert.ok(tasks(first).every((task) => tasks(other).every((entry) => entry.family !== task.family && entry.taskId !== task.taskId)));
+  }
+  for (const studyNamespace of ['', ' ', ' leading', 'trailing ', 17, null]) assert.throws(() => authoring.configuration({ authorModel: 'fixture', studyNamespace }), /studyNamespace/);
+});
+
+test('namespaces isolate ordinary, risk-topic, and parallel families', (t) => {
+  const tools = require('../../docs/checker-tool-inventory.json');
+  const config = { dynamicShellVariants: ['multiline'], riskTopics: ['parallel-denials', 'environment-disclosure'] };
+  const first = fixture(t, { ...config, studyNamespace: 'all-family-paths-a' }, tools);
+  const second = fixture(t, { ...config, studyNamespace: 'all-family-paths-b' }, tools);
+  const legacy = fixture(t, config, tools);
+  const tasks = (value) => JSON.parse(fs.readFileSync(path.join(value.directory, 'plan.json'), 'utf8')).tasks;
+  const a = tasks(first);
+  const b = tasks(second);
+  assert.ok(a.some((task) => task.topic === 'parallel-denials'));
+  assert.ok(a.some((task) => task.topic === 'environment-disclosure'));
+  assert.ok(a.some((task) => !task.topic));
+  assert.ok(a.every((task) => b.every((entry) => entry.family !== task.family && entry.taskId !== task.taskId)));
+  const parallel = a.filter((task) => task.topic === 'parallel-denials');
+  assert.equal(new Set(parallel.map((task) => task.family)).size, 1);
+  assert.ok(parallel.every((task) => task.parallelGroup === task.family && task.batch === task.family));
+  for (const task of tasks(legacy)) {
+    const identity = task.parallelRole ? { split: task.split, topic: task.topic } : task.topic ? { agent: task.agent, tool: task.tool, split: task.split, topic: task.topic } : { agent: task.agent, tool: task.tool, split: task.split, variant: task.variant };
+    const family = `family-${digest(identity).slice(0, 24)}`;
+    assert.equal(task.family, family);
+    assert.equal(task.taskId, `case-${digest(task.parallelRole ? { family, parallelRole: task.parallelRole } : { family, condition: task.condition }).slice(0, 24)}`);
+  }
+});
+
+test('a namespaced study resumes accepted cases without new requests', async (t) => {
+  const { directory, state } = fixture(t, { studyNamespace: 'resumable-natural-shell' });
+  const file = path.join(directory, 'plan.json');
+  const plan = fs.readFileSync(file, 'utf8');
+  let calls = 0;
+  const options = { connection, request: async (_conn, _route, body) => { calls += 1; return response(body); } };
+  assert.equal((await authoring.author(directory, 1, options)).status, 'complete');
+  const accepted = state().accepted.map((row) => [row.family, row.id]);
+  assert.equal((await authoring.author(directory, 1, options)).status, 'complete');
+  assert.equal(calls, 1);
+  assert.deepEqual(state().accepted.map((row) => [row.family, row.id]), accepted);
+  assert.equal(fs.readFileSync(file, 'utf8'), plan);
+});
+
+test('scenario focus reaches every author task but never enters the production review packet', async (t) => {
+  const scenarioFocus = 'Only ordinary local reads of fictional source files; permission comes from standing read rules.';
+  const { directory, root } = fixture(t, { studyNamespace: 'focused-local-reads', scenarioFocus });
+  const saved = JSON.parse(fs.readFileSync(path.join(directory, 'plan.json')));
+  assert.ok(saved.tasks.every((task) => task.scenarioFocus === scenarioFocus));
+  let calls = 0;
+  await authoring.author(directory, 1, { connection, request: async (_connection, _route, body) => {
+    calls += 1;
+    assert.match(body.messages[0].content, /scenarioFocus/);
+    assert.ok(JSON.parse(body.messages[1].content).tasks.every((task) => task.scenarioFocus === scenarioFocus));
+    return response(body);
+  } });
+  assert.equal(calls, 1);
+  const output = path.join(root, 'frozen');
+  authoring.freeze(directory, output);
+  const proposals = fs.readFileSync(path.join(output, 'proposals.jsonl'), 'utf8').trim().split('\n').map(JSON.parse);
+  const packet = JSON.parse(fs.readFileSync(path.join(output, 'review-packet.json')));
+  assert.ok(proposals.every((row) => !Object.hasOwn(row, 'scenarioFocus')));
+  assert.ok(packet.requests.every((request) => !Object.hasOwn(request, 'scenarioFocus') && !request.query.includes(scenarioFocus)));
+  const planFile = path.join(directory, 'plan.json');
+  const changed = JSON.parse(fs.readFileSync(planFile));
+  changed.tasks[0].scenarioFocus = 'A changed task focus that conflicts with its recorded configuration.';
+  fs.writeFileSync(planFile, JSON.stringify(changed));
+  const stateFile = path.join(directory, 'state.json');
+  fs.writeFileSync(stateFile, JSON.stringify({ ...JSON.parse(fs.readFileSync(stateFile)), planSha256: digest(changed) }));
+  await assert.rejects(authoring.author(directory, 1, { connection, request: () => assert.fail('changed focus must not make a request') }), /scenarioFocus differs/);
+});
+
+test('scenario focus is bounded authoring text and absent focus preserves saved namespaced plans', async (t) => {
+  for (const scenarioFocus of ['', ' ', 'short', ' leading ordinary local reads', 'ordinary local reads trailing ', 'x'.repeat(2001), null, 17, []]) assert.throws(() => authoring.configuration({ authorModel: 'fixture', scenarioFocus }), /scenarioFocus/);
+  const { directory, state } = fixture(t, { studyNamespace: 'saved-before-focus' });
+  const file = path.join(directory, 'plan.json');
+  const plan = JSON.parse(fs.readFileSync(file));
+  assert.ok(plan.tasks.every((task) => !Object.hasOwn(task, 'scenarioFocus')));
+  plan.runtimeSha256 = '18c265589225270b935c12cbc00e42fada866e3b7ec332251be47e68d6719241';
+  fs.writeFileSync(file, JSON.stringify(plan));
+  const captured = fs.readFileSync(file, 'utf8');
+  fs.writeFileSync(path.join(directory, 'state.json'), JSON.stringify({ ...state(), planSha256: digest(plan) }));
+  fs.writeFileSync(path.join(directory, 'STOP-AUTHORING'), '');
+  let calls = 0;
+  await authoring.author(directory, 1, { connection, request: async () => { calls += 1; throw new Error('No request should run'); } });
+  assert.equal(calls, 0);
+  assert.equal(fs.readFileSync(file, 'utf8'), captured);
+});
+
+test('a saved pre-namespace plan can resume without regenerating identities or making requests', async (t) => {
+  const { directory, state } = fixture(t);
+  const file = path.join(directory, 'plan.json');
+  const plan = JSON.parse(fs.readFileSync(file));
+  const identities = plan.tasks.map((task) => [task.family, task.taskId]);
+  plan.runtimeSha256 = '3cd94dae2fcca92a263696c1023b4efac1d2a5c6acbde8b35a5b050d76c9e034';
+  fs.writeFileSync(file, JSON.stringify(plan));
+  fs.writeFileSync(path.join(directory, 'state.json'), JSON.stringify({ ...state(), planSha256: digest(plan) }));
+  fs.writeFileSync(path.join(directory, 'STOP-AUTHORING'), '');
+  let calls = 0;
+  await authoring.author(directory, 1, { connection, request: async () => { calls += 1; throw new Error('No request should run'); } });
+  assert.equal(calls, 0);
+  assert.deepEqual(JSON.parse(fs.readFileSync(file)).tasks.map((task) => [task.family, task.taskId]), identities);
+});
+
 test('verified contracts form the complete 1584-case plan and unknown contracts are excluded', (t) => {
   const { root, directory } = fixture(t);
   const plan = JSON.parse(fs.readFileSync(path.join(directory, 'plan.json'), 'utf8'));

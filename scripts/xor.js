@@ -3,31 +3,23 @@
 
 const { installPlugin } = require('./install-plugin');
 const { migrate } = require('./migrate');
-const { parseSizeArgument } = require('../events/size-command');
-const { sendControl } = require('../pet/control');
-const { readConfig, writeConfig } = require('../xor/lib/config');
+const { handlePreference } = require('./preference');
+const { handlePet } = require('./pet');
+const { runDiagnostics } = require('./debug');
 
 function usage() {
   return `Usage: xor <command>
 
 Commands:
-  install                    Bind the OpenCode plugin and retrieve the Needle Gate
+  install                    Repair OpenCode setup and retrieve the Needle Gate
   migrate                    Move this folder from the retired Protocol and profiles to a Preference
-  pet size <percent|reset>   Persist and apply the Pet size
+  preference [--all]         Edit the folder Preference or global fallback
+  preference --remove        Remove this folder override
+  pet on|off                 Enable or disable the Pet globally
+  pet <percent>|reset        Persist and apply the Pet size
+  debug                      Check the installed OpenCode integration
   help                       Show this help
 `;
-}
-
-async function handlePet(args) {
-  if (args[0] !== 'size' || !args[1] || args.length !== 2) throw new Error('pet size needs reset or a supported percentage');
-  const size = parseSizeArgument(args[1]);
-  if (!size) throw new Error('supported sizes are 60, 75, 90, 100, 115, 135, 160, and 200');
-  const loaded = readConfig();
-  if (loaded.error) throw new Error(`xor configuration is invalid: ${loaded.error.message}`);
-  loaded.config.pet.scale = size.scale;
-  writeConfig(loaded.config);
-  const applied = await sendControl({ action: 'size', scale: size.scale });
-  process.stdout.write(`Pet size set to ${size.percent}%. ${applied ? 'The active Pet resized.' : 'It will apply to the next Pet session.'}\n`);
 }
 
 function handleMigrate() {
@@ -59,6 +51,12 @@ async function main(args = process.argv.slice(2)) {
   if (command === 'help' || command === '--help' || command === '-h') {
     process.stdout.write(usage());
     return;
+  }
+  if (command === 'preference') return handlePreference(args.slice(1));
+  if (command === 'debug' && args.length === 1) {
+    const report = await runDiagnostics();
+    if (!report.ok) process.exitCode = 1;
+    return report;
   }
   if (command === 'pet') return handlePet(args.slice(1));
   if (command === 'migrate' && args.length === 1) return handleMigrate();

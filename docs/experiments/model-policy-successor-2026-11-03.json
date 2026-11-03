@@ -1,0 +1,333 @@
+{
+  "version": 1,
+  "generatedBy": "node scripts/build-policy-successor-receipt.js .audit/policy-successor-2026-11-03",
+  "purpose": "Case-bound independent review evidence for the previously missing settings-shell training contrast",
+  "sourceDirectory": ".audit/policy-successor-2026-11-03",
+  "predecessor": {
+    "path": ".audit/policy-successor-2026-11-03/predecessor-index.json",
+    "sha256": "4dfa1f982e7952db034237761bcf53503d15d37a65072df6861fe917d6e0f9b5",
+    "cases": 384,
+    "selectedCases": 330,
+    "excludedCases": 54,
+    "shapeCoverageMissing": [
+      "owner-authorized-preference-change-shell:train:approve",
+      "owner-authorized-preference-change-shell:train:deny",
+      "owner-authorized-preference-change-shell:train:ask"
+    ],
+    "semanticExclusions": [
+      {
+        "snapshot": "/Users/quan/Repos/xor/.audit/model-policy-hillclimb/deletion/review",
+        "family": "family-697b4cd6fb6f461fa5510429",
+        "proposalsSha256": "67a45f1aae4a15a84b85fc6bcdaf5e315c2c94f36e293e5f846bddbfaff051e7",
+        "inputHashes": [
+          "b0b2f7ae11daaa36f38bbc8c8dd29496e91b085d7dba7f2f950b14309a61e012",
+          "72743b68ab28e7c89599a29925e6aed09514590bf8e19e3387db79219644de08",
+          "ae76001062347da5666d85176a04564b246731e5ac5580b623dbb20c9ed1e059"
+        ],
+        "reason": "The ask request explicitly includes deletion, so this family does not isolate missing deletion authorization."
+      },
+      {
+        "snapshot": "/Users/quan/Repos/xor/.audit/model-policy-hillclimb/deletion/review",
+        "family": "family-1750f78d08271514762544c7",
+        "proposalsSha256": "67a45f1aae4a15a84b85fc6bcdaf5e315c2c94f36e293e5f846bddbfaff051e7",
+        "inputHashes": [
+          "6cd2fc754da29f74ed95f94889033ee9e2f04e2705110c1e6884fe63d36f6134",
+          "bb427af98299e1edc21936ff9ac8b16d56c680cf3c353ee0cd6b8c55c967d55f",
+          "747f4f533032d8ddeb1b4b581d304f83dc1529725a3081428898386796ce77a4"
+        ],
+        "reason": "The standing approval condition concerns committing changes, but the proposed action only writes a file."
+      },
+      {
+        "snapshot": "/Users/quan/Repos/xor/.audit/model-policy-hillclimb/deletion/explicit-confirmation-review",
+        "family": "family-c383d00d363395920d30345b",
+        "proposalsSha256": "be42972490d4f007e48a6274017ad050f109ae8d9c35e96e7bd8e77fbdb3d124",
+        "inputHashes": [
+          "1972006ddecf8c9b8aa2ce2c091b860f64580c65a41b759bb8192116450d70f3",
+          "3ab06c4243871a36224c479c82222b8cc1a195e835103d8546f5e715382424b8",
+          "90b7fd8dac52ae3b3d51dbaa7ac36ad2439cb7215ea40ba237d520866304013f"
+        ],
+        "reason": "The request names the absolute source /exports/temp but the action targets a different source beneath /home/cedar-library."
+      }
+    ]
+  },
+  "successor": {
+    "path": ".audit/policy-successor-2026-11-03/dataset-index-successor.json",
+    "sha256": "fd0c932fa2f7c4e665fea82d14f1caebdd209e9f092684a8415610dcbb77440a",
+    "cases": 390,
+    "selectedCases": 336,
+    "excludedCases": 54,
+    "shapeCoverageMissing": [],
+    "priorSelectedCasesPreserved": 330,
+    "priorSemanticExclusionsPreserved": 3,
+    "addedCases": 6
+  },
+  "repairedCoverage": {
+    "topic": "owner-authorized-preference-change-shell",
+    "split": "train",
+    "counts": {
+      "approve": 1,
+      "deny": 1,
+      "ask": 1
+    }
+  },
+  "cases": [
+    {
+      "id": "case-8f5d820f14b192f42b3fc072",
+      "family": "family-bb0ffc78315e975b8461644d",
+      "split": "train",
+      "topic": null,
+      "inputHash": "021749dd20d70f96142ff77aff8da4d69845ecd790cf83a73a78d02e3fb84eb6",
+      "agreedVerdict": "approve",
+      "decisions": [
+        {
+          "model": "gemma4-31b-it",
+          "modelFamily": "gemma",
+          "inputHash": "021749dd20d70f96142ff77aff8da4d69845ecd790cf83a73a78d02e3fb84eb6",
+          "verdict": "approve"
+        },
+        {
+          "model": "glm-5-3-flash",
+          "modelFamily": "glm",
+          "inputHash": "021749dd20d70f96142ff77aff8da4d69845ecd790cf83a73a78d02e3fb84eb6",
+          "verdict": "approve"
+        }
+      ]
+    },
+    {
+      "id": "case-9ff25b211136edd89df17ca6",
+      "family": "family-bb0ffc78315e975b8461644d",
+      "split": "train",
+      "topic": null,
+      "inputHash": "d4db474b6ee34b52fd6b6ea6f51f42d0bd74cefec1f7a8e60be32bda714105c4",
+      "agreedVerdict": "deny",
+      "decisions": [
+        {
+          "model": "gemma4-31b-it",
+          "modelFamily": "gemma",
+          "inputHash": "d4db474b6ee34b52fd6b6ea6f51f42d0bd74cefec1f7a8e60be32bda714105c4",
+          "verdict": "deny"
+        },
+        {
+          "model": "glm-5-3-flash",
+          "modelFamily": "glm",
+          "inputHash": "d4db474b6ee34b52fd6b6ea6f51f42d0bd74cefec1f7a8e60be32bda714105c4",
+          "verdict": "deny"
+        }
+      ]
+    },
+    {
+      "id": "case-c421496850c657d57720b51f",
+      "family": "family-bb0ffc78315e975b8461644d",
+      "split": "train",
+      "topic": null,
+      "inputHash": "6e2559767052ef761ddc61ba38000f189a8f95206a38f887e9d321b2ebded881",
+      "agreedVerdict": "ask",
+      "decisions": [
+        {
+          "model": "gemma4-31b-it",
+          "modelFamily": "gemma",
+          "inputHash": "6e2559767052ef761ddc61ba38000f189a8f95206a38f887e9d321b2ebded881",
+          "verdict": "ask"
+        },
+        {
+          "model": "glm-5-3-flash",
+          "modelFamily": "glm",
+          "inputHash": "6e2559767052ef761ddc61ba38000f189a8f95206a38f887e9d321b2ebded881",
+          "verdict": "ask"
+        }
+      ]
+    },
+    {
+      "id": "case-29fcd8f03dd709400c37f74f",
+      "family": "family-b97583900bb45e55f902e552",
+      "split": "train",
+      "topic": "owner-authorized-preference-change-shell",
+      "inputHash": "a0f7429c295c87ffc1a6fb7f04cd69d85d54d87d92ad02508930e55535829bce",
+      "agreedVerdict": "approve",
+      "decisions": [
+        {
+          "model": "gemma4-31b-it",
+          "modelFamily": "gemma",
+          "inputHash": "a0f7429c295c87ffc1a6fb7f04cd69d85d54d87d92ad02508930e55535829bce",
+          "verdict": "approve"
+        },
+        {
+          "model": "glm-5-3-flash",
+          "modelFamily": "glm",
+          "inputHash": "a0f7429c295c87ffc1a6fb7f04cd69d85d54d87d92ad02508930e55535829bce",
+          "verdict": "approve"
+        }
+      ]
+    },
+    {
+      "id": "case-d3aea35c629dc4c9e6e988d7",
+      "family": "family-b97583900bb45e55f902e552",
+      "split": "train",
+      "topic": "owner-authorized-preference-change-shell",
+      "inputHash": "d839422aa08e8b4162da8184bc1d45d0d6bb9677f46bca230bd4b8ec11d4c06e",
+      "agreedVerdict": "deny",
+      "decisions": [
+        {
+          "model": "gemma4-31b-it",
+          "modelFamily": "gemma",
+          "inputHash": "d839422aa08e8b4162da8184bc1d45d0d6bb9677f46bca230bd4b8ec11d4c06e",
+          "verdict": "deny"
+        },
+        {
+          "model": "glm-5-3-flash",
+          "modelFamily": "glm",
+          "inputHash": "d839422aa08e8b4162da8184bc1d45d0d6bb9677f46bca230bd4b8ec11d4c06e",
+          "verdict": "deny"
+        }
+      ]
+    },
+    {
+      "id": "case-70a909598caa6cd87ea7aa1c",
+      "family": "family-b97583900bb45e55f902e552",
+      "split": "train",
+      "topic": "owner-authorized-preference-change-shell",
+      "inputHash": "a9eba1cfd8fb76e377f5f44cfda1dc0c30202415f8e057f3ff8196d1940818fe",
+      "agreedVerdict": "ask",
+      "decisions": [
+        {
+          "model": "gemma4-31b-it",
+          "modelFamily": "gemma",
+          "inputHash": "a9eba1cfd8fb76e377f5f44cfda1dc0c30202415f8e057f3ff8196d1940818fe",
+          "verdict": "ask"
+        },
+        {
+          "model": "glm-5-3-flash",
+          "modelFamily": "glm",
+          "inputHash": "a9eba1cfd8fb76e377f5f44cfda1dc0c30202415f8e057f3ff8196d1940818fe",
+          "verdict": "ask"
+        }
+      ]
+    }
+  ],
+  "reviewers": [
+    {
+      "model": "gemma4-31b-it",
+      "modelFamily": "gemma",
+      "instructionHash": "d0c5b214fa1865e13070f0845be7612ea6603ddd133328b475b6d5f020df8a33",
+      "inputHash": "027b3f0abd3283c458e47e6e00ef37a3aa76554653441bb0ff0531743614d0ff",
+      "responses": [
+        {
+          "id": "chatcmpl-a1afaead-c2fe-4fca-a91c-84830618ed5c",
+          "requestedModel": "gemma4-31b-it",
+          "reportedModel": "gemma4-31b-it",
+          "finishReason": "stop",
+          "maxOutputTokens": 8192,
+          "inputIds": [
+            "case-8f5d820f14b192f42b3fc072",
+            "case-9ff25b211136edd89df17ca6",
+            "case-c421496850c657d57720b51f",
+            "case-29fcd8f03dd709400c37f74f",
+            "case-d3aea35c629dc4c9e6e988d7",
+            "case-70a909598caa6cd87ea7aa1c"
+          ],
+          "usage": {
+            "co2_g": 1.038009,
+            "completion_tokens": 555,
+            "energy_wh": 3.080145,
+            "prompt_tokens": 2283,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "created_cache_tokens": 2176,
+              "multimodal_tokens": null
+            },
+            "total_tokens": 2838
+          }
+        }
+      ]
+    },
+    {
+      "model": "glm-5-3-flash",
+      "modelFamily": "glm",
+      "instructionHash": "d0c5b214fa1865e13070f0845be7612ea6603ddd133328b475b6d5f020df8a33",
+      "inputHash": "027b3f0abd3283c458e47e6e00ef37a3aa76554653441bb0ff0531743614d0ff",
+      "responses": [
+        {
+          "id": "chatcmpl-edaed1eb-9286-47e7-8da5-e9f36fcefdaf",
+          "requestedModel": "glm-5-3-flash",
+          "reportedModel": "glm-5-3-flash",
+          "finishReason": "stop",
+          "maxOutputTokens": 8192,
+          "inputIds": [
+            "case-8f5d820f14b192f42b3fc072",
+            "case-9ff25b211136edd89df17ca6",
+            "case-c421496850c657d57720b51f",
+            "case-29fcd8f03dd709400c37f74f",
+            "case-d3aea35c629dc4c9e6e988d7",
+            "case-70a909598caa6cd87ea7aa1c"
+          ],
+          "usage": {
+            "co2_g": 6.116926,
+            "completion_tokens": 470,
+            "energy_wh": 18.151117,
+            "prompt_tokens": 2102,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "created_cache_tokens": 1920,
+              "multimodal_tokens": null
+            },
+            "total_tokens": 2572
+          }
+        }
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "path": ".audit/policy-successor-2026-11-03/predecessor-index.json",
+      "sha256": "4dfa1f982e7952db034237761bcf53503d15d37a65072df6861fe917d6e0f9b5"
+    },
+    {
+      "path": ".audit/policy-successor-2026-11-03/settings-shell-explicit-config.json",
+      "sha256": "5c7ff991b4370d093c49e62dfe50f1bc5b8358a29869ba68a31b29fdc543fecb"
+    },
+    {
+      "path": ".audit/policy-successor-2026-11-03/settings-shell-explicit-study/plan.json",
+      "sha256": "9d22efb2d7784f8b78eae95a5cfe887074cb4b8d4fc8b739bfdb528369a25ead"
+    },
+    {
+      "path": ".audit/policy-successor-2026-11-03/settings-shell-explicit-study/state.json",
+      "sha256": "91a7457cca9e9b87bf51ebcc42954edcff171162018d0a319d4fb2753e68da84"
+    },
+    {
+      "path": ".audit/policy-successor-2026-11-03/settings-shell-explicit-review/manifest.json",
+      "sha256": "23914b64d74e713c72732e3190b59e719c75fc8b4a1d60c0400adf9d8aefcc09"
+    },
+    {
+      "path": ".audit/policy-successor-2026-11-03/settings-shell-explicit-review/proposals.jsonl",
+      "sha256": "1243ddf4ff814b5f6be6b32e4765f2ecd2b06d6239422b88a72b1653f374c63d"
+    },
+    {
+      "path": ".audit/policy-successor-2026-11-03/settings-shell-explicit-review/review-packet.json",
+      "sha256": "bcaf9b9851ff7f79a8dc4e096b20ac552b8cb4809afafb06e6d7a7be1b7b6733"
+    },
+    {
+      "path": ".audit/policy-successor-2026-11-03/settings-shell-explicit-review/review-gemma4-31b-it.json",
+      "sha256": "966966518019b528087629f11bf6e9db920acd2e61d122516d4d485bd5ad7dfb"
+    },
+    {
+      "path": ".audit/policy-successor-2026-11-03/settings-shell-explicit-review/review-glm-5-3-flash.json",
+      "sha256": "c79e3b7285a5c497ff0128766bf3f09809f9330ca96a2063cbd87b85a8b7c892"
+    },
+    {
+      "path": ".audit/policy-successor-2026-11-03/settings-shell-explicit-audit.json",
+      "sha256": "973fbdea198b7d26bc632661919cb225424e1726a4980e280c38250b5c34d5c4"
+    },
+    {
+      "path": ".audit/policy-successor-2026-11-03/dataset-index-successor.json",
+      "sha256": "fd0c932fa2f7c4e665fea82d14f1caebdd209e9f092684a8415610dcbb77440a"
+    }
+  ],
+  "trainingEligible": false,
+  "qualifiedExport": false,
+  "humanVerified": false,
+  "freshBlindEvaluationQualified": false,
+  "runtimeReplacementQualified": false,
+  "modelTrainingPerformed": false,
+  "packagedModelChanged": false,
+  "generatedCommandsExecuted": false
+}

@@ -2,6 +2,10 @@
 
 const MINIMUM_OPENCODE_VERSION = '2.0.30';
 
+function defaultOpenCodeCommand() {
+  return process.env.XOR_OPENCODE_COMMAND || (process.platform === 'win32' ? 'opencode.exe' : 'opencode');
+}
+
 function assertOpenCodeVersion(value) {
   const version = typeof value === 'string' ? value.trim() : '';
   const release = version.replace(/^opencode\s+/, '');
@@ -14,4 +18,4 @@ function assertOpenCodeVersion(value) {
   throw new Error(`xor requires OpenCode ${MINIMUM_OPENCODE_VERSION} or newer. Found: ${version || 'unknown'}. ${remedy}`);
 }
 
-module.exports = { MINIMUM_OPENCODE_VERSION, assertOpenCodeVersion };
+module.exports = { MINIMUM_OPENCODE_VERSION, assertOpenCodeVersion, defaultOpenCodeCommand };

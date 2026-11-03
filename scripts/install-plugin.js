@@ -3,12 +3,12 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
-const { assertOpenCodeVersion } = require('../xor/lib/opencode-version');
+const { assertOpenCodeVersion, defaultOpenCodeCommand } = require('../xor/lib/opencode-version');
 const { buildNativePet } = require('./build-native-pet');
-const { retrieveGate } = require('../xor/lib/gate-artifacts');
+const { retrieveGate, defaultGateRoot } = require('../xor/lib/gate-artifacts');
 
 function defaultPluginsDir() {
-  return path.join(os.homedir(), '.config', 'opencode', 'plugins');
+  return path.join(process.env.XDG_CONFIG_HOME || path.join(os.homedir(), '.config'), 'opencode', 'plugins');
 }
 
 function installEnv() {
@@ -87,7 +87,7 @@ function runCommand(cmd, args, cwd, options = {}) {
       ? 'timed out'
       : `failed with exit ${result.status}`;
     const diagnostic = capture
-      ? redactDiagnostic(result.stderr?.toString() || result.stdout?.toString())
+      ? redactDiagnostic([result.stdout?.toString(), result.stderr?.toString()].filter(Boolean).join('\n'))
       : '';
     const location = cwd ? ' in ' + cwd : '';
     throw new Error(cmd + ' ' + args.join(' ') + ' ' + outcome + location + (diagnostic ? '\n' + diagnostic : ''));
@@ -153,14 +153,31 @@ function verifyStagedPlugin(entry, cwd) {
   runCommand(process.execPath, ['--input-type=module', '-e', script], cwd, { capture: true });
 }
 
-function verifyOpenCode(cwd, command = process.platform === 'win32' ? 'opencode.exe' : 'opencode') {
+function verifyOpenCode(cwd, command = defaultOpenCodeCommand()) {
   const env = installEnv();
   env.XOR_NO_PET = '1';
-  runCommand(command, ['debug', 'config'], cwd, {
+  runCommand(command, ['--standalone', 'debug', 'config'], cwd, {
     capture: true,
     env,
     timeout: 120000,
   });
+}
+
+function verifyStagedSetup(entry, options = {}) {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'xor-setup-check-'));
+  try {
+    const result = runCommand(process.execPath, [path.join(__dirname, 'debug-probe.mjs'), JSON.stringify({
+      entry,
+      root,
+      modelRoot: options.modelRoot || defaultGateRoot(),
+      command: options.command || defaultOpenCodeCommand(),
+      setupOnly: true,
+    })], root, { capture: true, timeout: 50000 });
+    const report = JSON.parse(result.stdout.toString());
+    if (!report.ok) throw new Error('OpenCode could not load the staged XOR plugin.');
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
 }
 
 function replaceInstallation({ stagePackage, stageEntry, packageDir, entry, pluginsDir, verify }) {
@@ -222,7 +239,7 @@ async function installPlugin(opts = {}) {
   }
 
   if (opts.verifyOpenCode === true) {
-    const version = runCommand(opts.openCodeCommand || (process.platform === 'win32' ? 'opencode.exe' : 'opencode'), ['--version'], repoRoot, { capture: true, timeout: 15000 });
+    const version = runCommand(opts.openCodeCommand || defaultOpenCodeCommand(), ['--version'], repoRoot, { capture: true, timeout: 15000 });
     assertOpenCodeVersion(version.stdout.toString());
   }
 
@@ -284,6 +301,7 @@ async function installPlugin(opts = {}) {
     }
 
     verifyStagedPlugin(stageIndex, stageRoot);
+    if (opts.verifyOpenCode === true) verifyStagedSetup(stageIndex, { command: opts.openCodeCommand, modelRoot: opts.gateRoot || opts.verifierRoot });
     replaceInstallation({
       stagePackage,
       packageDir,

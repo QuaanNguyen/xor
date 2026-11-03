@@ -3,7 +3,7 @@
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const { CONFIG_SCHEMA_VERSION, PET_SCALES, configPath, defaultConfigRoot, writeConfig } = require('../xor/lib/config');
+const { CONFIG_SCHEMA_VERSION, configPath, defaultConfigRoot, writeConfig } = require('../xor/lib/config');
 const {
   DEFAULT_PREFERENCE,
   preferencePath,
@@ -32,13 +32,26 @@ function writeJson(file, value) {
   fs.renameSync(temp, file);
 }
 
+function mergeDoneCriteria(groups) {
+  const criteria = new Map();
+  for (const group of groups) {
+    for (const criterion of group) {
+      const previous = criteria.get(criterion.id);
+      if (previous && JSON.stringify(previous) !== JSON.stringify(criterion)) throw new Error(`Completion checks have conflicting definitions for '${criterion.id}'. Nothing was changed.`);
+      criteria.set(criterion.id, criterion);
+    }
+  }
+  return [...criteria.values()];
+}
+
 function retiredDoneCriteria(protocols) {
-  const first = protocols.find(({ source }) => source.exists);
-  if (!first) return [];
-  const criteria = first.source.value.done_criteria;
-  if (criteria === undefined) return [];
-  if (!Array.isArray(criteria)) throw new Error(`done_criteria in ${first.file} must be an array. Nothing was changed.`);
-  return criteria;
+  const groups = protocols.filter(({ source }) => source.exists).map(({ file, source }) => {
+    const criteria = source.value.done_criteria;
+    if (criteria === undefined) return [];
+    if (!Array.isArray(criteria)) throw new Error(`done_criteria in ${file} must be an array. Nothing was changed.`);
+    return criteria;
+  });
+  return mergeDoneCriteria(groups);
 }
 
 function preservedInstructions(sources) {
@@ -53,6 +66,13 @@ function migratePreference(opts = {}) {
 
   const preferenceFile = preferencePath(workdir);
   const preference = readOrThrow(preferenceFile, 'The Preference');
+  const globalFile = path.join(configRoot, 'preference.json');
+  const globalPreference = readOrThrow(globalFile, 'The global Preference');
+  if (globalPreference.exists) {
+    try { validatePreference(globalPreference.value); } catch (error) {
+      throw new Error(`The global Preference at ${globalFile} is invalid (${error.message}). Nothing was changed.`);
+    }
+  }
   const sourcePreference = preference;
   if (sourcePreference.exists) {
     try {
@@ -65,22 +85,28 @@ function migratePreference(opts = {}) {
   const doneCriteria = retiredDoneCriteria(protocols);
   const config = readOrThrow(configPath(configRoot), 'The xor configuration');
   const owner = readOrThrow(ownerPolicy, 'The retired owner policy');
+  if (config.exists && config.value.pet?.scale !== undefined && (!Number.isFinite(config.value.pet.scale) || config.value.pet.scale <= 0)) throw new Error('The saved pet size must be positive and finite. Nothing was changed.');
+  if (config.exists && config.value.pet?.enabled !== undefined && typeof config.value.pet.enabled !== 'boolean') throw new Error('The saved pet enablement must be a boolean. Nothing was changed.');
 
   const report = { preferenceFile, wrotePreference: false, carriedDoneCriteria: 0, removed: [], configFile: null };
 
-  const current = sourcePreference.exists ? sourcePreference.value : { ...DEFAULT_PREFERENCE };
+  const current = sourcePreference.exists ? sourcePreference.value : globalPreference.exists ? globalPreference.value : { ...DEFAULT_PREFERENCE };
   const next = withDefaults(current);
   const previousConfig = { ...config, value: Object.fromEntries(Object.entries(config.value || {}).filter(([key]) => !['schema_version', 'pet'].includes(key))) };
   const instructions = preservedInstructions([...protocols, { source: owner }, { source: previousConfig }]);
   if (instructions) next.text += '\n\nContinue to enforce these previous owner instructions:\n' + instructions;
-  if (!next.done_criteria?.length && doneCriteria.length) {
-    next.done_criteria = doneCriteria;
-    report.carriedDoneCriteria = doneCriteria.length;
+  if ((!sourcePreference.exists || !next.done_criteria.length) && doneCriteria.length) {
+    const previousCount = next.done_criteria.length;
+    next.done_criteria = mergeDoneCriteria([next.done_criteria, doneCriteria]);
+    report.carriedDoneCriteria = next.done_criteria.length - previousCount;
   }
-  if (!preference.exists || report.carriedDoneCriteria || JSON.stringify(preference.value) !== JSON.stringify(next)) {
+  const needsFolderPreference = preference.exists || protocols.some(({ source }) => source.exists) || Boolean(instructions);
+  if (needsFolderPreference && (!preference.exists || report.carriedDoneCriteria || JSON.stringify(preference.value) !== JSON.stringify(next))) {
     writeJson(preferenceFile, next);
     report.wrotePreference = true;
   }
+
+  if (!needsFolderPreference && globalPreference.exists) report.preferenceFile = globalFile;
 
   for (const { file, source } of protocols) {
     if (!source.exists) continue;
@@ -89,8 +115,9 @@ function migratePreference(opts = {}) {
   }
 
   if (config.exists) {
-    const scale = PET_SCALES.includes(config.value.pet?.scale) ? config.value.pet.scale : 1;
-    const petOnly = { schema_version: CONFIG_SCHEMA_VERSION, pet: { scale } };
+    const savedScale = config.value.pet?.scale;
+    const scale = Number.isFinite(savedScale) && savedScale > 0 ? savedScale : 1;
+    const petOnly = { schema_version: CONFIG_SCHEMA_VERSION, pet: { enabled: config.value.pet?.enabled === true, scale } };
     if (JSON.stringify(config.value) !== JSON.stringify(petOnly)) {
       report.configFile = writeConfig(petOnly, configRoot);
     }

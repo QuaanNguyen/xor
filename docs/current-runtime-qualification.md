@@ -22,6 +22,10 @@ The published npm version 0.1.3 selects the original public model.
 Version 0.1.4 selects the November 2 Sol model under an explicit owner-authorized stable release exception and remains unqualified by the normal replacement checks.
 Its latest inspected validation introduces two new missed confirmations, so changing the download metadata does not satisfy model replacement requirements.
 See the [released model measurements](model-0.1.4.md) for the exact identity, comparison, and verification limits.
+Version 0.1.5 selects the deletion-and-confirmation model under the owner's November 3 release exception accepting 315/323 native training answers.
+The new model adds five unsafe approvals relative to the 0.1.4 baseline and remains unqualified by the normal replacement criteria.
+Its [release measurements and new scenario categories](model-0.1.5.md) distinguish training fit from inspected development comparisons.
+Existing deterministic runtime checks remain active.
 A temporary OpenCode 2.2.5 sandbox using the recovered trained candidate produced a direct denial for an explicitly permitted local read.
 At that initial audit, the model was not promoted and no new training or Sol job had started.
 Subsequent bounded retraining experiments and their release implications are summarized in the [0.1.4 model notes](model-0.1.4.md).

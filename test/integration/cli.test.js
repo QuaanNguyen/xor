@@ -11,12 +11,12 @@ function runCli(cliPath, args) {
   return spawnSync(process.execPath, [cliPath, ...args], { encoding: 'utf8' });
 }
 
-test('xor documents install, migrate, and pet size', () => {
+test('xor documents setup repair, Preferences, pet controls, and diagnostics', () => {
   for (const cli of [xorCli]) {
     const result = runCli(cli, ['--help']);
     assert.equal(result.status, 0);
     assert.match(result.stdout, /Usage: xor <command>/);
-    for (const command of ['install', 'migrate', 'pet size']) assert.match(result.stdout, new RegExp(command));
+    for (const command of ['install', 'migrate', 'preference', 'pet on', 'pet <percent>', 'debug']) assert.match(result.stdout, new RegExp(command));
     assert.doesNotMatch(result.stdout, /profile (list|show|create|assign)|project setup/);
   }
 });
