@@ -32,3 +32,13 @@ jobs:
       - run: npm run check:runtime-qualification
       - run: npm test
       - run: npm run test:package
+  trainer-inputs:
+    name: Frozen trainer input checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python test/unit/synthesized-trainer.test.py
+      - run: python -m py_compile scripts/finetune_v3_synthesized.py scripts/preflight-checker-training.py

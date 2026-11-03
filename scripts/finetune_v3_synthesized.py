@@ -1,7 +1,9 @@
 import argparse
 import concurrent.futures
 from concurrent.futures import ThreadPoolExecutor
+from functools import lru_cache
 import json
+import hashlib
 import math
 import os
 import re
@@ -16,7 +18,7 @@ import numpy as np
 try:
     from needle.model.checkpoints import read_adapter, write_adapter
     from needle.model.tokenizer import (
-        get_tokenizer, BOS_ID, EOS_ID, PAD_ID,
+        BOS_ID, EOS_ID, PAD_ID,
         IM_START, IM_END, THINK_START, THINK_END,
         TOOLS_START, TOOLS_END, TOOL_CALL_START, TOOL_CALL_END,
     )
@@ -33,31 +35,6 @@ except ImportError:
     TOOLS_END = "</tools>"
     TOOL_CALL_START = "<tool_call>"
     TOOL_CALL_END = "</tool_call>"
-
-    def get_tokenizer(vocab_size: int = 8192):
-        import sentencepiece as spm
-        model_path = os.environ.get("NEEDLE_TOKENIZER_PATH", "analysis/needle-judge-2026-10-09/artifacts/public-tokenizer/tokenizer.model")
-        if not os.path.exists(model_path):
-            candidates = [
-                "/scratch/qnguye19/needle/tokenizer.model",
-                "/scratch/qnguye19/needle/tokenizer/tokenizer.model",
-                "tokenizer.model",
-            ]
-            for cand in candidates:
-                if os.path.exists(cand):
-                    model_path = cand
-                    break
-        sp = spm.SentencePieceProcessor()
-        sp.Load(model_path)
-        class LocalTokenizer:
-            def __init__(self, processor):
-                self.sp = processor
-                self.vocab_size = processor.GetPieceSize()
-            def encode(self, text: str) -> List[int]:
-                return self.sp.Encode(text, out_type=int)
-            def decode(self, ids: Sequence[int]) -> str:
-                return self.sp.Decode(list(ids))
-        return LocalTokenizer(sp)
 
     def write_adapter(path: str, adapter: Dict[str, Any]) -> None:
         from safetensors.numpy import save_file
@@ -99,7 +76,38 @@ DEFAULT_BASE = "checkpoints/needle3.safetensors"
 PREFIX_BOILERPLATE_TOKENS = 8
 VERDICT_NAMES = ("approve", "deny", "ask")
 VERDICT_INDEX = {name: i for i, name in enumerate(VERDICT_NAMES)}
-VERDICT_LEAD_TOKENS = (478, 462, 2150)
+
+
+def load_pinned_tokenizer(model_path: str, expected_sha256: str, vocab_size: int, archive_path: str, expected_blob_sha256: str):
+    with open(model_path, "rb") as handle:
+        actual = hashlib.sha256(handle.read()).hexdigest()
+    if actual != expected_sha256:
+        raise ValueError(f"Tokenizer digest differs from the study: expected {expected_sha256}, found {actual}")
+    from needle.model.tokenizer import SANTokenizer
+    from needle.model.export import RefTokenizer, parse_tokenizer_blob, read_tokenizer_blob
+    packaged = SANTokenizer(model_path)
+    native_blob = read_tokenizer_blob(archive_path)
+    if hashlib.sha256(native_blob).hexdigest() != expected_blob_sha256:
+        raise ValueError("Native tokenizer blob differs from the frozen study")
+    meta = parse_tokenizer_blob(native_blob)
+    if len(meta['pieces']) > vocab_size or packaged.vocab_size != len(meta['pieces']):
+        raise ValueError("Tokenizer vocabulary differs from the checkpoint vocabulary")
+    if any(packaged.sp.IdToPiece(index) != piece or packaged.sp.GetScore(index) != meta['scores'][index] for index, piece in enumerate(meta['pieces'])):
+        raise ValueError("Training vocabulary or scores differ from the native model tokenizer")
+    tokenizer = RefTokenizer(meta)
+    tokenizer.vocab_size = len(meta['pieces'])
+    tokenizer.pad_token_id = meta['pad_id']
+    tokenizer.eos_token_id = meta['eos_id']
+    tokenizer.bos_token_id = meta['bos_id']
+    tokenizer._bpe = lru_cache(maxsize=32768)(tokenizer._bpe)
+    return tokenizer
+
+
+def decision_token_ids(tokenizer: Any) -> Tuple[int, ...]:
+    pieces = [tokenizer.encode(name) for name in VERDICT_NAMES]
+    if any(not ids for ids in pieces) or len({ids[0] for ids in pieces}) != len(VERDICT_NAMES):
+        raise ValueError("The risk objective requires a distinct first token for each verdict")
+    return tuple(ids[0] for ids in pieces)
 
 
 def training_rng(seed: int) -> np.random.Generator:
@@ -195,6 +203,8 @@ def encode_example(
     class_scale = class_weights.get(verdict, 1.0) if class_weights else 1.0
 
     start_idx, end_idx = locate_decision_token_span(target_ids, decision_ids, prefix_len=PREFIX_BOILERPLATE_TOKENS)
+    if start_idx == end_idx:
+        raise ValueError("The complete verdict token sequence is missing from its training target")
     decision_token_count = max(1, end_idx - start_idx) if start_idx < end_idx else 1
 
     per_token_decision_weight = (
@@ -216,14 +226,14 @@ def encode_example(
 
     ids = [BOS_ID] + prompt_ids + target_ids + [EOS_ID]
     mask = [0.0] * (1 + len(prompt_ids)) + target_weights
+    if len(ids) > max_len:
+        raise ValueError(f"Complete training example needs {len(ids)} tokens and exceeds max_len={max_len}; preserve the query and answer and increase the configured limit")
 
     verdict_token_pos = len(prompt_ids) + start_idx
     verdict_target_id = VERDICT_INDEX.get(verdict, 0)
 
-    ids = ids[:max_len]
-    mask = mask[:max_len]
     pad = max_len - len(ids)
-    return ids + [PAD_ID] * pad, mask + [0.0] * pad, min(verdict_token_pos, max_len - 2), verdict_target_id
+    return ids + [PAD_ID] * pad, mask + [0.0] * pad, verdict_token_pos, verdict_target_id
 
 
 def from_chat(example: Dict[str, Any]) -> Optional[Dict[str, Any]]:
@@ -531,7 +541,8 @@ def finetune_local(args: argparse.Namespace, progress: Optional[Any] = None) -> 
     emit(f"  {'backend':<9} {backend}  float32")
     emit(f"  {'depth':<9} {config.num_layers} layers")
 
-    tokenizer = get_tokenizer(config.vocab_size)
+    tokenizer = load_pinned_tokenizer(args.tokenizer_model, args.tokenizer_sha256, config.vocab_size, args.tokenizer_archive, args.tokenizer_blob_sha256)
+    verdict_leads = decision_token_ids(tokenizer)
     max_len = fit_max_len(data_path, tokenizer, args.max_len)
     seqs, masks, positions, targets, class_weights = load_jsonl(
         data_path,
@@ -590,7 +601,7 @@ def finetune_local(args: argparse.Namespace, progress: Optional[Any] = None) -> 
         [10.0, 0.0, 1.0],
         [5.0, 1.0, 0.0],
     ], dtype=jnp.float32)
-    verdict_tokens_jnp = jnp.array(VERDICT_LEAD_TOKENS, dtype=jnp.int32)
+    verdict_tokens_jnp = jnp.array(verdict_leads, dtype=jnp.int32)
 
     def loss_fn(adapter_weights: Any, token_ids: jnp.ndarray, token_masks: jnp.ndarray, pos: jnp.ndarray, targs: jnp.ndarray) -> jnp.ndarray:
         merged = cq_ste_params(merge_lora(params, adapter_weights, scale), WEIGHT_BITS)
@@ -776,6 +787,10 @@ def main() -> None:
     train_parser.add_argument("--lora-rank", type=int, default=64)
     train_parser.add_argument("--lora-alpha", type=float, default=128.0)
     train_parser.add_argument("--max-len", type=int, default=1024)
+    train_parser.add_argument("--tokenizer-model", required=True)
+    train_parser.add_argument("--tokenizer-sha256", required=True)
+    train_parser.add_argument("--tokenizer-archive", required=True)
+    train_parser.add_argument("--tokenizer-blob-sha256", required=True)
     train_parser.add_argument("--val-split", type=float, default=0.1)
     train_parser.add_argument("--seed", type=int, default=0)
     train_parser.add_argument("--checkpoint-dir", default="checkpoints")
