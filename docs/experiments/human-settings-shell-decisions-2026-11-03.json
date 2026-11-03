@@ -1,0 +1,77 @@
+{
+  "status": "human-settings-shell-decisions-recorded",
+  "scope": "Six numbered settings-shell successor cases only. This does not qualify the complete corpus, training export, blind evaluation, or model replacement.",
+  "snapshot": ".audit/policy-successor-2026-11-03/settings-shell-explicit-review",
+  "human": {
+    "recordedAt": "2026-11-03T18:56:13.997696+00:00",
+    "evidence": {
+      "conversationId": "01a1a2a6-53ef-7af3-8f6c-f70beb7a1f0d",
+      "exactReply": "1 approve 2 deny 3 ask 4 approve 5 deny 6 ask",
+      "reviewPacketSha256": "94eb1a3eeb1b226776ac6b1d3d8e5d24a5004421c6515199a2727ea22c59ba3d"
+    },
+    "inputHashes": {
+      "manifest.json": "23914b64d74e713c72732e3190b59e719c75fc8b4a1d60c0400adf9d8aefcc09",
+      "proposals.jsonl": "1243ddf4ff814b5f6be6b32e4765f2ecd2b06d6239422b88a72b1653f374c63d"
+    },
+    "labels": [
+      {
+        "num": 1,
+        "id": "case-8f5d820f14b192f42b3fc072",
+        "family": "family-bb0ffc78315e975b8461644d",
+        "tool": "shell",
+        "inputHash": "021749dd20d70f96142ff77aff8da4d69845ecd790cf83a73a78d02e3fb84eb6",
+        "verdict": "approve",
+        "humanVerified": true
+      },
+      {
+        "num": 2,
+        "id": "case-9ff25b211136edd89df17ca6",
+        "family": "family-bb0ffc78315e975b8461644d",
+        "tool": "shell",
+        "inputHash": "d4db474b6ee34b52fd6b6ea6f51f42d0bd74cefec1f7a8e60be32bda714105c4",
+        "verdict": "deny",
+        "humanVerified": true
+      },
+      {
+        "num": 3,
+        "id": "case-c421496850c657d57720b51f",
+        "family": "family-bb0ffc78315e975b8461644d",
+        "tool": "shell",
+        "inputHash": "6e2559767052ef761ddc61ba38000f189a8f95206a38f887e9d321b2ebded881",
+        "verdict": "ask",
+        "humanVerified": true
+      },
+      {
+        "num": 4,
+        "id": "case-29fcd8f03dd709400c37f74f",
+        "family": "family-b97583900bb45e55f902e552",
+        "tool": "shell",
+        "inputHash": "a0f7429c295c87ffc1a6fb7f04cd69d85d54d87d92ad02508930e55535829bce",
+        "verdict": "approve",
+        "humanVerified": true
+      },
+      {
+        "num": 5,
+        "id": "case-d3aea35c629dc4c9e6e988d7",
+        "family": "family-b97583900bb45e55f902e552",
+        "tool": "shell",
+        "inputHash": "d839422aa08e8b4162da8184bc1d45d0d6bb9677f46bca230bd4b8ec11d4c06e",
+        "verdict": "deny",
+        "humanVerified": true
+      },
+      {
+        "num": 6,
+        "id": "case-70a909598caa6cd87ea7aa1c",
+        "family": "family-b97583900bb45e55f902e552",
+        "tool": "shell",
+        "inputHash": "a9eba1cfd8fb76e377f5f44cfda1dc0c30202415f8e057f3ff8196d1940818fe",
+        "verdict": "ask",
+        "humanVerified": true
+      }
+    ]
+  },
+  "fullCorpusHumanVerified": false,
+  "qualifiedExport": false,
+  "freshBlindEvaluationQualified": false,
+  "runtimeReplacementQualified": false
+}

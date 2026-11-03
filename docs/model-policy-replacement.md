@@ -112,3 +112,19 @@ Regenerate the compact receipt with `node scripts/build-policy-successor-receipt
 No new example was fitted into the packaged model.
 The successor remains ineligible for normal training or promotion until the separate human, blind, full-product, and runtime requirements are met.
 The missing shell example is repaired as dataset work, while the qualification portion of the dataset ticket stays open.
+
+## Settings-shell human review on November 3
+
+The owner labelled all six exact settings-shell successor cases in the current chat.
+The [new human receipt](experiments/human-settings-shell-decisions-2026-11-03.json) binds those decisions to the frozen manifest, proposals, case identities, families, tools, and production-input hashes.
+It preserves the exact reply and conversation identity.
+The original successor receipt remains unchanged because it describes the evidence available when it was created.
+
+The preparation check validates all six owner labels and still refuses an export because the scoped split and default-Preference coverage is incomplete.
+These labels do not cover every critical case in the combined corpus.
+Fresh blind provenance, full catalog coverage, final export checks, and model replacement evidence remain required.
+No new training or model replacement occurred.
+
+The preparation helper now reuses the exact-input and human-receipt validation already present in local commit `c9af298`, which had not reached merged main.
+Its regression checks reject altered review hashes, missing independent decisions, mismatched human inputs, and missing recorded owner replies.
+This avoids maintaining another preparation path that trusts unbound labels.
