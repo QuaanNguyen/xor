@@ -5,7 +5,7 @@ const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const { assertOpenCodeVersion } = require('../xor/lib/opencode-version');
 const { buildNativePet } = require('./build-native-pet');
-const { retrieveGate } = require('../xor/lib/gate-artifacts');
+const { retrieveGate, defaultGateRoot } = require('../xor/lib/gate-artifacts');
 
 function defaultPluginsDir() {
   return path.join(process.env.XDG_CONFIG_HOME || path.join(os.homedir(), '.config'), 'opencode', 'plugins');
@@ -163,6 +163,23 @@ function verifyOpenCode(cwd, command = process.platform === 'win32' ? 'opencode.
   });
 }
 
+function verifyStagedSetup(entry, options = {}) {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'xor-setup-check-'));
+  try {
+    const result = runCommand(process.execPath, [path.join(__dirname, 'debug-probe.mjs'), JSON.stringify({
+      entry,
+      root,
+      modelRoot: options.modelRoot || defaultGateRoot(),
+      command: options.command || (process.platform === 'win32' ? 'opencode.exe' : 'opencode'),
+      setupOnly: true,
+    })], root, { capture: true, timeout: 50000 });
+    const report = JSON.parse(result.stdout.toString());
+    if (!report.ok) throw new Error('OpenCode could not load the staged XOR plugin.');
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+}
+
 function replaceInstallation({ stagePackage, stageEntry, packageDir, entry, pluginsDir, verify }) {
   const suffix = `${process.pid}-${Date.now()}`;
   const packageBackup = path.join(pluginsDir, `.xor-package-backup-${suffix}`);
@@ -284,6 +301,7 @@ async function installPlugin(opts = {}) {
     }
 
     verifyStagedPlugin(stageIndex, stageRoot);
+    if (opts.verifyOpenCode === true) verifyStagedSetup(stageIndex, { command: opts.openCodeCommand, modelRoot: opts.gateRoot || opts.verifierRoot });
     replaceInstallation({
       stagePackage,
       packageDir,

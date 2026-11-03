@@ -6,7 +6,7 @@ import { spawn } from 'node:child_process';
 import { createInterface } from 'node:readline';
 import { setTimeout as delay } from 'node:timers/promises';
 
-export async function probeInstalledPlugin(context, { entry, receiptFile, fixtureFile }) {
+export async function probeInstalledPlugin(context, { entry, receiptFile, fixtureFile, setupOnly = false }) {
   const receipt = { complete: false, stage: 'import', plugin: entry, loaded: false, registeredHooks: [], allowed: false, read: false, observed: false };
   const hooks = new Map();
   let dispose;
@@ -38,6 +38,12 @@ export async function probeInstalledPlugin(context, { entry, receiptFile, fixtur
     const before = hooks.get('execute.before');
     const after = hooks.get('execute.after');
     if (!before || !after) throw new Error('The installed plugin did not register its action hooks.');
+    if (setupOnly) {
+      receipt.complete = true;
+      receipt.stage = 'ready';
+      save();
+      return receipt;
+    }
     session = await context.session.create({});
     receipt.stage = 'prompt';
     save();
@@ -74,7 +80,9 @@ export async function probeInstalledPlugin(context, { entry, receiptFile, fixtur
 }
 
 
-export async function runProbe({ entry, root, modelRoot, command }) {
+export async function runProbe({ entry, root, modelRoot, command, setupOnly = false }) {
+  fs.mkdirSync(root, { recursive: true });
+  root = fs.realpathSync(root);
   const project = path.join(root, 'project');
   const config = path.join(root, 'config', 'opencode');
   const wrapper = path.join(config, 'plugins', 'xor-diagnostic');
@@ -86,7 +94,7 @@ export async function runProbe({ entry, root, modelRoot, command }) {
   fs.writeFileSync(fixtureFile, 'XOR installation diagnostic.\n');
   fs.writeFileSync(path.join(project, '.xor', 'preference.json'), JSON.stringify({ text: 'Allow reading diagnostic.txt for the XOR installation diagnostic. Do not modify any files.' }) + '\n');
   fs.writeFileSync(path.join(wrapper, 'package.json'), JSON.stringify({ name: 'xor-diagnostic', exports: { '.': './index.mjs' } }) + '\n');
-  fs.writeFileSync(path.join(wrapper, 'index.mjs'), `import { probeInstalledPlugin } from ${JSON.stringify(import.meta.url)}; export default { id: 'xor-diagnostic', setup(context) { setTimeout(() => { void probeInstalledPlugin(context, ${JSON.stringify({ entry, receiptFile, fixtureFile })}); }, 0); } };\n`);
+  fs.writeFileSync(path.join(wrapper, 'index.mjs'), `import { probeInstalledPlugin } from ${JSON.stringify(import.meta.url)}; export default { id: 'xor-diagnostic', setup(context) { setTimeout(() => { void probeInstalledPlugin(context, ${JSON.stringify({ entry, receiptFile, fixtureFile, setupOnly })}); }, 0); } };\n`);
   const password = randomBytes(32).toString('base64url');
   const env = {
     ...process.env,
@@ -101,7 +109,7 @@ export async function runProbe({ entry, root, modelRoot, command }) {
   };
   delete env.XOR_ROOT;
   delete env.OPENCODE_SERVER_PASSWORD;
-  const child = spawn(command, ['serve', '--stdio', '--port', '0'], { cwd: project, env, stdio: ['pipe', 'pipe', 'pipe'], windowsHide: true });
+  const child = spawn(command, ['serve', '--stdio', '--port', '0'], { cwd: project, env, stdio: ['pipe', 'pipe', 'pipe'], shell: process.platform === 'win32' && /\.(cmd|bat)$/i.test(command), windowsHide: true });
   child.stderr.resume();
   const lines = createInterface({ input: child.stdout });
   let childError;
@@ -122,7 +130,8 @@ export async function runProbe({ entry, root, modelRoot, command }) {
       if (child.exitCode !== null || child.signalCode !== null) throw new Error('The private OpenCode server exited before the diagnostic finished.');
       const receipt = fs.existsSync(receiptFile) ? JSON.parse(fs.readFileSync(receiptFile, 'utf8')) : null;
       if (receipt?.complete) {
-        if (receipt.loaded && receipt.allowed && receipt.read && receipt.observed) return { ok: true, detail: 'OpenCode loaded the installed plugin; its native action hooks allowed and observed a harmless file read.' };
+        if (setupOnly && receipt.loaded && !receipt.error) return { ok: true, detail: 'OpenCode loaded the plugin and registered its action hooks.' };
+        if (!setupOnly && receipt.loaded && receipt.allowed && receipt.read && receipt.observed) return { ok: true, detail: 'OpenCode loaded the installed plugin; its native action hooks allowed and observed a harmless file read.' };
         return { ok: false, detail: 'The installed OpenCode action-hook diagnostic failed.', reason: receipt.error || 'The hook receipt is incomplete.' };
       }
       if (url) {
