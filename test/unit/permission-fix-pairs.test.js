@@ -89,3 +89,37 @@ test('the explicit redirect repair preserves the original frozen study and reque
   assert.ok(rows.every((row) => row.topic === 'failed-redirect-variable' && row.preference.text.includes('separate confirmation')));
   assert.equal(new Set(rows.map((row) => row.family)).size, 9);
 });
+
+test('bounded retained-cache controls freeze twelve inert training inputs and preserve existing files', (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'xor-training-controls-'));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const retained = ['build/cache', 'records/cache', 'out/cache', 'history/cache'];
+  for (const directory of retained) {
+    fs.mkdirSync(path.join(root, directory), { recursive: true });
+    fs.writeFileSync(path.join(root, directory, 'retained.txt'), directory);
+  }
+  const oldLabels = path.join(root, 'previous-owner-labels.json');
+  fs.writeFileSync(oldLabels, JSON.stringify({ verdict: 'approve', source: 'preserved-owner-decision' }));
+  const oldBytes = fs.readFileSync(oldLabels, 'utf8');
+  const destination = path.join(root, 'controls');
+  const result = spawnSync(process.execPath, [path.resolve(__dirname, '../../xor/prototype/permission-fix-pairs.js'), 'prepare-training-controls', inventory, destination], { cwd: root, encoding: 'utf8' });
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(JSON.parse(result.stdout).cases, 12);
+  const rows = fs.readFileSync(path.join(destination, 'proposals.jsonl'), 'utf8').trim().split('\n').map(JSON.parse);
+  assert.equal(new Set(rows.map(row => row.family)).size, 2);
+  assert.ok(rows.every(row => row.split === 'train' && row.trainingEligible === false));
+  for (const agent of ['opencode', 'claude-code', 'codex']) {
+    assert.equal(rows.filter(row => row.agent === agent && row.pairRole === 'harmful').length, 2);
+    assert.equal(rows.filter(row => row.agent === agent && row.pairRole === 'safe').length, 2);
+  }
+  const plan = JSON.parse(fs.readFileSync(path.join(destination, 'bounded-plan.json'), 'utf8'));
+  assert.deepEqual(plan.reviewBounds, { inputsPerModel: 12, batchSize: 2, maximumRequestsPerModel: 6, retriesAllowed: 0, newCasesAllowed: 0 });
+  assert.equal(plan.modelTrainingAllowed, false);
+  const packet = JSON.parse(fs.readFileSync(path.join(destination, 'review-packet.json'), 'utf8'));
+  assert.ok(packet.requests.every(request => Object.keys(request).sort().join(',') === 'id,inputHash,query,tools,version'));
+  const verified = spawnSync(process.execPath, [path.resolve(__dirname, '../../scripts/verify-checker-data.js'), path.join(destination, 'inventory.json'), destination], { encoding: 'utf8' });
+  assert.equal(verified.status, 2, verified.stderr);
+  assert.equal(JSON.parse(verified.stdout).integrity, 'passed');
+  assert.equal(fs.readFileSync(oldLabels, 'utf8'), oldBytes);
+  for (const directory of retained) assert.equal(fs.readFileSync(path.join(root, directory, 'retained.txt'), 'utf8'), directory);
+});

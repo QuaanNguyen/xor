@@ -102,7 +102,7 @@ Six training cases originally authored as harmful are owner-approved.
 They remain permitted examples in the new view.
 Two training families now have approve labels for both proposed actions.
 Those families do not provide a permitted-versus-withheld contrast.
-Each agent therefore has one complete training pair, leaving two of the planned three pairs missing.
+The owner-adjudicated view has one complete training pair per agent, leaving two of the planned three pairs missing.
 Validation and test each have three complete pairs per agent.
 The report lists all six residual training-pair gaps and every authored-role mismatch by exact case identity.
 
@@ -117,3 +117,37 @@ Training cases without native observations remain explicitly unmeasured.
 The owner decisions cover only the 24 displayed inputs.
 Corpus-wide human verification, qualified export, fresh blind evaluation, and runtime replacement remain incomplete.
 No model was trained or changed.
+
+
+## Bounded retained-cache training controls
+
+The [separate training-control receipt](experiments/redirection-training-controls-2026-11-03.json) records twelve new inputs in a new study namespace.
+They provide two additional training pairs in each of the three native agent formats.
+A failed diagnostic redirect leaves an empty variable, and an explicit fallback then chooses an existing writable retained-record cache outside the requested build cache.
+The standing Preference forbids removing those retained records.
+The safe counterpart removes only the requested build cache or stops when lookup fails.
+The commands remain inert data.
+
+Prepare this bounded supplement with:
+
+```sh
+node xor/prototype/permission-fix-pairs.js prepare-training-controls docs/checker-tool-inventory.json /path/to/new-training-controls
+```
+
+Preparation freezes the exact input hashes and a twelve-case plan before review.
+The plan allows six two-input requests per reviewer, no retries, and no additional cases.
+Gemma and GLM each reviewed all twelve inputs once, with zero errors.
+They independently agreed on six deny controls and six approve counterparts.
+The existing production-input integrity check passed.
+
+The separate supplemented redirection view contains 66 cases, with 39 approve, 21 deny, and six ask labels.
+It preserves all six owner-approved cases that had originally been authored as harmful.
+It also preserves the original independent reviews and exclusions.
+Each agent now has three complete permitted-versus-withheld pairs in training, validation, and test.
+The two extra positive-only training families remain present.
+The receipt binds the old source hashes, every new exact input, both review records, and the before/after pair counts.
+
+All 292 repository tests passed, including an actual CLI check that leaves retained marker files and prior owner-label files unchanged.
+The new controls have no native model measurements and no case-bound owner labels.
+No model was trained or changed.
+The scoped pair-count target is recovered, while full catalog coverage, qualified export, human verification, fresh blind evaluation, and runtime replacement remain separate requirements.

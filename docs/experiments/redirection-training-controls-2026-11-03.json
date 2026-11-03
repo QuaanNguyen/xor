@@ -1,0 +1,494 @@
+{
+  "version": 1,
+  "date": "2026-11-03",
+  "status": "bounded-training-controls-independently-agreed",
+  "scope": "Two new redirection training pairs per native agent, separate from preserved owner-positive cases",
+  "namespace": "permission-fix-retained-cache-training-controls-v1",
+  "directory": ".audit/permission-fix-retained-cache-controls-2026-11-03",
+  "boundedPlan": {
+    "version": 1,
+    "namespace": "permission-fix-retained-cache-training-controls-v1",
+    "cases": 12,
+    "families": 2,
+    "split": "train",
+    "generatedCommandsExecuted": false,
+    "trainingEligible": false,
+    "modelTrainingAllowed": false,
+    "promotionAllowed": false,
+    "reviewInstructionHash": "d0c5b214fa1865e13070f0845be7612ea6603ddd133328b475b6d5f020df8a33",
+    "reviewers": [
+      {
+        "model": "gemma4-31b-it",
+        "modelFamily": "gemma"
+      },
+      {
+        "model": "glm-5-3-flash",
+        "modelFamily": "glm"
+      }
+    ],
+    "reviewBounds": {
+      "inputsPerModel": 12,
+      "batchSize": 2,
+      "maximumRequestsPerModel": 6,
+      "retriesAllowed": 0,
+      "newCasesAllowed": 0
+    },
+    "sourceSha256": "fb146407b1f8b3c668e58693a5258ca515c4d6716a20085e1fb4a98ca8ebc88d",
+    "frozenInputs": {
+      "inventory.json": "d5efe0d2b315541a58ecf8feee75d0e87e9e895b96e589a489ee7a8b35ff5a5d",
+      "manifest.json": "0c146ec294953a0cb09ce9e623e8a2e3cc84e33e0cfad84a3f567fe66748e840",
+      "proposals.jsonl": "b50dbb6a41cc83eab275a648b1c1b65e7a3eda2c76a135fd4f27078ad1c0e57e",
+      "review-packet.json": "00ced9c342751125183b10c0fedfc5b57be56efd5b4ee7aa1bcef0eb9e7d6729"
+    }
+  },
+  "reviewLimitsObserved": true,
+  "reviews": [
+    {
+      "model": "gemma4-31b-it",
+      "family": "gemma",
+      "decisions": 12,
+      "requests": 6,
+      "errors": 0,
+      "instructionHash": "d0c5b214fa1865e13070f0845be7612ea6603ddd133328b475b6d5f020df8a33",
+      "inputHash": "3a5d9833c111b97d36ad840849e9cffd6576ed9f716509f1e9ca782fd4768a43"
+    },
+    {
+      "model": "glm-5-3-flash",
+      "family": "glm",
+      "decisions": 12,
+      "requests": 6,
+      "errors": 0,
+      "instructionHash": "d0c5b214fa1865e13070f0845be7612ea6603ddd133328b475b6d5f020df8a33",
+      "inputHash": "3a5d9833c111b97d36ad840849e9cffd6576ed9f716509f1e9ca782fd4768a43"
+    }
+  ],
+  "integrity": "passed",
+  "productionBuilderMatches": true,
+  "authoredCases": 12,
+  "independentlyAgreedCases": 12,
+  "excludedCases": 0,
+  "newLabels": {
+    "approve": 6,
+    "deny": 6,
+    "ask": 0
+  },
+  "newCases": [
+    {
+      "id": "case-102a3f3d916f537b44b7c2c5",
+      "family": "family-c3967a1cad29c8049cb4dc43",
+      "agent": "opencode",
+      "tool": "shell",
+      "split": "train",
+      "authoredRole": "harmful",
+      "verdict": "deny",
+      "inputHash": "ef2f4699bfbb0c23a3640935ab330526e9f3728022e14da9018267b0708d92d2"
+    },
+    {
+      "id": "case-59d015d1aac69460abc013d3",
+      "family": "family-c3967a1cad29c8049cb4dc43",
+      "agent": "opencode",
+      "tool": "shell",
+      "split": "train",
+      "authoredRole": "safe",
+      "verdict": "approve",
+      "inputHash": "d98961e82f696cdf2b8a1fe3214ddab41a64d16cb4220e1f43cd4ecdc2a77b51"
+    },
+    {
+      "id": "case-e74a9700861cb33f0fc7d52a",
+      "family": "family-c3967a1cad29c8049cb4dc43",
+      "agent": "claude-code",
+      "tool": "Bash",
+      "split": "train",
+      "authoredRole": "harmful",
+      "verdict": "deny",
+      "inputHash": "b14a8813c641c91c2afd6a65f9e2ae8fc41bf0158c0e299ddf2b4b42acc9bf83"
+    },
+    {
+      "id": "case-af14a3868fdbcfce0732c113",
+      "family": "family-c3967a1cad29c8049cb4dc43",
+      "agent": "claude-code",
+      "tool": "Bash",
+      "split": "train",
+      "authoredRole": "safe",
+      "verdict": "approve",
+      "inputHash": "2512d6dc732cccc0624ea4da4289b4f7306b0deae5681a8aea078493f5902a4a"
+    },
+    {
+      "id": "case-8fedcc8ceb7d6e323afddc58",
+      "family": "family-c3967a1cad29c8049cb4dc43",
+      "agent": "codex",
+      "tool": "exec_command",
+      "split": "train",
+      "authoredRole": "harmful",
+      "verdict": "deny",
+      "inputHash": "3ff9329d9d132bc308ff90d6a78ab4037f5fda6b595e00a4b0df2450a4521b0b"
+    },
+    {
+      "id": "case-c0a7cbff3cc8bfc6a8e3d088",
+      "family": "family-c3967a1cad29c8049cb4dc43",
+      "agent": "codex",
+      "tool": "exec_command",
+      "split": "train",
+      "authoredRole": "safe",
+      "verdict": "approve",
+      "inputHash": "703ef48b5960e4eacb30aaadfbab9d293f95f572a93b0664095345629cfba862"
+    },
+    {
+      "id": "case-648782eaa4b4af64695c1792",
+      "family": "family-87f0af9b2adc838c19a90407",
+      "agent": "opencode",
+      "tool": "shell",
+      "split": "train",
+      "authoredRole": "harmful",
+      "verdict": "deny",
+      "inputHash": "0ed41946eaa4d2e1b1dd00f45f10d741ba5501d26948517d82ca4c30b1a180c4"
+    },
+    {
+      "id": "case-62a875adcc794747a2ef8cf8",
+      "family": "family-87f0af9b2adc838c19a90407",
+      "agent": "opencode",
+      "tool": "shell",
+      "split": "train",
+      "authoredRole": "safe",
+      "verdict": "approve",
+      "inputHash": "e8cdf82987aa8b8b9da6ddbe4a8e84e226bd83f68b9f4cba13d34ef66f84f24f"
+    },
+    {
+      "id": "case-616c639cb6dffe19b3fcad70",
+      "family": "family-87f0af9b2adc838c19a90407",
+      "agent": "claude-code",
+      "tool": "Bash",
+      "split": "train",
+      "authoredRole": "harmful",
+      "verdict": "deny",
+      "inputHash": "338688664786d7eea57793fe2a2c1767f2e4549781dfde5c9053da370e4b8aac"
+    },
+    {
+      "id": "case-a23ca170373727b824f68b66",
+      "family": "family-87f0af9b2adc838c19a90407",
+      "agent": "claude-code",
+      "tool": "Bash",
+      "split": "train",
+      "authoredRole": "safe",
+      "verdict": "approve",
+      "inputHash": "42e9708982091ba0657d3ca1c06254e45128e9687313d885e42b33d9e336a02c"
+    },
+    {
+      "id": "case-194d8d298fd3d8c92c2ece5f",
+      "family": "family-87f0af9b2adc838c19a90407",
+      "agent": "codex",
+      "tool": "exec_command",
+      "split": "train",
+      "authoredRole": "harmful",
+      "verdict": "deny",
+      "inputHash": "30829c1f480639195c53f78670990b71f42880a2f758dc7fcc1a566b649f9ea2"
+    },
+    {
+      "id": "case-4134aae6707fd0bae0eedf88",
+      "family": "family-87f0af9b2adc838c19a90407",
+      "agent": "codex",
+      "tool": "exec_command",
+      "split": "train",
+      "authoredRole": "safe",
+      "verdict": "approve",
+      "inputHash": "46eedd52aee6bc642af36ef02aaf16ca7ebca4cdd1867b2518d1f7779f6ccf93"
+    }
+  ],
+  "previousOwnerPositiveCasesRetained": [
+    {
+      "id": "case-fcb7380270725e2997dea69e",
+      "family": "family-856d64cbc6d496a0fbf9b4d9",
+      "agent": "opencode",
+      "tool": "shell",
+      "inputHash": "d8d6d4378a9f2f3d90c16ab0a1203518d3b66aeeab2e7a57f683e1c7769c2231",
+      "verdict": "approve"
+    },
+    {
+      "id": "case-b27734356b4e63b861ba82a3",
+      "family": "family-856d64cbc6d496a0fbf9b4d9",
+      "agent": "claude-code",
+      "tool": "Bash",
+      "inputHash": "d22d0172599e42b69ba43bd412e1134c171c8850b1855b058fbc5f1c28ac3657",
+      "verdict": "approve"
+    },
+    {
+      "id": "case-416c89afd8b55d4ed28c343a",
+      "family": "family-856d64cbc6d496a0fbf9b4d9",
+      "agent": "codex",
+      "tool": "exec_command",
+      "inputHash": "cbf79277c4ef31870dd717261b26b49de7d79a0982337b6218724a6b22134f7e",
+      "verdict": "approve"
+    },
+    {
+      "id": "case-169db47cb5135fbb6f8bf18b",
+      "family": "family-ab021fe48e342a8640233b28",
+      "agent": "opencode",
+      "tool": "shell",
+      "inputHash": "53c1c3e020b561af47ea7f507c103110e222b429907da8e9bbd01992180c90b7",
+      "verdict": "approve"
+    },
+    {
+      "id": "case-a12b1f1fa9fe364b4f121aa0",
+      "family": "family-ab021fe48e342a8640233b28",
+      "agent": "claude-code",
+      "tool": "Bash",
+      "inputHash": "4054f18adad9957ec2c01a83f4dabcc5a6d4dcb6ae609a81b488c8f7575e4db7",
+      "verdict": "approve"
+    },
+    {
+      "id": "case-a760c3a2ddd47dd935c7f7f7",
+      "family": "family-ab021fe48e342a8640233b28",
+      "agent": "codex",
+      "tool": "exec_command",
+      "inputHash": "6731c9cb4d0b141281816b565eed29ac21bbcbf2673add7d9d02967b3fad68c5",
+      "verdict": "approve"
+    }
+  ],
+  "previousSources": {
+    "docs/experiments/human-redirection-coverage-2026-11-03.json": "8af3a5faa0966ddff6877d4cf36db6de996e65ffcd9123559aa717ea40f3b58d",
+    ".audit/permission-fix-human-adjudication-2026-11-03/human-decisions.json": "3f8bee288d211e79b117d47828c3a0d98a04c9663a9d3822213ceb98d8ad46d1",
+    ".audit/permission-fix-redirect-repair-2026-11-03/manifest.json": "61cc2fdea528e636efd112ec4acb992a75135d273b9d821a158b1e55d9c8edf3",
+    ".audit/permission-fix-redirect-repair-2026-11-03/proposals.jsonl": "b1a90f23778a621d0998a9f962120b5be75c729973c0e55f4b562aadaf6458b0",
+    ".audit/permission-fix-redirect-repair-2026-11-03/completed-reviews/review-gemma4-31b-it.json": "3962029eb1b953bb3bc342e29fc1a00a890bc46ad2df77d93ecfa8ab2242b77a",
+    ".audit/permission-fix-redirect-repair-2026-11-03/completed-reviews/review-glm-5-3-flash.json": "8f082f962f902b926dafeb2e25746764f19727ea5d80c0f7e14088d194da7b0c",
+    ".audit/permission-fix-pairs-2026-11-03/manifest.json": "58a51684b1a1a390c285d74f69c6e505d30a90b66407cae16016af804ea928f1",
+    ".audit/permission-fix-pairs-2026-11-03/proposals.jsonl": "6b8a1b21e47f1d724bc67b851ee7a34105b67ba9de3b3a5302bb8ac3b46d2805"
+  },
+  "oldIndependentQuarantineCases": 24,
+  "oldIndependentQuarantineUnchanged": true,
+  "beforeCoverage": {
+    "opencode": {
+      "train": {
+        "plannedPairs": 3,
+        "completePairs": 1,
+        "missingPairs": 2,
+        "completeFamilies": [
+          "family-213d03af583f7c8dd8bd6c4c"
+        ]
+      },
+      "validation": {
+        "plannedPairs": 3,
+        "completePairs": 3,
+        "missingPairs": 0,
+        "completeFamilies": [
+          "family-3e36c87e39112d8d13821d2c",
+          "family-01ea320889c8034dd99b9fe4",
+          "family-a14f5137a1132043de37cc4a"
+        ]
+      },
+      "test": {
+        "plannedPairs": 3,
+        "completePairs": 3,
+        "missingPairs": 0,
+        "completeFamilies": [
+          "family-1e106df789e7ee15bdd51607",
+          "family-939553203d540365226123e1",
+          "family-1c8119eb77044604744f57ac"
+        ]
+      }
+    },
+    "claude-code": {
+      "train": {
+        "plannedPairs": 3,
+        "completePairs": 1,
+        "missingPairs": 2,
+        "completeFamilies": [
+          "family-213d03af583f7c8dd8bd6c4c"
+        ]
+      },
+      "validation": {
+        "plannedPairs": 3,
+        "completePairs": 3,
+        "missingPairs": 0,
+        "completeFamilies": [
+          "family-3e36c87e39112d8d13821d2c",
+          "family-01ea320889c8034dd99b9fe4",
+          "family-a14f5137a1132043de37cc4a"
+        ]
+      },
+      "test": {
+        "plannedPairs": 3,
+        "completePairs": 3,
+        "missingPairs": 0,
+        "completeFamilies": [
+          "family-1e106df789e7ee15bdd51607",
+          "family-939553203d540365226123e1",
+          "family-1c8119eb77044604744f57ac"
+        ]
+      }
+    },
+    "codex": {
+      "train": {
+        "plannedPairs": 3,
+        "completePairs": 1,
+        "missingPairs": 2,
+        "completeFamilies": [
+          "family-213d03af583f7c8dd8bd6c4c"
+        ]
+      },
+      "validation": {
+        "plannedPairs": 3,
+        "completePairs": 3,
+        "missingPairs": 0,
+        "completeFamilies": [
+          "family-3e36c87e39112d8d13821d2c",
+          "family-01ea320889c8034dd99b9fe4",
+          "family-a14f5137a1132043de37cc4a"
+        ]
+      },
+      "test": {
+        "plannedPairs": 3,
+        "completePairs": 3,
+        "missingPairs": 0,
+        "completeFamilies": [
+          "family-1e106df789e7ee15bdd51607",
+          "family-939553203d540365226123e1",
+          "family-1c8119eb77044604744f57ac"
+        ]
+      }
+    }
+  },
+  "supplementedCoverage": {
+    "opencode": {
+      "train": {
+        "plannedPairs": 3,
+        "completePairs": 3,
+        "missingPairs": 0,
+        "completeFamilies": [
+          "family-213d03af583f7c8dd8bd6c4c",
+          "family-c3967a1cad29c8049cb4dc43",
+          "family-87f0af9b2adc838c19a90407"
+        ]
+      },
+      "validation": {
+        "plannedPairs": 3,
+        "completePairs": 3,
+        "missingPairs": 0,
+        "completeFamilies": [
+          "family-3e36c87e39112d8d13821d2c",
+          "family-01ea320889c8034dd99b9fe4",
+          "family-a14f5137a1132043de37cc4a"
+        ]
+      },
+      "test": {
+        "plannedPairs": 3,
+        "completePairs": 3,
+        "missingPairs": 0,
+        "completeFamilies": [
+          "family-1e106df789e7ee15bdd51607",
+          "family-939553203d540365226123e1",
+          "family-1c8119eb77044604744f57ac"
+        ]
+      }
+    },
+    "claude-code": {
+      "train": {
+        "plannedPairs": 3,
+        "completePairs": 3,
+        "missingPairs": 0,
+        "completeFamilies": [
+          "family-213d03af583f7c8dd8bd6c4c",
+          "family-c3967a1cad29c8049cb4dc43",
+          "family-87f0af9b2adc838c19a90407"
+        ]
+      },
+      "validation": {
+        "plannedPairs": 3,
+        "completePairs": 3,
+        "missingPairs": 0,
+        "completeFamilies": [
+          "family-3e36c87e39112d8d13821d2c",
+          "family-01ea320889c8034dd99b9fe4",
+          "family-a14f5137a1132043de37cc4a"
+        ]
+      },
+      "test": {
+        "plannedPairs": 3,
+        "completePairs": 3,
+        "missingPairs": 0,
+        "completeFamilies": [
+          "family-1e106df789e7ee15bdd51607",
+          "family-939553203d540365226123e1",
+          "family-1c8119eb77044604744f57ac"
+        ]
+      }
+    },
+    "codex": {
+      "train": {
+        "plannedPairs": 3,
+        "completePairs": 3,
+        "missingPairs": 0,
+        "completeFamilies": [
+          "family-213d03af583f7c8dd8bd6c4c",
+          "family-c3967a1cad29c8049cb4dc43",
+          "family-87f0af9b2adc838c19a90407"
+        ]
+      },
+      "validation": {
+        "plannedPairs": 3,
+        "completePairs": 3,
+        "missingPairs": 0,
+        "completeFamilies": [
+          "family-3e36c87e39112d8d13821d2c",
+          "family-01ea320889c8034dd99b9fe4",
+          "family-a14f5137a1132043de37cc4a"
+        ]
+      },
+      "test": {
+        "plannedPairs": 3,
+        "completePairs": 3,
+        "missingPairs": 0,
+        "completeFamilies": [
+          "family-1e106df789e7ee15bdd51607",
+          "family-939553203d540365226123e1",
+          "family-1c8119eb77044604744f57ac"
+        ]
+      }
+    }
+  },
+  "targetedMissingTrainingPairsRecovered": true,
+  "scopedRedirectionPlannedPairsComplete": true,
+  "supplementedSelectionCases": 66,
+  "supplementedLabelCounts": {
+    "approve": 39,
+    "deny": 21,
+    "ask": 6
+  },
+  "priorOwnerLabelsChanged": false,
+  "oldInputsChanged": false,
+  "oldExclusionsChanged": false,
+  "nativeModelEvaluatedOnNewControls": false,
+  "globalCatalogCoverageQualified": false,
+  "humanVerified": false,
+  "trainingEligible": false,
+  "qualifiedExport": false,
+  "freshBlindEvaluationQualified": false,
+  "runtimeReplacementQualified": false,
+  "modelTrainingPerformed": false,
+  "packagedModelChanged": false,
+  "generatedCommandsExecuted": false,
+  "sources": {
+    "bounded-plan.json": "f39d69c1bc4eee2d2a7ad84eec711766069f223d1bbb795c400048e1f7b0e06c",
+    "prior-sources.json": "1aa7ebeb078ed55dbb62eb197a2941320c34f67ac35ed8390d75ef6421442b08",
+    "inventory.json": "d5efe0d2b315541a58ecf8feee75d0e87e9e895b96e589a489ee7a8b35ff5a5d",
+    "manifest.json": "0c146ec294953a0cb09ce9e623e8a2e3cc84e33e0cfad84a3f567fe66748e840",
+    "proposals.jsonl": "b50dbb6a41cc83eab275a648b1c1b65e7a3eda2c76a135fd4f27078ad1c0e57e",
+    "review-packet.json": "00ced9c342751125183b10c0fedfc5b57be56efd5b4ee7aa1bcef0eb9e7d6729",
+    "review-gemma4-31b-it.json": "72a3e35c60871d76de91f58fcdef3ee45604db7685184493eab77607a3390c10",
+    "review-glm-5-3-flash.json": "bfffdde8eefaeb7caac8a1e801aa82ceb44257f42829571629443d4df2963a0c",
+    "review-report.json": "4da2adfb1605415024864c86463042507158d7a054b6f8aab95c7e854c281360"
+  },
+  "auditSources": {
+    "audit-controls.cjs": "11c8dcb47fb1d3a48b4116391f8125d19de4093e90d4d41c2c4ed8feebf33afb",
+    "supplement-audit.json": "728405d75653ac631a4937c003eef78f2d0b2b02f139f33cb6811d89456bdb52"
+  },
+  "generatorSource": {
+    "path": "xor/prototype/permission-fix-pairs.js",
+    "sha256": "fb146407b1f8b3c668e58693a5258ca515c4d6716a20085e1fb4a98ca8ebc88d"
+  },
+  "tests": {
+    "repositoryTestsPassed": 292,
+    "focusedScenarioTestsPassed": 6,
+    "generatedCommandsExecuted": false
+  }
+}
