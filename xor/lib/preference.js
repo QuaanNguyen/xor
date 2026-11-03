@@ -29,11 +29,16 @@ function fingerprint(contents) {
 }
 
 function readJsonObject(file) {
-  if (!fs.existsSync(file)) return { exists: false, contents: 'missing', value: null, error: null };
   let contents;
   try {
     contents = fs.readFileSync(file, 'utf8');
   } catch (error) {
+    if (error.code === 'ENOENT') {
+      try { fs.lstatSync(file); } catch (statError) {
+        if (statError.code === 'ENOENT') return { exists: false, contents: 'missing', value: null, error: null };
+        return { exists: true, contents: `read-error:${statError.message}`, value: null, error: statError };
+      }
+    }
     return { exists: true, contents: `read-error:${error.message}`, value: null, error };
   }
   try {

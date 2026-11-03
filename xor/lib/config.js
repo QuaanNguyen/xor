@@ -29,12 +29,17 @@ function validateConfig(config) {
 
 function readConfig(root = defaultConfigRoot()) {
   const file = configPath(root);
-  if (!fs.existsSync(file)) return { config: defaultConfig(), file, exists: false, error: null };
   try {
     const saved = validateConfig(JSON.parse(fs.readFileSync(file, 'utf8')));
     const config = { ...saved, schema_version: CONFIG_SCHEMA_VERSION, pet: { ...saved.pet, enabled: saved.pet.enabled === true } };
     return { config, file, exists: true, error: null };
   } catch (error) {
+    if (error.code === 'ENOENT') {
+      try { fs.lstatSync(file); } catch (statError) {
+        if (statError.code === 'ENOENT') return { config: defaultConfig(), file, exists: false, error: null };
+        return { config: null, file, exists: true, error: statError };
+      }
+    }
     return { config: null, file, exists: true, error };
   }
 }

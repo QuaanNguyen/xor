@@ -164,9 +164,13 @@ test('unavailable optional control storage cannot prevent gate startup', async (
   try {
     const config = path.join(root, 'not-a-directory');
     fs.writeFileSync(config, 'unavailable');
+    const workdir = path.join(root, 'project');
+    fs.mkdirSync(path.join(workdir, '.xor'), { recursive: true });
+    fs.writeFileSync(path.join(workdir, '.xor', 'preference.json'), JSON.stringify({ text: 'Permit reading the requested local fixture.' }));
+    fs.writeFileSync(path.join(workdir, 'fixture.txt'), 'Local fixture.');
     for (const forced of ['0', '1']) {
-      const result = spawnSync(process.execPath, ['--input-type=module', '-e', "import { xor } from './plugin/xor.js'; const hook = await xor({ directory: process.cwd() }, { gate: async () => ({ verdict: 'allow' }) }); await hook['tool.execute.before']({ tool: 'read' }, { args: { filePath: 'README.md' } }); console.log('gate operational'); hook.dispose();"], {
-        cwd: project,
+      const result = spawnSync(process.execPath, ['--input-type=module', '-e', `import { xor } from ${JSON.stringify(pathToFileURL(path.join(project, 'plugin/xor.js')).href)}; const hook = await xor({ directory: process.cwd() }, { gate: async () => ({ verdict: 'allow' }) }); await hook['tool.execute.before']({ tool: 'read' }, { args: { filePath: 'fixture.txt' } }); console.log('gate operational'); hook.dispose();`], {
+        cwd: workdir,
         env: { ...process.env, XOR_CONFIG_ROOT: config, XOR_NO_PET: forced },
         encoding: 'utf8',
         timeout: 3000,
