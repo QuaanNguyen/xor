@@ -2,15 +2,7 @@
 
 The owner requested expanding the release pull request to cover the Preference, model-policy, installation, pet, and diagnostic tickets on November 3, 2026.
 
-## Work plan
-
-1. Ground the current CLI, plugin, settings, installation, and model evidence.
-2. Compare designs and choose interfaces for settings and controls.
-3. Implement the agreed design without a separate approval checkpoint.
-4. Verify each feature through its real user entry point and the packed installation.
-5. Revisit the design if implementation reveals conflicting ownership.
-
-## Design
+## Settings and installation
 
 The CLI remains the entry point for owner edits, controls, and diagnosis.
 Preference resolution and live reload remain in the existing Preference module.
@@ -26,13 +18,7 @@ The model continues checking every action when no pet runs.
 The npm lifecycle calls the existing installer, with the explicit install command retained for repair.
 Diagnostics use the installed plugin and native model in an isolated temporary project.
 
-The alternative design concentrated Preferences, pet settings, migration, and installation in a new settings service.
-The selected design extends existing modules because they already own these concerns.
-The alternate design's useful contribution is one shared validation rule for positive finite pet sizes and explicit effective Preference metadata.
-Both architecture candidates used the current session model, as required by the owner profile.
-The architecture cross-judge was omitted because that profile requires the same model for every role.
-
-## Ticket requirements
+## Issue requirements
 
 | Work | Ticket | Completion evidence |
 | --- | --- | --- |
@@ -103,7 +89,9 @@ The policy-replacement audit returned its expected incomplete-qualification stat
 Its regression tests reject mismatched review inputs and unsupported qualification claims.
 The exact packed package installed locally and globally in an isolated profile with OpenCode 2.2.5 and the pinned public model and runner.
 The installed diagnostic returned PASS for required checks and SKIP for the disabled pet.
-No merge, npm publication, or personal installation update was performed.
+Those checks preceded the merge of PR 98.
+PR 99 subsequently passed 340 repository tests and added the final-action guard, local verdict receipts, and the patched desktop dependency.
+See [the runtime guide](post-pr98-enhancements.md) for the current implementation and remaining requirements.
 
 The hosted Windows failures exposed a named-pipe half-close assumption, platform-specific path assertions, and executable test fixtures.
 Pet controls now use bounded newline frames and acknowledgements without relying on client EOF.

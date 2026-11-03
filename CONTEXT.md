@@ -1,86 +1,75 @@
-# xor action gate and companion
+# XOR action gate and companion
 
-xor checks proposed OpenCode tool calls against the user's request and project rules before they run.
-It uses local Needle decisions to approve, deny, or ask for confirmation.
+XOR checks supported coding-agent actions against the user's request and project rules before they run.
+Its local model returns approve, deny, or ask decisions.
 
-The active work prepares reviewed synthetic scenarios and qualifies a replacement Needle model on the Mac.
-No replacement model is qualified.
-Direct answers without model reasoning remain a qualification requirement.
-The desktop companion remains part of the runtime.
+## Language
 
-## Core architecture
-
-### 1. The gate
-
-The gate checks the final decoded action of a registered tool before that tool executes.
-A Verdict applies to one exact tool, argument snapshot, user request, and Preference.
-A rewritten action needs its own check.
-An approval of earlier proposed arguments does not authorize a later replacement.
-
-Folder boundaries and protected settings remain deterministic restrictions.
-An approve decision releases the checked action through OpenCode's remaining permission handling.
-A deny decision withholds the action and explains the governing rule.
-An ask decision withholds the action and returns control to the coding agent to request owner confirmation.
-
-Final Verdict records are local evidence of XOR's release or withholding decision.
-They do not prove that an approved tool completed.
-Denied and unanswered actions retain no raw arguments.
-If required local recording fails, the action remains withheld.
-
-Code Mode's synthesized outer execution is a separate coverage gap.
-Its registered nested tool calls receive their own checks, but checking those calls does not establish a Verdict for the outer wrapper.
-Native plugin implementations remain trusted host code.
-See [the final-action design](docs/final-action-design.md) and [verified scope](docs/final-execution-guard.md) for the implementation and evidence.
-
-### 2. The local Needle model
-- **Decision format**: The target format is direct `approve`, `deny`, or `ask` tool calls.
-  Qualification must establish this behavior for a replacement model.
-- **Checked Inputs**: The gate consumes the exact production request format (version 3): the latest user request, one free-text project Preference, and the complete proposed tool call (including derived read/write paths and network targets for shell commands).
-- **Fail-Closed**: Missing models, unreadable preferences, missing verdicts, or execution timeouts automatically fail-closed into refusals.
-
-### 3. The Desktop Companion (Pet)
-- Sits beside the coding agent and reflects the live event stream emitted by the gate (`calm`, `allowed`, `thinking`, `refused`, `denied`, `suspicious`, `celebrating`).
-- Uses native macOS AppKit / WebKit (`pet/native/`) on Darwin and locked Electron on Windows / Linux.
-- The Pet observes and displays events via a private IPC pipe; it never alters gate decisions.
-
-## Language and Domain Vocabulary
-
-**xor**:
-The verifier product, plugin, and CLI command suite (`xor install`, `xor migrate`, `xor pet size`).
+**XOR**:
+The local action checker, OpenCode plugin, command-line tools, and optional desktop companion.
 
 **Gate**:
-The check that compares a supported tool's final decoded action against the owner Preference and current request before execution.
-The Verdict and actual execution use the same checked action snapshot.
+The check of a supported tool's final decoded action against the current request and Preference.
+The decision applies to the same action that the tool receives.
 
 **Preference**:
-One free-text statement of the user's project rules (canonical location `.xor/preference.json`), defining what actions are permitted, what must be denied, and what requires owner confirmation. Optional `done_criteria` define deterministic completion verification.
+One free-text statement of the owner's project rules.
+A folder Preference takes precedence over the global fallback and built-in default.
 
-**Needle Model (Gate / Gate Engine)**:
-The on-device Cactus Needle model that classifies proposed actions.
+**Needle model**:
+The local model that classifies a proposed action as approve, deny, or ask.
+_Avoid_: Judge, policy authority.
 
 **Verdict**:
-One direct `approve`, `deny`, or `ask` answer returned by the gate.
-- `deny`: Withholds the proposed action because it matches the user preference description for denial.
-- `approve`: Allows the proposed action because it does not match the denial description.
-- `ask`: Withholds the action pending owner confirmation.
+One decision for an exact action, request, and Preference.
+Approve permits the action to proceed, deny withholds it, and ask withholds it pending owner confirmation.
+
+**Final action**:
+The tool and decoded arguments at the point of execution.
+A changed action requires its own check.
+
+**Verdict receipt**:
+A local record of XOR's final decision to release or withhold an action.
+It does not prove that the tool completed or that another permission system approved it.
+
+**Trusted restriction**:
+A runtime rule that uses facts the model cannot establish from the proposed action alone.
+Folder boundaries and protected owner settings remain subject to these rules.
+
+**Companion**:
+The optional desktop pet that displays action-checking events.
+It observes decisions and cannot change them.
 
 **Scenario**:
-A synthetic tuple of (user request, Preference, proposed tool call) used for fine-tuning and evaluating the gate. Generated commands are inert data and never executed.
+A user request, Preference, and proposed tool call used for model training or evaluation.
+Generated commands are data and must never run.
 
 **Family**:
-A cluster of related scenarios and syntactic command variants that are kept together in the same data split to prevent leakage.
+Related scenarios kept in the same data split to prevent training and evaluation overlap.
 
 **Split**:
-Disjoint partitions for training, validation, and frozen blind evaluation.
+A partition of scenarios for training, development validation, or frozen blind evaluation.
 
 **Author**:
-The model responsible for synthesizing diverse, schema-valid tool calls, tasks, and preferences.
+The model that creates scenarios and their intended decisions.
 
-**Independent Review**:
-Evaluating author cases across two distinct model families without access to intended labels; families with disputes or abstentions are quarantined.
+**Independent review**:
+Review by two distinct model families without access to the author's intended decisions.
+Disputed cases remain excluded until resolved.
 
-**Human Verification**:
-Explicit human audit and sign-off on critical safety cases and distribution boundaries.
+**Human verification**:
+The owner's explicit review of critical cases and the limits of the dataset.
+
+**Qualification**:
+Evidence that a dataset, runtime, or model meets its stated acceptance requirements.
+Publishing a package or closing an issue does not establish qualification.
 
 **Promotion**:
-Upgrading the shipped Needle gate only after proving parity or improvement over the baseline on frozen evaluation sets with lower latency or smaller size.
+Replacing the shipped model after it passes the required independent comparisons and safety checks.
+An owner-authorized release exception remains separate from qualification.
+
+## Related records
+
+[Runtime behavior and limits](docs/post-pr98-enhancements.md) describes the supported checks and remaining coverage.
+[Model measurements](docs/model-0.1.5.md) records the 0.1.5 model and its unresolved regressions.
+[Release guide](docs/RELEASING.md) describes package publication.

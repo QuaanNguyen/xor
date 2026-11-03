@@ -4,15 +4,11 @@ A real OpenCode 2.2.5 test reproduced a later-hook rewrite after XOR approved a 
 OpenCode executed the replacement shell call and created a fixed harmless marker.
 The before hook is too early to establish that the checked action is the action that runs.
 
-## Existing flow
+## Reproduced failure
 
-The OpenCode adapter collects the proposed arguments, current user request, and Preference.
-The session applies deterministic boundaries and asks the native gate for a decision.
-The gate owns the process queue, deadlines, cancellation, and complete production-request identity.
-The adapter currently saves its decision before OpenCode finishes the remaining before hooks and decodes the selected tool's arguments.
-A later before hook can therefore change the operation after approval.
-The repository context describes the before hook as the interception point, but it does not establish that this hook sees the final action.
-The real reproduction overrides that assumption.
+The earlier adapter checked proposed arguments before OpenCode finished the remaining before hooks and decoded the tool arguments.
+A later hook could replace the approved action.
+The repaired adapter checks the final decoded action at execution.
 
 ## Chosen ownership
 
@@ -33,23 +29,14 @@ When logging is enabled, an approval that cannot be saved must not release an un
 The owner receives a storage error and can repair storage or explicitly turn logging off.
 A missing record must never be reported as a successful write.
 
-## Alternatives and synthesis
+## Alternatives
 
-Two independent same-model designs considered early freezing, approval caching, duplicate checking, a final executor guard, and an upstream final-execution hook.
-Both selected one check at the decoded executor for registered tools.
-The selected design gives the runtime ownership of both the check and the invocation, avoiding an asynchronous handoff after a final approval.
-The smaller adapter from the other design keeps registry iteration and host details outside policy ownership.
-
-Early freezing does not establish decoded action identity and can break legitimate hooks.
-Approval caching requires invalidation and schema canonicalization across two stages.
-Checking twice adds two decisions and leaves receipt ownership unclear.
-An upstream final-execution hook would cover more host paths but is not an available local plugin change.
-Permission hooks alone do not establish complete arguments for every tool.
-
-The comparison used final-action enforcement, one final receipt, cancellation behavior, reload behavior, and interface simplicity.
-Both designs pass those criteria for registered tools when the real tests pass.
-Neither establishes universal coverage of synthesized tools.
-The user profile requires all roles to inherit the session model, so this comparison did not use a different model family.
+The implementation checks each registered action once at its decoded executor.
+Freezing arguments earlier can interfere with legitimate hooks and does not establish the decoded action.
+Approval caching requires invalidation across two stages.
+Checking twice adds a second model decision and complicates receipt ownership.
+An upstream final-execution hook could cover more host paths, but the local plugin cannot add that host interface.
+Permission hooks do not expose complete arguments for every tool.
 
 ## Compatibility limits
 
