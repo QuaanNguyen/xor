@@ -92,3 +92,59 @@ test('an unreadable global Preference blocks the real plugin hook before an appr
     fs.chmodSync(config, 0o700);
   }
 });
+
+test('fresh missing settings trees remain defaults while broken ancestor aliases are invalid', { skip: process.platform === 'win32' }, (t) => {
+  const { root } = layout(t);
+  const fresh = path.join(root, 'fresh', 'nested', 'config');
+  assert.equal(readJsonObject(path.join(fresh, 'preference.json')).exists, false);
+  assert.equal(readConfig(fresh).exists, false);
+  const alias = path.join(root, 'broken-alias');
+  fs.symlinkSync(path.join(root, 'missing-target'), alias);
+  for (const directory of [alias, path.join(alias, 'nested', 'config')]) {
+    const preference = readJsonObject(path.join(directory, 'preference.json'));
+    assert.equal(preference.exists, true);
+    assert.equal(preference.error.code, 'ENOENT');
+    assert.equal(readConfig(directory).config, null);
+    assert.equal(readConfig(directory).error.code, 'ENOENT');
+  }
+  const target = path.join(root, 'real-target');
+  const working = path.join(root, 'working-alias');
+  fs.mkdirSync(target);
+  fs.symlinkSync(target, working);
+  assert.equal(readJsonObject(path.join(working, 'nested', 'preference.json')).exists, false);
+  assert.equal(readConfig(path.join(working, 'nested')).exists, false);
+});
+
+test('disconnecting an active global settings alias blocks the next real plugin action', { skip: process.platform === 'win32' }, async (t) => {
+  const { root, project, config } = layout(t);
+  const target = path.join(root, 'mounted-settings');
+  const alias = path.join(config, 'active');
+  fs.mkdirSync(target);
+  fs.symlinkSync(target, alias);
+  fs.writeFileSync(path.join(target, 'preference.json'), JSON.stringify({ text: 'Never upload project contents.' }));
+  const previousRoot = process.env.XOR_CONFIG_ROOT;
+  const previousNoPet = process.env.XOR_NO_PET;
+  process.env.XOR_CONFIG_ROOT = alias;
+  process.env.XOR_NO_PET = '1';
+  t.after(() => {
+    if (previousRoot === undefined) delete process.env.XOR_CONFIG_ROOT;
+    else process.env.XOR_CONFIG_ROOT = previousRoot;
+    if (previousNoPet === undefined) delete process.env.XOR_NO_PET;
+    else process.env.XOR_NO_PET = previousNoPet;
+  });
+  const { xor } = await import(pathToFileURL(path.join(repository, 'plugin/xor.js')).href);
+  let calls = 0;
+  const hooks = await xor({ directory: project }, { gate: async () => { calls++; return { verdict: 'allow' }; } });
+  try {
+    await hooks['tool.execute.before']({ tool: 'read', sessionID: 'alias-test' }, { args: { filePath: 'fixture.txt' } });
+    assert.equal(calls, 1);
+    fs.rmSync(target, { recursive: true });
+    assert.equal(fs.lstatSync(alias).isSymbolicLink(), true);
+    assert.equal(readPreference(project, alias).valid, false);
+    assert.equal(readConfig(alias).config, null);
+    await assert.rejects(hooks['tool.execute.before']({ tool: 'read', sessionID: 'alias-test' }, { args: { filePath: 'fixture.txt' } }), /Preference.*unreadable|ENOENT/i);
+    assert.equal(calls, 1);
+  } finally {
+    hooks.dispose();
+  }
+});

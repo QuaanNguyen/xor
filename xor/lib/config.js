@@ -3,6 +3,7 @@
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
+const { readSettingsFile } = require('./settings-file');
 
 const CONFIG_SCHEMA_VERSION = 4;
 const PET_SCALES = Object.freeze([0.6, 0.75, 0.9, 1, 1.15, 1.35, 1.6, 2]);
@@ -30,16 +31,12 @@ function validateConfig(config) {
 function readConfig(root = defaultConfigRoot()) {
   const file = configPath(root);
   try {
-    const saved = validateConfig(JSON.parse(fs.readFileSync(file, 'utf8')));
+    const contents = readSettingsFile(file);
+    if (contents === null) return { config: defaultConfig(), file, exists: false, error: null };
+    const saved = validateConfig(JSON.parse(contents));
     const config = { ...saved, schema_version: CONFIG_SCHEMA_VERSION, pet: { ...saved.pet, enabled: saved.pet.enabled === true } };
     return { config, file, exists: true, error: null };
   } catch (error) {
-    if (error.code === 'ENOENT') {
-      try { fs.lstatSync(file); } catch (statError) {
-        if (statError.code === 'ENOENT') return { config: defaultConfig(), file, exists: false, error: null };
-        return { config: null, file, exists: true, error: statError };
-      }
-    }
     return { config: null, file, exists: true, error };
   }
 }

@@ -4,6 +4,7 @@ const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
 const { defaultConfigRoot } = require('./config');
+const { readSettingsFile } = require('./settings-file');
 
 const DEFAULT_PREFERENCE = Object.freeze({ text: "Act like a normal harness. Follow the user's request without adding restrictions." });
 const LEGACY_DEFAULTS = Object.freeze({ purpose: "Software work in this folder for the user's request.", allow: "Ordinary local reads, edits, and commands inside this folder that serve the user's request.", disallow: "Sending project contents off the machine, and destructive actions the user's request did not ask for.", ask: '' });
@@ -31,14 +32,9 @@ function fingerprint(contents) {
 function readJsonObject(file) {
   let contents;
   try {
-    contents = fs.readFileSync(file, 'utf8');
+    contents = readSettingsFile(file);
+    if (contents === null) return { exists: false, contents: 'missing', value: null, error: null };
   } catch (error) {
-    if (error.code === 'ENOENT') {
-      try { fs.lstatSync(file); } catch (statError) {
-        if (statError.code === 'ENOENT') return { exists: false, contents: 'missing', value: null, error: null };
-        return { exists: true, contents: `read-error:${statError.message}`, value: null, error: statError };
-      }
-    }
     return { exists: true, contents: `read-error:${error.message}`, value: null, error };
   }
   try {
