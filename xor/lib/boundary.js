@@ -3,7 +3,7 @@
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const { PREFERENCE_RELATIVE_PATH, RETIRED_PROTOCOL_RELATIVE_PATHS } = require('./preference');
+const { PREFERENCE_RELATIVE_PATH, RETIRED_PROTOCOL_RELATIVE_PATHS, globalPreferencePath } = require('./preference');
 
 const SUBAGENT_TOOLS = new Set(['task', 'subagent']);
 const DIRECT_WRITE_TOOLS = new Set(['delete', 'remove', 'move', 'rename', 'chmod', 'chown']);
@@ -65,8 +65,9 @@ function locate(value, workdir) {
   return comparable(realRelative);
 }
 
-function touchesPreference(relative) {
-  return PROTECTED_RELATIVE_PATHS.some((protectedPath) => {
+function touchesPreference(relative, workdir) {
+  const globalRelative = relativeInside(realPathOf(path.resolve(workdir)), realPathOf(path.resolve(globalPreferencePath())));
+  return [...PROTECTED_RELATIVE_PATHS, ...(globalRelative === null ? [] : [globalRelative])].some((protectedPath) => {
     const target = comparable(protectedPath);
     return relative === '' || relative === target || target.startsWith(`${relative}/`) || relative.startsWith(`${target}/`);
   });
@@ -101,10 +102,10 @@ function boundaryDecision({ call, workdir }) {
     }
   }
   for (const value of writes) {
-    if (touchesPreference(locate(value, workdir))) {
+    if (touchesPreference(locate(value, workdir), workdir)) {
       return {
         rule: 'preference',
-        reason: `${value} would change the folder Preference`,
+        reason: `${value} would change an owner Preference`,
         alternative: 'Read the Preference without changing it; only the owner edits it.',
       };
     }

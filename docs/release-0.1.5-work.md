@@ -97,7 +97,7 @@ The broader permissive fresh-installation ticket remains linked to that replacem
 
 ## Verification
 
-The full repository suite passed 278 tests.
+The full repository suite passed 284 tests.
 Syntax, package contents, and the generated runtime-evidence audit passed.
 The policy-replacement audit returned its expected incomplete-qualification status after verifying the repaired contrast and saved native counterexamples.
 Its regression tests reject mismatched review inputs and unsupported qualification claims.
@@ -110,3 +110,6 @@ Pet controls now use bounded newline frames and acknowledgements without relying
 The fake benchmark uses a pinned executable and pinned test script with no shell, and production comparisons continue to require the native executable.
 Yarn package-layout checks skip lifecycle setup consistently with the other layout checks.
 Separate packed npm installation tests continue to exercise automatic setup.
+
+The [blast-radius review](pr98-blast-radius.md) records three reproduced regressions and their executable fixes.
+Global owner files are protected even inside the project, unreadable saved rules withhold actions, and control discovery survives filesystem aliases.

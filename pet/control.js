@@ -12,7 +12,12 @@ function controlDirectory(root) {
 }
 
 function controlSocketPath(root = defaultConfigRoot(), id = 'legacy') {
-  const scope = createHash('sha256').update(path.resolve(root)).digest('hex').slice(0, 16);
+  let canonicalRoot;
+  try { canonicalRoot = fs.realpathSync.native(root); } catch (error) {
+    if (error.code !== 'ENOENT') throw error;
+    canonicalRoot = path.resolve(root);
+  }
+  const scope = createHash('sha256').update(canonicalRoot).digest('hex').slice(0, 16);
   return process.platform === 'win32'
     ? `\\\\.\\pipe\\xor-pet-${scope}-${id}`
     : path.join(os.tmpdir().length <= 25 ? os.tmpdir() : '/tmp', `xor-pet-${scope}-${id}.sock`);
@@ -61,10 +66,10 @@ async function sendControl(control, root = defaultConfigRoot()) {
 }
 
 function startControlServer(onControl, root = defaultConfigRoot(), onError = () => {}) {
+  fs.mkdirSync(controlDirectory(root), { recursive: true, mode: 0o700 });
   const id = randomUUID();
   const socket = controlSocketPath(root, id);
   const registry = path.join(controlDirectory(root), id);
-  fs.mkdirSync(controlDirectory(root), { recursive: true, mode: 0o700 });
   const connections = new Set();
   let closed = false;
   let settleReady;
