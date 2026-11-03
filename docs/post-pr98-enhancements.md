@@ -1,20 +1,21 @@
-# Enhancement work after PR 98
+# Runtime checks and remaining requirements
 
 The audit starts from merged PR 98 at `2767fcbbb32684376dcd7a2a9589af2176e27ede`.
 GitHub ticket state and qualification evidence are separate.
 A closed ticket does not establish model or dataset qualification.
 
-## Completed work and remaining requirements
+## Completed work and open issues
 
 PR 98 added folder and global Preference editing, automatic npm setup, optional pet controls, and installed OpenCode diagnostics.
 The [release report](release-0.1.5-work.md) records those features and their original checks.
-This follow-up extends the existing implementations instead of adding another settings, inventory, or review pipeline.
+PR 99 adds final-action checking, local verdict receipts, and reviewed scenario preparation.
+It also updates the desktop dependency lockfile to undici 7.30.1, fixing eight security advisories.
 
 | Work | Ticket | Verified progress | Requirements still open |
 | --- | --- | --- | --- |
 | Withhold actions when checking fails | [83](https://github.com/QuaanNguyen/xor/issues/83) | Runner failures, active-process cancellation, late approvals, bounded folder deadlines, real interruption, registry reload, and post-module-reload execution have checks. | Cancellation of a checker still running at full module disposal and every host startup failure route are not established by these fixtures. |
 | Check the action that runs | [84](https://github.com/QuaanNguyen/xor/issues/84) | Final decoded registered actions are checked once. Real later-hook replacement, complete oversized-input refusal, direct and nested MCP parity, and mixed concurrent verdict routing pass. | Synthesized outer Code Mode execution remains outside the guard. Actual subagent lifecycle coverage remains separate from concurrent-action tests. |
-| Save final verdicts locally | [85](https://github.com/QuaanNguyen/xor/issues/85) | Default-on atomic receipts exclude denied inputs, suppress duplicates, bind exact production context, and support reviewed-candidate preparation. Required storage failures withhold execution. | Universal recording cannot include host execution routes that remain outside the registered-tool guard. |
+| Save final verdicts locally | [85](https://github.com/QuaanNguyen/xor/issues/85), closed | Default-on atomic receipts exclude denied inputs, suppress duplicates, bind exact production context, and support reviewed-candidate preparation. Required storage failures withhold execution. | Complete for final verdicts issued by the registered-tool guard. Host routes outside that guard remain a coverage limit tracked separately. |
 | Add paired shell-permission scenarios | [86](https://github.com/QuaanNguyen/xor/issues/86) | Five patterns have reviewed paired inputs and source-bound native model observations in three real agent formats. Owner decisions and twelve separately reviewed controls restore the redirection pair-count target without changing prior labels. | The new training controls lack native measurements and owner labels. Template overlap, wider human coverage, and training qualification remain separate. |
 | Verify OpenCode compatibility | [87](https://github.com/QuaanNguyen/xor/issues/87) | Real lifecycle fixtures pass on official 2.2.0, 2.2.1, 2.2.2, and installed 2.2.5. Registered final actions and direct and nested MCP have observed checks. | Image, scheduling, goal sessions, and the complete native ask experience retain their specific runtime requirements. |
 | Cover supported tool contracts | [72](https://github.com/QuaanNguyen/xor/issues/72) | The existing inventory now has six additional source-derived image and schedule contracts with native and Code Mode names distinguished. | Other entries retain their earlier inspection dates. Reviewed decision coverage, held-out per-tool results, dynamic catalogs, and unsupported contracts remain incomplete. |
@@ -116,7 +117,7 @@ Existing deterministic restrictions remain active.
 The [successor fitting report](policy-successor-readiness.md) records the 384-case scoped export and its remaining qualification requirements.
 Preparation checks do not authorize the dependent training experiment.
 
-## Review trail
+## Verification records
 
 The [decision log](../.audit/post-pr98.tsv) preserves the ordered experiments, failed observations, corrections, and evidence pointers.
 The [workflow](../.audit/post-pr98.todo.md) records the completion predicate and remaining requirements.

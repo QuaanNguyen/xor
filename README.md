@@ -10,7 +10,7 @@ xor checks supported tools inside that program, but it does not fully check the 
 See the [coverage limits and implementation checks](docs/post-pr98-enhancements.md).
 
 The optional desktop companion shows what your agent is doing.
-It starts off until you enable it.
+It is off by default.
 
 ![xor companion](docs/xor.gif)
 
@@ -185,12 +185,12 @@ node test/run-all-tests.js
 
 | Guide | Description |
 | :--- | :--- |
-| [Project Context](CONTEXT.md) | Architectural background, terms, and conventions |
+| [Project context](CONTEXT.md) | Project terms and their meanings |
 | [Gate Reference](docs/xor-and-gate.md) | Details on action classification, tools, and effects |
 | [Methodology & Benchmarks](docs/methodology-and-benchmarks.md) | Training methods and comparative results |
 | [Training Guide](docs/checker-training.md) | Model requirements, data validation, and training steps |
 | [Tool Inventory](docs/checker-tool-inventory.json) | Pinned tool contracts and explicit coverage gaps |
-| [Post-release work and checks](docs/post-pr98-enhancements.md) | Current implementation, local records, and remaining requirements |
+| [Runtime checks and limits](docs/post-pr98-enhancements.md) | Current implementation, local records, and remaining requirements |
 | [Desktop Companion Events](docs/EVENTS.md) | Event stream formats for the desktop UI |
 | [Contributing Guide](CONTRIBUTION.md) | Contribution standards, code style, and test requirements |
 | [Release Guide](docs/RELEASING.md) | Step-by-step checklist for publishing new versions |
