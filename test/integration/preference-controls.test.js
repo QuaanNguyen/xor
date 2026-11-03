@@ -133,3 +133,20 @@ test('Preference CLI rejects removal of the global fallback and unknown options'
     assert.match(result.stderr, /Usage: xor preference/);
   }
 });
+
+
+test('removing a folder override preserves it when retired instructions make the fallback invalid', (t) => {
+  const context = fixture(t);
+  save(context.folder, { text: 'Current folder instructions.' });
+  save(context.global, { text: 'Valid global instructions.' });
+  const retired = path.join(context.workdir, '.xor', 'protocol.json');
+  save(retired, { task: 'Previous owner instructions.' });
+  const before = fs.readFileSync(context.folder, 'utf8');
+  const result = context.run(['--remove']);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /xor migrate/);
+  assert.match(result.stderr, /Nothing was changed/);
+  assert.equal(fs.readFileSync(context.folder, 'utf8'), before);
+  assert.equal(readPreference(context.workdir, context.configRoot).source, 'file');
+  assert.equal(JSON.parse(fs.readFileSync(retired)).task, 'Previous owner instructions.');
+});

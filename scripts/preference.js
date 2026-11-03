@@ -10,6 +10,7 @@ const {
   globalPreferencePath,
   preferencePath,
   readJsonObject,
+  readFallbackPreference,
   readPreference,
   validatePreference,
   withDefaults,
@@ -36,10 +37,8 @@ function handlePreference(args = [], options = {}) {
   if (saved.error) throw new Error(`The Preference at ${file} is unreadable: ${saved.error.message}. Nothing was changed.`);
   if (saved.exists) validatePreference(saved.value);
   if (remove) {
-    const fallbackFile = globalPreferencePath(configRoot);
-    const fallback = readJsonObject(fallbackFile);
-    if (fallback.error) throw new Error(`The global Preference at ${fallbackFile} is unreadable: ${fallback.error.message}. Nothing was changed.`);
-    if (fallback.exists) validatePreference(fallback.value);
+    const fallback = readFallbackPreference(workdir, configRoot);
+    if (!fallback.valid) throw new Error(`${fallback.reason}. Nothing was changed.`);
     fs.rmSync(file, { force: true });
     const state = readPreference(workdir, configRoot);
     output.write(`${saved.exists ? 'Removed' : 'No'} folder Preference at ${file}.\nEffective Preference: ${effectiveSource(state)}.\n`);

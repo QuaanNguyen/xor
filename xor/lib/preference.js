@@ -105,6 +105,11 @@ function readPreference(workdir, configRoot = defaultConfigRoot()) {
   const file = preferencePath(workdir);
   const source = readJsonObject(file);
   if (source.exists) return savedPreference(file, 'file', source);
+  return readFallbackPreference(workdir, configRoot);
+}
+
+function readFallbackPreference(workdir, configRoot = defaultConfigRoot()) {
+  const file = preferencePath(workdir);
   const retired = retiredDoneCriteria(workdir);
   const print = fingerprint(`${file}\0${retired.contents}`);
   if (retired.error) return { valid: false, fingerprint: print, file: retired.file, preference: null, reason: `the retired Protocol at ${retired.file} is unreadable: ${retired.error.message}` };
@@ -156,6 +161,7 @@ module.exports = {
   preferencePath,
   preferenceText,
   readJsonObject,
+  readFallbackPreference,
   readPreference,
   retiredProtocolPaths,
   validatePreference,
