@@ -97,7 +97,7 @@ The broader permissive fresh-installation ticket remains linked to that replacem
 
 ## Verification
 
-The full repository suite passed 284 tests.
+The full repository suite passed 286 tests.
 Syntax, package contents, and the generated runtime-evidence audit passed.
 The policy-replacement audit returned its expected incomplete-qualification status after verifying the repaired contrast and saved native counterexamples.
 Its regression tests reject mismatched review inputs and unsupported qualification claims.
@@ -113,3 +113,5 @@ Separate packed npm installation tests continue to exercise automatic setup.
 
 The [blast-radius review](pr98-blast-radius.md) records three reproduced regressions and their executable fixes.
 Global owner files are protected even inside the project, unreadable saved rules withhold actions, and control discovery survives filesystem aliases.
+
+The saved-settings reader also distinguishes genuinely missing directories from disconnected directory aliases, with shared handling for global rules and pet settings.

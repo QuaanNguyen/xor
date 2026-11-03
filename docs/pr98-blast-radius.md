@@ -19,13 +19,14 @@ The real installed native smoke checks remain distinct from those cache tests.
 
 | Finding | Trigger and likelihood | Cost | Owning code | Proof |
 | --- | --- | --- | --- | --- |
-| Global owner rules could be overwritten | The global settings file lies within the opened project, including an opened home folder or custom settings directory; conditional but realistic | High: an approved write could replace the owner's rules before the later quarantine | [Owner boundaries](../xor/lib/boundary.js) | The real before-action hook now rejects direct edits, removal, parent-directory moves, and shell writes before the approving model is called; aliases and shadowed global rules are covered |
-| Unreadable global rules became permissive defaults | Directory permission failure or unavailable saved settings; conditional | High: the effective policy silently became permissive | [Preference reads](../xor/lib/preference.js) and [global settings reads](../xor/lib/config.js) | A real permission-denied directory makes the plugin withhold the next action without another model call; cross-platform error injection and dangling-symlink checks cover the read contract |
-| Directory aliases destroyed live control discovery | Plugin and CLI address one settings directory through different filesystem aliases; uncommon | Medium: on/off and resize stop reaching the running plugin until restart | [Companion control discovery](../pet/control.js) | Three real controls through original, alias, and original paths now succeed and preserve the live registry entry, including creation of a new settings directory through an alias |
+| Global owner rules could be overwritten | The global settings file lies within the opened project, including an opened home folder or custom settings directory; conditional but realistic | High: an approved write could replace the owner's rules before the later quarantine | [xor/lib/boundary.js:68](../xor/lib/boundary.js#L68) | The real before-action hook now rejects direct edits, removal, parent-directory moves, and shell writes before the approving model is called; aliases and shadowed global rules are covered |
+| Unreadable global rules became permissive defaults | Directory permission failure or a disconnected settings-directory alias; conditional | High: the effective policy silently became permissive | [xor/lib/settings-file.js:6](../xor/lib/settings-file.js#L6), used by both settings readers | A real permission-denied directory makes the plugin withhold the next action without another model call; cross-platform error injection and disconnected directory-alias checks cover the read contract |
+| Directory aliases destroyed live control discovery | Plugin and CLI address one settings directory through different filesystem aliases; uncommon | Medium: on/off and resize stop reaching the running plugin until restart | [pet/control.js:14](../pet/control.js#L14) | Three real controls through original, alias, and original paths now succeed and preserve the live registry entry, including creation of a new settings directory through an alias |
 
 The protection fix covers the global owner file even when folder rules currently override it.
 Ordinary neighboring project files and reads of the rules remain available to the model.
-Only a genuinely missing file selects default settings.
+Only a genuinely missing file under a valid directory tree selects default settings.
+A disconnected directory alias also withholds the next action.
 The control endpoint uses the canonical existing directory identity.
 
 ## Checked and cleared
@@ -45,7 +46,7 @@ Run `node --test test/integration/global-preference-boundary.test.js test/integr
 The tests invoke the shipped plugin and local socket implementation in isolated directories.
 The permission test uses real filesystem denial where supported and a deterministic read-error check on every platform.
 Run `npm test`, `npm run check`, `npm run check:runtime-qualification`, and `npm run test:package` for the wider consumers.
-The full local suite passed 284 tests after the fixes.
+The full local suite passed 286 tests after the fixes.
 The replacement audit still returns its expected incomplete-qualification status.
 
 ## Review synthesis

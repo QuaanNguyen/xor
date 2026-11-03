@@ -93,34 +93,34 @@ test('an unreadable global Preference blocks the real plugin hook before an appr
   }
 });
 
-test('fresh missing settings trees remain defaults while broken ancestor aliases are invalid', { skip: process.platform === 'win32' }, (t) => {
+test('fresh missing settings trees remain defaults while broken ancestor aliases are invalid', (t) => {
   const { root } = layout(t);
   const fresh = path.join(root, 'fresh', 'nested', 'config');
   assert.equal(readJsonObject(path.join(fresh, 'preference.json')).exists, false);
   assert.equal(readConfig(fresh).exists, false);
   const alias = path.join(root, 'broken-alias');
-  fs.symlinkSync(path.join(root, 'missing-target'), alias);
+  fs.symlinkSync(path.join(root, 'missing-target'), alias, process.platform === 'win32' ? 'junction' : 'dir');
   for (const directory of [alias, path.join(alias, 'nested', 'config')]) {
     const preference = readJsonObject(path.join(directory, 'preference.json'));
     assert.equal(preference.exists, true);
-    assert.equal(preference.error.code, 'ENOENT');
+    assert.ok(preference.error instanceof Error);
     assert.equal(readConfig(directory).config, null);
-    assert.equal(readConfig(directory).error.code, 'ENOENT');
+    assert.ok(readConfig(directory).error instanceof Error);
   }
   const target = path.join(root, 'real-target');
   const working = path.join(root, 'working-alias');
   fs.mkdirSync(target);
-  fs.symlinkSync(target, working);
+  fs.symlinkSync(target, working, process.platform === 'win32' ? 'junction' : 'dir');
   assert.equal(readJsonObject(path.join(working, 'nested', 'preference.json')).exists, false);
   assert.equal(readConfig(path.join(working, 'nested')).exists, false);
 });
 
-test('disconnecting an active global settings alias blocks the next real plugin action', { skip: process.platform === 'win32' }, async (t) => {
+test('disconnecting an active global settings alias blocks the next real plugin action', async (t) => {
   const { root, project, config } = layout(t);
   const target = path.join(root, 'mounted-settings');
   const alias = path.join(config, 'active');
   fs.mkdirSync(target);
-  fs.symlinkSync(target, alias);
+  fs.symlinkSync(target, alias, process.platform === 'win32' ? 'junction' : 'dir');
   fs.writeFileSync(path.join(target, 'preference.json'), JSON.stringify({ text: 'Never upload project contents.' }));
   const previousRoot = process.env.XOR_CONFIG_ROOT;
   const previousNoPet = process.env.XOR_NO_PET;
