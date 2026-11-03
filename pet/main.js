@@ -75,8 +75,8 @@ app.setPath("userData", runtimeDirectory);
 function applyLayout() {
   if (!win || win.isDestroyed()) return;
   const prev = win.getBounds();
-  const width = Math.round(BASE_W * settings.scale);
-  const height = Math.round(WINDOW_H * settings.scale);
+  const width = Math.max(1, Math.round(BASE_W * settings.scale));
+  const height = Math.max(1, Math.round(WINDOW_H * settings.scale));
   const next = {
     width,
     height,
@@ -99,7 +99,7 @@ function setScale(next) {
   settings.scale = s;
   applyLayout();
   if (win && !win.isDestroyed()) {
-    win.webContents.send("xor:scaled", Math.round(s * 100));
+    win.webContents.send("xor:scaled", s * 100);
   }
 }
 
@@ -132,8 +132,8 @@ if (!gotLock) {
   function create() {
     const display = screen.getPrimaryDisplay();
     const area = display.workAreaSize;
-    const w = Math.round(BASE_W * settings.scale);
-    const h = Math.round(WINDOW_H * settings.scale);
+    const w = Math.max(1, Math.round(BASE_W * settings.scale));
+    const h = Math.max(1, Math.round(WINDOW_H * settings.scale));
     const start = G.keepOnScreen(
       {
         width: w,

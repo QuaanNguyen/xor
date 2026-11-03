@@ -13,7 +13,7 @@ struct PetConfig: Decodable {
     let stateAnimations: [String: String]
 
     func clamp(_ value: Double) -> Double {
-        return min(scales.last ?? defaultScale, max(scales.first ?? defaultScale, value))
+        return value.isFinite && value > 0 ? value : defaultScale
     }
 }
 
@@ -473,7 +473,7 @@ final class PetHost: NSObject, WKNavigationDelegate {
         if next == scale { return }
         scale = next
         applyLayout()
-        webView.evaluateJavaScript("(window.__xorScaled)(\(Int(round(scale * 100))))")
+        webView.evaluateJavaScript("(window.__xorScaled)(\(scale * 100))")
     }
 
     private func applyLayout() {

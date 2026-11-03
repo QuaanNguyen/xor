@@ -36,8 +36,7 @@ const xorLibDir = path.join(repoRoot, "xor/lib");
 
 const { createXorAdapter } = require(path.join(xorLibDir, "adapter.js"));
 const { EventBus } = require(path.join(repoRoot, "events/index.js"));
-const { startControlServer } = require(path.join(repoRoot, "pet/control.js"));
-const { PET_SCALES, readConfig } = require(path.join(xorLibDir, "config.js"));
+const { createPetController } = require(path.join(repoRoot, "pet/controller.js"));
 const { createLivePreference } = require(path.join(xorLibDir, "preference.js"));
 const { createNeedleGate } = require(path.join(xorLibDir, "gate.js"));
 
@@ -188,22 +187,12 @@ export const xor = async ({ client, directory }, options = {}) => {
   const livePreference = createLivePreference({ workdir });
   const gate = typeof options?.gate === "function" ? options.gate : (typeof options?.verifier === "function" ? options.verifier : createNeedleGate());
   let preferenceState = livePreference.refresh();
-  const petProcess = launchPet();
-  const bus = new EventBus({
-    sink: petProcess?.stdin
-      ? (event) => petProcess.stdin.write(JSON.stringify(event) + "\n")
-      : null,
+  const bus = new EventBus();
+  const petController = createPetController({
+    bus,
+    launch: options.launchPet || launchPet,
+    onError: (error) => console.error('[xor] Pet settings could not be applied:', error.message),
   });
-  const petControl = petProcess ? startControlServer((control) => {
-    if (control.action !== 'size' || !PET_SCALES.includes(control.scale)) return false;
-    emitPetSize(control.scale);
-    return true;
-  }) : null;
-  const petConfig = readConfig();
-  if (!petConfig.error) {
-    const scale = petConfig.config.pet.scale;
-    emitPetSize(scale);
-  }
   const sessions = new Map();
   const userMessages = new Map();
   const xorFeedback = new Set();
@@ -233,13 +222,6 @@ export const xor = async ({ client, directory }, options = {}) => {
   function publish(out) {
     if (!out || !out.events) return;
     for (const e of out.events) bus.emit(e);
-  }
-
-  function emitPetSize(scale) {
-    bus.emit({
-      type: 'control', status: 'ok', petState: 'calm', summary: `Pet size ${Math.round(scale * 100)}%`,
-      detail: { action: 'size', scale, percent: Math.round(scale * 100) },
-    });
   }
 
   function syncPreference(state, next) {
@@ -304,8 +286,7 @@ export const xor = async ({ client, directory }, options = {}) => {
       }
     }
     bus.close();
-    petControl?.close();
-    petProcess?.stdin?.end();
+    petController.close();
     gate.dispose?.();
   }
 

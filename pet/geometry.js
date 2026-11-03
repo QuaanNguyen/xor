@@ -14,14 +14,13 @@ const DEFAULT_SCALE = config.defaultScale;
 
 function clampScale(s) {
   const n = Number(s);
-  if (!Number.isFinite(n)) return DEFAULT_SCALE;
-  return Math.min(SCALES[SCALES.length - 1], Math.max(SCALES[0], n));
+  return Number.isFinite(n) && n > 0 ? n : DEFAULT_SCALE;
 }
 
 /** New size at this scale, anchored on the current bottom-right corner. */
 function boundsFor(prev, scale) {
-  const width = Math.round(BASE_W * scale);
-  const height = Math.round(BASE_H * scale);
+  const width = Math.max(1, Math.round(BASE_W * scale));
+  const height = Math.max(1, Math.round(BASE_H * scale));
   return {
     width,
     height,

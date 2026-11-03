@@ -1,7 +1,5 @@
 'use strict'
 
-const { scales } = require('./pet-config.json')
-
 function parseSizeArgument(value) {
   const text = String(value || '').trim().toLowerCase()
   if (text === 'reset') return { scale: 1, percent: 100 }
@@ -9,7 +7,7 @@ function parseSizeArgument(value) {
   if (!match) return null
   const percent = Number(match[1])
   const scale = percent / 100
-  if (!scales.includes(scale)) return null
+  if (!Number.isFinite(percent) || percent <= 0 || !Number.isFinite(scale) || scale <= 0) return null
   return { scale, percent }
 }
 
