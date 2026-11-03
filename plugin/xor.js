@@ -185,7 +185,7 @@ function launchPet() {
 export const xor = async ({ client, directory }, options = {}) => {
   const workdir = directory || process.cwd();
   const livePreference = createLivePreference({ workdir });
-  const gate = typeof options?.gate === "function" ? options.gate : (typeof options?.verifier === "function" ? options.verifier : createNeedleGate());
+  const gate = typeof options?.gate === "function" ? options.gate : (typeof options?.verifier === "function" ? options.verifier : createNeedleGate({ workdir }));
   let preferenceState = livePreference.refresh();
   const bus = new EventBus();
   const petController = createPetController({
@@ -251,6 +251,7 @@ export const xor = async ({ client, directory }, options = {}) => {
     state = {
       xor: adapter,
       reviewed: new Set(),
+      activeChecks: new Set(),
       completionPending: true,
       review: null,
       preferenceRevision: next.valid ? next.revision : null,
@@ -266,6 +267,7 @@ export const xor = async ({ client, directory }, options = {}) => {
     userMessages.delete(sessionID);
     const state = sessions.get(sessionID);
     if (!state) return;
+    for (const controller of state.activeChecks) controller.abort();
     try {
       publish(state.xor.end());
     } catch {
@@ -280,6 +282,7 @@ export const xor = async ({ client, directory }, options = {}) => {
     process.removeListener("beforeExit", endSession);
     process.removeListener("exit", endSession);
     for (const state of sessions.values()) {
+      for (const controller of state.activeChecks) controller.abort();
       try {
         publish(state.xor.end());
       } catch {
@@ -431,18 +434,27 @@ export const xor = async ({ client, directory }, options = {}) => {
     },
 
     "tool.execute.before": async (input, output) => {
+      if (ended) throw new Error('xor is stopped. Reload the plugin before running tools.');
       const tool = input.tool || "";
       const args = output?.args || input.args || {};
       const next = refreshPreference();
       if (!next.valid) throw new Error(sessionBlockedMessage(tool, args, blockedReason(next)));
       const state = stateFor(input.sessionID, next);
-      const out = await state.xor.proposedAction({
-        tool,
-        args,
-        userMessage: await latestUserMessage(input.sessionID),
-      });
-      publish(out);
-      if (out.decision !== "allow") throw new Error(out.message);
+      const controller = new AbortController();
+      const signal = input.signal ? AbortSignal.any([controller.signal, input.signal]) : controller.signal;
+      state.activeChecks.add(controller);
+      try {
+        const out = await state.xor.proposedAction({
+          tool,
+          args,
+          signal,
+          userMessage: await latestUserMessage(input.sessionID),
+        });
+        publish(out);
+        if (out.decision !== "allow") throw new Error(out.message);
+      } finally {
+        state.activeChecks.delete(controller);
+      }
     },
 
     "tool.execute.after": async (input, output) => {
@@ -473,8 +485,6 @@ export const xor = async ({ client, directory }, options = {}) => {
 
     event: async ({ event }) => {
       if (!event) return;
-      const next = refreshPreference();
-      if (!next.valid) return;
       let sessionID = sessionIDOf(event);
       if (sessionID) lastActiveSessionID = sessionID;
       else if (event.type === "session.idle" || isIdle(event)) sessionID = lastActiveSessionID;
@@ -482,6 +492,14 @@ export const xor = async ({ client, directory }, options = {}) => {
         releaseSession(sessionID);
         return;
       }
+      const status = (event.properties || event.data || event).status;
+      const statusType = typeof status === "string" ? status : status?.type;
+      if (event.type === "session.error" || ["stopped", "stop", "cancelled", "canceled", "error"].includes(statusType)) {
+        const existing = sessions.get(sessionID || "plugin");
+        for (const controller of existing?.activeChecks || []) controller.abort();
+      }
+      const next = refreshPreference();
+      if (!next.valid) return;
       const state = stateFor(sessionID, next);
       if (event.type === "session.status" && isBusy(event)) {
         state.completionPending = true;
@@ -561,7 +579,7 @@ export default {
     const hooks = await xor({ client: v2Client(ctx), directory }, options);
     await ctx.tool.hook("execute.before", async (event) => {
       await hooks["tool.execute.before"](
-        { tool: event.tool, sessionID: event.sessionID, callID: event.callID },
+        { tool: event.tool, sessionID: event.sessionID, callID: event.callID, signal: event.signal },
         { args: toolInput(event) },
       );
     });

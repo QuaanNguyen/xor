@@ -436,3 +436,46 @@ test('auto-accept preserves each parallel refusal, owner question and allowed ca
     });
   }
 });
+
+
+test('disposing the plugin cancels pending checks even if a custom gate later approves', async () => {
+  await withWorkdir(async (workdir) => {
+    let entered;
+    const checking = new Promise((resolve) => { entered = resolve; });
+    let finish;
+    const gate = async ({ signal }) => {
+      entered(signal);
+      return new Promise((resolve) => { finish = resolve; });
+    };
+    const hooks = await xor({ directory: workdir, client: {} }, { gate });
+    const pending = hooks['tool.execute.before']({ tool: 'read', sessionID: 'cancelled' }, { args: { path: 'notes.txt' } });
+    const rejected = assert.rejects(pending, /cancelled/);
+    const signal = await checking;
+    hooks.dispose();
+    assert.equal(signal.aborted, true);
+    finish({ verdict: 'allow' });
+    await rejected;
+  });
+});
+
+
+test('session deletion cancels an active check even when the Preference becomes invalid', async () => {
+  await withWorkdir(async (workdir) => {
+    let entered;
+    const checking = new Promise((resolve) => { entered = resolve; });
+    let finish;
+    const hooks = await xor({ directory: workdir, client: {} }, { gate: async ({ signal }) => {
+      entered(signal);
+      return new Promise((resolve) => { finish = resolve; });
+    } });
+    const pending = hooks['tool.execute.before']({ tool: 'read', sessionID: 'deleted' }, { args: { path: 'notes.txt' } });
+    const rejected = assert.rejects(pending, /cancelled/);
+    const signal = await checking;
+    writePreference(workdir, '{');
+    await hooks.event({ event: { type: 'session.deleted', properties: { sessionID: 'deleted' } } });
+    assert.equal(signal.aborted, true);
+    finish({ verdict: 'allow' });
+    await rejected;
+    hooks.dispose();
+  });
+});

@@ -27,7 +27,7 @@ function runtimeChecks(root) {
     { check: 'preference_change_quarantine', source: 'plugin', marker: 'quarantinedPreferenceFingerprint', present: 'Current effective Preference text.', missing: 'Before/after setting hashes and observation that a change occurred during an action.' },
     { check: 'preference_validity', source: 'preference', marker: 'valid: false', present: 'Validated Preference prose only.', missing: 'Actual failed read or parse result. An invalid Preference cannot form the current valid request.' },
     { check: 'completion_terminal', source: 'session', marker: "rule: 'completion_terminal'", present: 'Latest user request and proposed tool action.', missing: 'Completion event, actual evidence results, completion criteria, settled claims, and retry history.' },
-    { check: 'model_failure', source: 'gate', marker: 'GATE_TIMEOUT_MS', present: 'A request can be sent only when the model is available.', missing: 'An unavailable, timed-out, or invalid model cannot decide its own failure response. Host failure handling remains necessary.' },
+    { check: 'model_failure', source: 'gate', marker: 'if (result.error)', present: 'A request can be sent only when the model is available.', missing: 'An unavailable, timed-out, or invalid model cannot decide its own failure response. Host failure handling remains necessary.' },
   ];
   return checks.map((item) => {
     const source = sources[item.source];

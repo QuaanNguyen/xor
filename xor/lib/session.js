@@ -158,18 +158,23 @@ function createSession(opts = {}) {
       judgment = { verdict: null, unavailable: true, reason: 'no Gate is configured for this session' };
     } else {
       try {
-        judgment = await gate({ userMessage: event.userMessage || '', preference, call });
+        judgment = await gate({ userMessage: event.userMessage || '', preference, call, signal: event.signal });
       } catch (error) {
         judgment = { verdict: null, reason: `the Gate failed: ${error.message}` };
       }
     }
+    if (event.signal?.aborted) judgment = { ...judgment, verdict: null, reason: 'the Gate check was cancelled' };
     const verdict = judgment?.verdict ?? null;
+    const gateTiming = {};
+    for (const key of ['timeoutMs', 'queueMs', 'checkerMs']) {
+      if (judgment?.[key] !== undefined) gateTiming[key] = judgment[key];
+    }
 
     if (verdict === 'allow') {
       events.push({
         type: 'action', status: 'allow', petState: 'allowed',
         tool: call.tool, summary: truncate(call.summary, 70),
-        detail: { actionId },
+        detail: { actionId, ...gateTiming },
       });
       return { decision: 'allow', events };
     }
@@ -179,11 +184,13 @@ function createSession(opts = {}) {
         tool: call.tool, summary: truncate(`${call.summary} needs the owner`, 60),
         reason: 'The checker requires owner confirmation under the folder Preference',
         rule: 'gate',
-        detail: { actionId },
+        detail: { actionId, ...gateTiming },
       });
       return { decision: 'ask', message: askMessage(call, preference), events };
     }
-    return refuse(call, actionId, events, { ...gateRefusal(judgment || {}), decidedBy: 'Gate' });
+    const out = refuse(call, actionId, events, { ...gateRefusal(judgment || {}), decidedBy: 'Gate' });
+    Object.assign(out.events.at(-1).detail, gateTiming);
+    return out;
   }
 
   function toolAfter(event) {

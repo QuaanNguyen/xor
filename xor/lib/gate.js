@@ -8,11 +8,11 @@ const { spawn } = require('node:child_process');
 const { defaultGateRoot, gateManifest, verifyInstalledGate } = require('./gate-artifacts');
 
 const { preferenceText } = require('./preference');
+const { readGateSettings } = require('./gate-settings');
 
 const GATE_REQUEST_VERSION = '3';
 const VERDICT_BY_TOOL = Object.freeze({ approve: 'allow', deny: 'disallow', ask: 'ask' });
 const NO_ARGUMENTS = Object.freeze({ type: 'object', properties: {}, required: [] });
-const GATE_TIMEOUT_MS = 15000;
 
 function clip(value, limit) {
   const text = String(value || '').replace(/\s+/g, ' ').trim();
@@ -70,20 +70,30 @@ function runnerEnvironment() {
   return env;
 }
 
-function runNeedle(runner, args) {
+function runNeedle(runner, args, abortSignal, timeoutMs) {
   return new Promise((resolve) => {
+    if (abortSignal.aborted) return resolve({ error: 'the Gate check was cancelled' });
     const child = spawn(runner, args, { env: runnerEnvironment(), stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true });
     let stdout = '';
     let stderr = '';
-    const timer = setTimeout(() => child.kill('SIGKILL'), GATE_TIMEOUT_MS);
+    const cancel = () => child.kill('SIGKILL');
+    abortSignal.addEventListener('abort', cancel, { once: true });
+    let timedOut = false;
+    const timer = setTimeout(() => { timedOut = true; cancel(); }, timeoutMs);
+    function cleanup() {
+      clearTimeout(timer);
+      abortSignal.removeEventListener('abort', cancel);
+    }
     child.stdout.on('data', (chunk) => { stdout += chunk; });
     child.stderr.on('data', (chunk) => { stderr += chunk; });
     child.on('error', (error) => {
-      clearTimeout(timer);
+      cleanup();
       resolve({ error: error.message });
     });
     child.on('close', (code, signal) => {
-      clearTimeout(timer);
+      cleanup();
+      if (timedOut) return resolve({ error: `the Gate exceeded its ${timeoutMs}ms time limit` });
+      if (abortSignal.aborted) return resolve({ error: 'the Gate check was cancelled' });
       if (signal) return resolve({ error: `the Gate was stopped by ${signal}` });
       if (code !== 0) return resolve({ error: clip(stderr || `the Gate exited with ${code}`, 200) });
       try {
@@ -98,9 +108,11 @@ function runNeedle(runner, args) {
 function createNeedleGate(opts = {}) {
   const manifest = opts.manifest || gateManifest();
   const root = opts.root || defaultGateRoot();
+  const workdir = opts.workdir || process.cwd();
   let installed = null;
   let toolDir = null;
   let queue = Promise.resolve();
+  const lifetime = new AbortController();
 
   function ensureInstalled() {
     if (installed?.ready) return installed;
@@ -121,6 +133,13 @@ function createNeedleGate(opts = {}) {
   }
 
   async function decide(input) {
+    if (lifetime.signal.aborted || input.signal?.aborted) return { verdict: null, reason: 'the Gate check was cancelled' };
+    let settings;
+    try {
+      settings = readGateSettings(workdir);
+    } catch (error) {
+      return { verdict: null, reason: `the Gate settings could not be applied: ${error.message}` };
+    }
     const ready = ensureInstalled();
     if (!ready.ready) return { verdict: null, unavailable: true, reason: `${ready.reason}. Run xor install` };
     const request = gateRequest(input);
@@ -135,22 +154,31 @@ function createNeedleGate(opts = {}) {
       if (!Number.isInteger(opts.threads) || opts.threads < 1) throw new Error('Gate thread count must be a positive integer');
       args.push('--threads', String(opts.threads));
     }
-    const result = await runNeedle(ready.runner, args);
-    if (result.error) return { verdict: null, reason: result.error };
+    const signal = input.signal ? AbortSignal.any([lifetime.signal, input.signal]) : lifetime.signal;
+    const started = performance.now();
+    const result = await runNeedle(ready.runner, args, signal, settings.timeoutMs);
+    const timing = { timeoutMs: settings.timeoutMs, checkerMs: performance.now() - started };
+    if (result.error) return { verdict: null, reason: result.error, ...timing };
     return {
       verdict: verdictFrom(result.response),
+      ...timing,
       confidence: result.response.confidence ?? null,
       reason: result.response.error || null,
     };
   }
 
   function gate(input) {
-    const next = queue.then(() => decide(input));
+    const queued = performance.now();
+    const next = queue.then(async () => {
+      const queueMs = performance.now() - queued;
+      return { ...await decide(input), queueMs };
+    });
     queue = next.catch(() => {});
     return next;
   }
 
   gate.dispose = () => {
+    lifetime.abort();
     if (toolDir) fs.rmSync(toolDir, { recursive: true, force: true });
     toolDir = null;
   };
