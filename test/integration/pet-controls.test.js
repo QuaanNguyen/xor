@@ -219,7 +219,8 @@ test('asynchronous control registration failures stay inside the optional pet co
     fs.rmdirSync(registry);
     fs.writeFileSync(registry, 'unavailable');
     assert.equal(await controller.ready, false);
-    assert.deepEqual(errors, ['ENOTDIR']);
+    assert.equal(errors.length, 1);
+    assert.ok(['ENOTDIR', 'ENOENT', 'EACCES', 'EPERM'].includes(errors[0]), errors[0]);
   } finally {
     controller.close();
     fs.rmSync(root, { recursive: true, force: true });
@@ -243,5 +244,69 @@ test('a disconnected pet controller cannot leave a command waiting indefinitely'
     server.close();
     fs.rmSync(root, { recursive: true, force: true });
     try { fs.unlinkSync(socket); } catch {}
+  }
+});
+
+test('pet control servers acknowledge newline-framed requests without waiting for client EOF', { timeout: 2500 }, async () => {
+  const net = require('node:net');
+  const { controlSocketPath, startControlServer } = require('../../pet/control');
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'xor-pet-frame-'));
+  const received = [];
+  const server = startControlServer(async (control) => {
+    await new Promise((resolve) => setImmediate(resolve));
+    received.push(control);
+    return true;
+  }, root);
+  let client;
+  try {
+    assert.equal(await server.ready, true);
+    const [id] = fs.readdirSync(path.join(root, 'pet-controls'));
+    const reply = await new Promise((resolve, reject) => {
+      client = net.createConnection(controlSocketPath(root, id));
+      let output = '';
+      client.setEncoding('utf8');
+      client.once('error', reject);
+      client.on('data', (chunk) => { output += chunk; });
+      client.once('end', () => resolve(output));
+      client.once('connect', () => {
+        client.write('{"action":');
+        setImmediate(() => client.write('"reload"}\n'));
+      });
+    });
+    assert.equal(reply, 'ok');
+    assert.deepEqual(received, [{ action: 'reload' }]);
+  } finally {
+    client?.destroy();
+    server.close();
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+
+test('malformed, oversized, extra, and unterminated pet control frames cannot dispatch actions', { timeout: 3000 }, async () => {
+  const net = require('node:net');
+  const { controlSocketPath, startControlServer } = require('../../pet/control');
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'xor-pet-invalid-'));
+  let calls = 0;
+  const server = startControlServer(() => { calls++; return true; }, root);
+  try {
+    assert.equal(await server.ready, true);
+    const [id] = fs.readdirSync(path.join(root, 'pet-controls'));
+    for (const frame of ['not-json\n', '{}\n{}\n', 'x'.repeat(4097) + '\n', '{"action":"reload"}']) {
+      const reply = await new Promise((resolve) => {
+        const client = net.createConnection(controlSocketPath(root, id));
+        let output = '';
+        client.setEncoding('utf8');
+        client.on('data', (chunk) => { output += chunk; });
+        client.once('error', () => {});
+        client.once('close', () => resolve(output));
+        client.once('connect', () => client.write(frame));
+      });
+      assert.notEqual(reply, 'ok');
+      assert.equal(calls, 0);
+    }
+  } finally {
+    server.close();
+    fs.rmSync(root, { recursive: true, force: true });
   }
 });

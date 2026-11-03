@@ -35,10 +35,16 @@ function sendOne(control, root, id) {
       }
       finish(false);
     });
-    socket.once('data', (result) => finish(result.toString() === 'ok'));
+    let reply = '';
+    socket.setEncoding('utf8');
+    socket.on('data', (result) => {
+      reply += result;
+      if (reply === 'ok') finish(true);
+      else if (!'ok'.startsWith(reply)) finish(false);
+    });
     socket.once('end', () => finish(false));
     socket.once('close', () => finish(false));
-    socket.once('connect', () => socket.end(JSON.stringify(control) + '\n'));
+    socket.once('connect', () => socket.write(JSON.stringify(control) + '\n'));
   });
 }
 
@@ -69,16 +75,23 @@ function startControlServer(onControl, root = defaultConfigRoot(), onError = () 
     connection.setTimeout(1000, () => connection.destroy());
     connection.setEncoding('utf8');
     let input = '';
+    let processing = false;
     connection.on('error', () => {});
     connection.on('close', () => connections.delete(connection));
     connection.on('data', (chunk) => {
+      if (processing) return connection.destroy();
       input += chunk;
-      if (input.length > 4096) connection.destroy();
-    });
-    connection.on('end', () => {
-      Promise.resolve().then(() => onControl(JSON.parse(input)))
+      if (Buffer.byteLength(input, 'utf8') > 4096) return connection.destroy();
+      const newline = input.indexOf('\n');
+      if (newline === -1) return;
+      processing = true;
+      if (newline !== input.length - 1) return connection.end('denied');
+      Promise.resolve().then(() => connection.destroyed ? false : onControl(JSON.parse(input.slice(0, newline))))
         .then((accepted) => { if (!connection.destroyed) connection.end(accepted === true ? 'ok' : 'denied'); })
         .catch(() => { if (!connection.destroyed) connection.end('denied'); });
+    });
+    connection.on('end', () => {
+      if (!processing) connection.end('denied');
     });
   });
   server.unref();
