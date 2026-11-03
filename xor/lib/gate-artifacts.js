@@ -18,12 +18,12 @@ const NEEDLE_RUNNERS = {
 };
 
 const NEEDLE_MANIFEST = Object.freeze({
-  revision: 'xor-69a83e3ed5bdda95825684442a87d0142c06fc844a4a9ca55d9cb78b53c8c497',
+  revision: 'xor-e1c8a7c8b01b3e041f19ae1d0ec68fbfc92ab01f929f93f360fbd90580146a13',
   weights: {
     path: 'needle3.cact',
     size: 63437076,
-    sha256: '69a83e3ed5bdda95825684442a87d0142c06fc844a4a9ca55d9cb78b53c8c497',
-    url: 'https://github.com/QuaanNguyen/xor/releases/download/needle-2026-11-02-69a83e3e/needle3.cact',
+    sha256: 'e1c8a7c8b01b3e041f19ae1d0ec68fbfc92ab01f929f93f360fbd90580146a13',
+    url: 'https://github.com/QuaanNguyen/xor/releases/download/needle-2026-11-03-e1c8a7c8/needle3.cact',
   },
   runners: Object.fromEntries(Object.entries(NEEDLE_RUNNERS).map(([platform, runner]) => [platform, {
     ...runner,

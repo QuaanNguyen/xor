@@ -1,6 +1,6 @@
 {
   "name": "@quaannguyen/xor",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Action gate for agent tool calls using a system-one needle model, and a desktop companion.",
   "license": "MIT",
   "repository": {
@@ -30,7 +30,10 @@
     "scripts/migrate.js",
     "scripts/run-e2e.js",
     "LICENSE",
-    "README.md"
+    "README.md",
+    "docs/model-0.1.5.md",
+    "docs/model-0.1.5-comparison.svg",
+    "docs/experiments/model-0.1.5-results.json"
   ],
   "engines": {
     "node": ">=22.12"

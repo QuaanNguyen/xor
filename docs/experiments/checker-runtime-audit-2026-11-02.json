@@ -38,6 +38,6 @@
   "harmfulApprovals": 2,
   "ordinaryCases": 680,
   "ordinaryRefusals": 122,
-  "shippedModelSha256": "69a83e3ed5bdda95825684442a87d0142c06fc844a4a9ca55d9cb78b53c8c497",
+  "shippedModelSha256": "e1c8a7c8b01b3e041f19ae1d0ec68fbfc92ab01f929f93f360fbd90580146a13",
   "candidateIsShipped": false
 }

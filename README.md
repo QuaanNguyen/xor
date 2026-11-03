@@ -81,28 +81,33 @@ You can write your preferences in plain English. If you do not create this file,
 
 ## Model Performance
 
-Version 0.1.4 uses the latest Sol-trained model, released with the owner’s explicit exception to the usual replacement requirements.
-It has known confirmation failures and is not a qualified safety improvement.
-The earlier trained comparator below was experimental; npm 0.1.3 actually shipped the original public model, which was not measured on these 122 cases.
+Version 0.1.5 ships the deletion-and-confirmation model accepted by the owner with a native training fit of **315/323**.
+That score measures its own training examples.
+The separate development comparison against the 0.1.4 baseline is below.
 
-| Measurement | npm 0.1.3 shipped model | Earlier trained comparator | npm 0.1.4 model |
-| :--- | :--- | :--- | :--- |
-| Model download size, decimal MB | 35.34 | 63.44 | 63.44 |
-| Correct decisions on the same 122 cases | Not measured | 107/122 (87.70%) | 115/122 (94.26%) |
-| Prohibited actions incorrectly approved | Not measured | 1/33 | 1/33 |
-| Required confirmations bypassed | Not measured | 1/31 | 3/31 |
-| Permitted actions refused | Not measured | 9/58 | 1/58 |
-| Invalid, unstable, or failed answers | Not measured | 0/122 | 0/122 |
-| Recorded median native response time | Not measured | 231 ms | 257 ms |
-| Recorded native response-time range | Not measured | 182–354 ms | 186–421 ms |
+![XOR baseline and new model on development controls](docs/model-0.1.5-comparison.svg)
 
-These cases were inspected during model development, so the scores do not measure performance on unseen actions.
-The separate final test was not run because the candidate failed the usual acceptance checks.
-The same owner correction applies to both compared models, and the latest model introduces two confirmation bypasses that the comparator handled correctly.
-Timings cover native process launch and response on the same Apple Silicon Mac, with one thread, one warmup, and three recorded runs per case (366 timings per model).
-They exclude OpenCode hook and queue time; the runs were not an alternating controlled performance benchmark, so no speedup is claimed.
-The real OpenCode 2.2.5 read succeeds with standard input but fails with the positional command-line prompt.
-See the [release measurements and limitations](docs/model-0.1.4.md) and [per-case results](docs/experiments/model-0.1.4-results.json).
+| Evaluation | 0.1.4 baseline | 0.1.5 model |
+| :--- | :--- | :--- |
+| Policy and permission rules | 96/100 | 97/100 |
+| Historical controls | 115/122 | 116/122 |
+| New deletion and confirmation controls | 21/27 | 19/27 |
+| Native training fit on the new training examples | Not measured | 315/323 |
+| Download size, decimal MB | 63.44 | 63.44 |
+
+The new scenarios cover folder scope and traversal, protected settings, scoped delegation, incomplete action visibility, permission authority, confirmation, and completion evidence.
+They also cover archives that preserve originals, archives followed by deletion, requested or prohibited deletion, and removing obsolete code blocks.
+Dataset coverage does not mean the hardcoded checks have been removed.
+Trusted filesystem and settings checks still run before model decisions.
+
+The development suites contain 241 unique inspected cases and overlap with each other.
+Each scored case requires the correct answer in all five native rounds.
+The new model introduces five unsafe approvals relative to the baseline and is not a qualified safety improvement.
+The frozen test split remains unscored, and no speedup is claimed.
+The training diagnostic reports 323/323 verdict leads while actual native generation returns 315/323, so that disagreement remains unresolved.
+
+Download the [0.1.5 weights](https://github.com/QuaanNguyen/xor/releases/download/needle-2026-11-03-e1c8a7c8/needle3.cact) or the [0.1.4 baseline weights](https://github.com/QuaanNguyen/xor/releases/download/needle-2026-11-02-69a83e3e/needle3.cact).
+See the [release measurements and categories](docs/model-0.1.5.md) and [per-case results](docs/experiments/model-0.1.5-results.json).
 
 ---
 
