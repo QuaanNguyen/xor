@@ -143,14 +143,14 @@ test('a saved pre-namespace plan can resume without regenerating identities or m
   assert.deepEqual(JSON.parse(fs.readFileSync(file)).tasks.map((task) => [task.family, task.taskId]), identities);
 });
 
-test('verified contracts form the complete 1584-case plan and unknown contracts are excluded', (t) => {
+test('verified contracts form the complete 1656-case plan and unknown contracts are excluded', (t) => {
   const { root, directory } = fixture(t);
   const plan = JSON.parse(fs.readFileSync(path.join(directory, 'plan.json'), 'utf8'));
   assert.equal(plan.tasks.length, 4);
   assert.equal(plan.excludedContracts.length, 1);
   assert.throws(() => authoring.plan(inventory, { authorModel: 'test', selectedTools: [{ agent: 'codex', name: 'unknown' }] }, path.join(root, 'invalid')), /unverified/);
   const result = authoring.plan(require('../../docs/checker-tool-inventory.json'), { authorModel: 'test' }, path.join(root, 'complete'));
-  assert.equal(result.cases, 1584);
+  assert.equal(result.cases, 1656);
   assert.equal(result.excludedContracts, 18);
   assert.throws(() => authoring.plan(inventory, { authorModel: 'test', batchSize: 5 }, path.join(root, 'large')), /four/);
 });
