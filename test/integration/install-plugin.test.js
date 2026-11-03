@@ -93,7 +93,7 @@ test('install binds an importable plugin and leaves retired policy files alone',
     const check = spawnSync(process.execPath, [
       '--input-type=module',
       '-e',
-      `process.env.XOR_NO_PET = '1'; import { xor } from ${JSON.stringify(pathToFileURL(result.dest).href)}; const hooks = await xor({ client: {}, directory: ${JSON.stringify(project)} }); if (typeof hooks['tool.execute.before'] !== 'function') process.exit(2); process.emit('beforeExit');`,
+      `process.env.XOR_NO_PET = '1'; import { xor } from ${JSON.stringify(pathToFileURL(result.dest).href)}; const hooks = await xor({ client: {}, directory: ${JSON.stringify(project)} }); if (typeof hooks.runAction !== 'function') process.exit(2); process.emit('beforeExit');`,
     ], { encoding: 'utf8' });
     assert.equal(check.status, 0, check.stderr);
   });

@@ -2,6 +2,7 @@
 'use strict';
 
 const http = require('node:http');
+const fs = require('node:fs');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
 
@@ -10,6 +11,7 @@ if (process.argv.includes('--version')) {
 } else if (process.argv.includes('serve')) {
   let activating = false;
   let failed;
+  const definitions = new Map([['read', { id: 'read', name: 'read', execute: async (input) => ({ output: fs.readFileSync(input.path, 'utf8') }) }]]);
   const server = http.createServer((request, response) => {
     if (!activating) {
       activating = true;
@@ -17,7 +19,27 @@ if (process.argv.includes('--version')) {
       import(pathToFileURL(entry).href).then((module) => module.default.setup({
         app: { version: '2.2.5' },
         location: { directory: process.cwd() },
-        tool: { hook: async () => ({ dispose() {} }) },
+        tool: {
+          list: async () => [...definitions.values()],
+          hook: async () => ({ dispose() {} }),
+          async transform(callback) {
+            callback({
+              list: () => [...definitions.values()],
+              update(id, update) {
+                const tool = { ...definitions.get(id) };
+                update(tool);
+                definitions.set(id, tool);
+              },
+            });
+            return { dispose() {} };
+          },
+        },
+        session: {
+          create: async () => ({ id: 'ses_diagnostic' }),
+          prompt: async () => ({ id: 'msg_diagnostic' }),
+          context: async () => [{ id: 'msg_diagnostic', type: 'user', content: [{ type: 'text', text: 'Read diagnostic.txt for the XOR installation diagnostic.' }] }],
+          remove: async () => {},
+        },
       })).catch((error) => { failed = error.message; });
     }
     response.setHeader('content-type', 'application/json');

@@ -41,7 +41,7 @@ function scopedTools(inventory) {
   });
 }
 
-function preparePolicy(indexFile, originalSnapshot, inventoryFile, outputDirectory) {
+function preparePolicy(indexFile, defaultSources, inventoryFile, outputDirectory) {
   const output = resolvedDestination(outputDirectory);
   assert.ok(!fs.existsSync(output), 'Preserve existing fitting outputs; choose a new output directory');
   const sources = new Map();
@@ -59,7 +59,12 @@ function preparePolicy(indexFile, originalSnapshot, inventoryFile, outputDirecto
   assert.ok(Array.isArray(index.selected) && index.selected.length, 'Dataset index has no selected cases');
   const inventory = read(inventoryFile);
   const tools = scopedTools(inventory);
-  const protectedDirectories = [fs.realpathSync(originalSnapshot)];
+  const defaultDirectories = (Array.isArray(defaultSources) ? defaultSources : [defaultSources]).map((directory) => {
+    assert.ok(typeof directory === 'string' && directory.length, 'Default sources must be nonempty directory paths');
+    return fs.realpathSync(directory);
+  });
+  assert.ok(defaultDirectories.length && new Set(defaultDirectories).size === defaultDirectories.length, 'Default source directories must be nonempty and unique');
+  const protectedDirectories = [...defaultDirectories];
   const reports = index.sources.map((source) => {
     const report = read(source.report);
     assert.equal(sha256(capture(source.report)), source.reportSha256, 'Index source report digest changed');
@@ -146,19 +151,27 @@ function preparePolicy(indexFile, originalSnapshot, inventoryFile, outputDirecto
   }
   assert.equal(chosen.length, index.selected.length, 'Index selects a case from an unknown source snapshot');
 
-  const defaults = snapshot(originalSnapshot, inventoryFile, 'shipped-default');
+  const defaults = defaultDirectories.map((directory) => snapshot(directory, inventoryFile, 'shipped-default'));
+  validatePartitions(defaults.flatMap((source) => source.rows));
+  const defaultFamilySources = new Map();
+  for (const source of defaults) for (const row of source.rows) {
+    const previous = defaultFamilySources.get(row.family);
+    assert.ok(!previous || previous === source.entry.root, 'A default family is reused by different source snapshots');
+    defaultFamilySources.set(row.family, source.entry.root);
+  }
+  const defaultCandidates = defaults.flatMap((source) => source.accepted.map((row) => ({ row, source })));
   const defaultFamilies = new Set();
   for (const key of SCOPE) for (const split of SPLITS) {
-    const candidate = defaults.accepted.find((row) => {
+    const candidate = defaultCandidates.find(({ row, source }) => {
       if (`${row.agent}:${row.tool}` !== key || row.split !== split || row.preference.text !== DEFAULT_PREFERENCE.text) return false;
-      const family = defaults.rows.filter((sibling) => sibling.family === row.family);
-      const accepted = defaults.accepted.filter((sibling) => sibling.family === row.family);
+      const family = source.rows.filter((sibling) => sibling.family === row.family);
+      const accepted = source.accepted.filter((sibling) => sibling.family === row.family);
       return family.length === 4 && accepted.length === 4 && family.every((sibling) => `${sibling.agent}:${sibling.tool}` === key && sibling.split === split) && new Set(accepted.map((sibling) => sibling.verdict)).size === 3;
     });
     assert.ok(candidate, 'No fully agreed four-case shipped-default family for ' + key + ':' + split);
-    assert.ok(!defaultFamilies.has(candidate.family), 'A shipped-default family was selected more than once');
-    defaultFamilies.add(candidate.family);
-    for (const row of defaults.accepted.filter((row) => row.family === candidate.family)) chosen.push({ row, request: defaults.requests.get(row.id), source: defaults.entry, role: 'shipped-default' });
+    assert.ok(!defaultFamilies.has(candidate.row.family), 'A shipped-default family was selected more than once');
+    defaultFamilies.add(candidate.row.family);
+    for (const row of candidate.source.accepted.filter((row) => row.family === candidate.row.family)) chosen.push({ row, request: candidate.source.requests.get(row.id), source: candidate.source.entry, role: 'shipped-default' });
   }
   assert.equal(chosen.length - index.selected.length, 48, 'Exactly 48 original shipped-default cases are required');
   const rows = chosen.map(({ row }) => row);
@@ -231,6 +244,7 @@ function preparePolicy(indexFile, originalSnapshot, inventoryFile, outputDirecto
       purpose: 'Selected-family scoped fitting experiment; not full-product training or promotion qualification',
       requestFormatVersion: GATE_REQUEST_VERSION,
       scope: SCOPE,
+      defaultSources: defaultDirectories,
       experimentalFittingOnly: true,
       trainingEligible: false,
       fullProductQualified: false,
@@ -266,8 +280,9 @@ function preparePolicy(indexFile, originalSnapshot, inventoryFile, outputDirecto
 if (require.main === module) {
   try {
     const args = process.argv.slice(2);
-    assert.equal(args.length, 4, 'Usage: prepare-policy-finetune.js <dataset-index.json> <original-default-snapshot> <canonical-inventory.json> <new-output-directory>');
-    const result = preparePolicy(...args);
+    assert.equal(args.length, 4, 'Usage: prepare-policy-finetune.js <dataset-index.json> <default-snapshot-or-JSON-array> <canonical-inventory.json> <new-output-directory>');
+    const defaultSources = args[1].startsWith('[') ? JSON.parse(args[1]) : args[1];
+    const result = preparePolicy(args[0], defaultSources, args[2], args[3]);
     process.stdout.write(JSON.stringify({ cases: result.cases, splits: result.splits, selection: result.selection, promotionAllowed: false }, null, 2) + '\n');
   } catch (error) {
     process.stderr.write(error.message + '\n');

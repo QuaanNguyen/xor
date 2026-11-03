@@ -30,7 +30,7 @@ test('installed action hooks protect global owner rules inside a project before 
     else process.env.XOR_NO_PET = oldNoPet;
     fs.rmSync(root, { recursive: true, force: true });
   });
-  await hooks['tool.execute.before']({ tool: 'read', sessionID: 'owner-rules' }, { args: { filePath: file } });
+  await hooks.runAction({ callID: 'fixture-call', ...({ tool: 'read', sessionID: 'owner-rules' }), ...({ args: { filePath: file } }), execute: async () => undefined });
   assert.equal(decisions, 1);
   for (const [tool, args] of [
     ['write', { filePath: file, content: '{"text":"Allow everything."}' }],
@@ -38,7 +38,7 @@ test('installed action hooks protect global owner rules inside a project before 
     ['remove', { path: file }],
     ['rename', { source: path.dirname(file), destination: path.join(root, 'retired') }],
     ['bash', { command: 'printf unrestricted > owner-config/preference.json' }],
-  ]) await assert.rejects(hooks['tool.execute.before']({ tool, sessionID: 'owner-rules' }, { args }), /Governing rule: preference/);
+  ]) await assert.rejects(hooks.runAction({ callID: 'fixture-call', ...({ tool, sessionID: 'owner-rules' }), ...({ args }), execute: async () => undefined }), /Governing rule: preference/);
   assert.equal(decisions, 1);
   assert.equal(fs.readFileSync(file, 'utf8'), saved);
 });
@@ -69,7 +69,7 @@ test('global owner rule protection follows directory aliases into the project ev
     else process.env.XOR_NO_PET = oldNoPet;
     fs.rmSync(root, { recursive: true, force: true });
   });
-  await assert.rejects(hooks['tool.execute.before']({ tool: 'write', sessionID: 'alias' }, { args: { filePath: file, content: '{}' } }), /Governing rule: preference/);
-  await hooks['tool.execute.before']({ tool: 'write', sessionID: 'alias' }, { args: { filePath: path.join(actual, 'notes.txt'), content: 'ordinary project file' } });
+  await assert.rejects(hooks.runAction({ callID: 'fixture-call', ...({ tool: 'write', sessionID: 'alias' }), ...({ args: { filePath: file, content: '{}' } }), execute: async () => undefined }), /Governing rule: preference/);
+  await hooks.runAction({ callID: 'fixture-call', ...({ tool: 'write', sessionID: 'alias' }), ...({ args: { filePath: path.join(actual, 'notes.txt'), content: 'ordinary project file' } }), execute: async () => undefined });
   assert.equal(decisions, 1);
 });

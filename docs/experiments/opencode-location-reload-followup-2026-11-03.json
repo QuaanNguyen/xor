@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "checkedAt": "2026-11-03",
+  "status": "verified-post-location-reload-registered-execution",
+  "runtimeCommit": "83faf5f",
+  "hostVersion": "2.2.5",
+  "toolSelection": "A local deterministic response fixture supplied the initial fixed shell-marker action and the new read after reload. Native Needle checked both final decoded actions.",
+  "modelSha256": "e1c8a7c8b01b3e041f19ae1d0ec68fbfc92ab01f929f93f360fbd90580146a13",
+  "fullReload": {
+    "responseStatus": 204,
+    "oldGenerationDisposed": true,
+    "newGuardedGenerationReady": true,
+    "initialShellMarkerExists": false
+  },
+  "postReloadRead": {
+    "id": "call_post_reload_read",
+    "sessionID": "ses_e5d200d5effepVPH2YD77z55DQ",
+    "status": "completed",
+    "markerObserved": true,
+    "finalReceipts": [
+      {
+        "verdict": "approve",
+        "tool": "read",
+        "arguments": {
+          "path": "allowed.txt"
+        },
+        "argumentsHash": "e4f18e17fc27d4addabe0b80f77617148e01fa3af62310ef0d7eaa2613573048",
+        "inputHash": "f08dc0104f82ce3ee7503cc9817e55dc1d54eb9167a16dc22cfc6fdb63da1387",
+        "requestVersion": "3"
+      }
+    ],
+    "exactlyOneNewReceipt": true
+  },
+  "totalVerdictReceipts": 2,
+  "initialVerdict": "approve",
+  "sourceHashes": {
+    "plugin/xor.js": "a2b8b64a1a2578f1d406401a3f72fd4b7c5967152e653971d532d51b3d9cb3c7",
+    "xor/lib/opencode-execution.js": "489855f09a39802d307631f077b9a03c3005559597d41965b39b3288fd7bb8ce",
+    "xor/lib/action-input.js": "34bbc7b71230827a04e26e6f2846ea7800c90d18699ea2e151e9e85595f52435",
+    "xor/lib/session.js": "50fb7d2d58baf6489120750e5ffd6c62964252731101f9fa3aafc5c457415d78",
+    "xor/lib/gate.js": "0d1f0c2199568c1b5d80f942bc09cd559f525492f670dbd20e2fc7285e616f25",
+    "xor/lib/verdict-log.js": "3898a55c0771e1aa84457f405e98653aa2e42c510eb614ccc002052f89e62f0c",
+    "xor/lib/toolcalls.js": "d973a7a850aa42a181762d466a42f1a1149d7307e27589273019bc5a8882f613"
+  },
+  "evidence": {
+    "directory": "/tmp/xor-final-execution-location-reload-followup",
+    "summarySha256": "91841cc898ca55a2cdcc8f3434e5ec3011838200128b8676fda165f819d07464",
+    "oldGenerationSha256": "19c25e6932003012cf095953371731562664edf03778e464d713a504061051ba",
+    "newGenerationSha256": "75bc5415d6c2ed287a6257a7e1e51607d83bb0bf0ee25e3bd7ae1b819bdf8660",
+    "verificationScript": "/tmp/xor-location-reload-followup.mjs",
+    "verificationScriptSha256": "959db1a84a8d723686164f027e878eda045c50268ede17c276fa28294c79b111"
+  },
+  "limitations": [
+    "The initial native check approved before old-generation disposal. This run does not prove cancellation of a still-running checker during full module reload.",
+    "The successful post-reload action is a registered read. Synthesized outer execute and arbitrary native-plugin implementation replacement remain outside the stated guarantee."
+  ]
+}

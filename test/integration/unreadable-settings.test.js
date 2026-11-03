@@ -78,14 +78,14 @@ test('an unreadable global Preference blocks the real plugin hook before an appr
   let calls = 0;
   const hooks = await xor({ directory: project }, { gate: async () => { calls++; return { verdict: 'allow' }; } });
   try {
-    await hooks['tool.execute.before']({ tool: 'read', sessionID: 'test' }, { args: { filePath: 'fixture.txt' } });
+    await hooks.runAction({ callID: 'fixture-call', ...({ tool: 'read', sessionID: 'test' }), ...({ args: { filePath: 'fixture.txt' } }), execute: async () => undefined });
     assert.equal(calls, 1);
     fs.chmodSync(config, 0);
     const effective = readPreference(project, config);
     assert.equal(effective.valid, false);
     assert.match(effective.reason, /EACCES|permission denied/i);
     assert.equal(readConfig(config).error.code, 'EACCES');
-    await assert.rejects(hooks['tool.execute.before']({ tool: 'read', sessionID: 'test' }, { args: { filePath: 'fixture.txt' } }), /Preference.*unreadable|permission denied/i);
+    await assert.rejects(hooks.runAction({ callID: 'fixture-call', ...({ tool: 'read', sessionID: 'test' }), ...({ args: { filePath: 'fixture.txt' } }), execute: async () => undefined }), /Preference.*unreadable|permission denied/i);
     assert.equal(calls, 1);
   } finally {
     hooks.dispose();
@@ -136,13 +136,13 @@ test('disconnecting an active global settings alias blocks the next real plugin 
   let calls = 0;
   const hooks = await xor({ directory: project }, { gate: async () => { calls++; return { verdict: 'allow' }; } });
   try {
-    await hooks['tool.execute.before']({ tool: 'read', sessionID: 'alias-test' }, { args: { filePath: 'fixture.txt' } });
+    await hooks.runAction({ callID: 'fixture-call', ...({ tool: 'read', sessionID: 'alias-test' }), ...({ args: { filePath: 'fixture.txt' } }), execute: async () => undefined });
     assert.equal(calls, 1);
     fs.rmSync(target, { recursive: true });
     assert.equal(fs.lstatSync(alias).isSymbolicLink(), true);
     assert.equal(readPreference(project, alias).valid, false);
     assert.equal(readConfig(alias).config, null);
-    await assert.rejects(hooks['tool.execute.before']({ tool: 'read', sessionID: 'alias-test' }, { args: { filePath: 'fixture.txt' } }), /Preference.*unreadable|ENOENT/i);
+    await assert.rejects(hooks.runAction({ callID: 'fixture-call', ...({ tool: 'read', sessionID: 'alias-test' }), ...({ args: { filePath: 'fixture.txt' } }), execute: async () => undefined }), /Preference.*unreadable|ENOENT/i);
     assert.equal(calls, 1);
   } finally {
     hooks.dispose();

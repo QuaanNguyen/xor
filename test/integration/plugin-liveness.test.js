@@ -148,10 +148,7 @@ async function runScenario(tempDir) {
 
   const hooksWithoutPetDelivery = await xor({ client: {}, directory: invalidWorkspace })
   await assert.rejects(
-    hooksWithoutPetDelivery['tool.execute.before'](
-      { tool: 'read', sessionID: 'transport-failure' },
-      { args: { path: 'README.md' } },
-    ),
+    hooksWithoutPetDelivery.runAction({ callID: 'fixture-call', ...({ tool: 'read', sessionID: 'transport-failure' }), ...({ args: { path: 'README.md' } }), execute: async () => undefined }),
     /xor refused this action/,
   )
   process.stdout.write('ok - streaming responses are not interrupted by completion review\n')

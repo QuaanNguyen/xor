@@ -1,0 +1,176 @@
+{
+  "verified": true,
+  "verifiedScope": "Direct and nested local MCP marker execution and deterministic outside-project withholding",
+  "identicalMcpInputsAcrossModes": true,
+  "approvedProductionInputHash": "da0efb0ba670a076d438d7bef99c01b6d75f238ed03e5814db3ebb0dc7a47f99",
+  "limitations": [
+    "The synthesized outer execute wrapper has no XOR receipt. This fixture verifies nested MCP calls only, not direct CodeMode fetch or other wrapper effects."
+  ],
+  "hostArtifact": {
+    "path": "/opt/homebrew/Cellar/opencode-v2/2.2.5/bin/opencode",
+    "sha256": "abe4d88594bffb12b364375b8a6732d2d1f7a977195ed1a35c5c76f8e89c9e0e"
+  },
+  "modelArtifact": {
+    "path": "needle3.cact",
+    "size": 63437076,
+    "sha256": "e1c8a7c8b01b3e041f19ae1d0ec68fbfc92ab01f929f93f360fbd90580146a13",
+    "url": "https://github.com/QuaanNguyen/xor/releases/download/needle-2026-11-03-e1c8a7c8/needle3.cact"
+  },
+  "runnerArtifact": {
+    "path": "macos-arm64/needle",
+    "size": 1089896,
+    "sha256": "342fa2c6f140e702354a99c4201c9057535ec908eed35c7382e911a19d1d2724",
+    "url": "https://huggingface.co/Cactus-Compute/needle3/resolve/2ae11323dc000f5e70c49f7403efa6af12ba9e67/macos-arm64/needle"
+  },
+  "localOnly": true,
+  "externalModelsUsed": false,
+  "syntheticTrainingCommandsExecuted": false,
+  "runtimeReplacementQualified": false,
+  "version": 1,
+  "date": "2026-11-03",
+  "evidenceDirectory": "/tmp/xor-mcp-verification/packaged-final-execution-complete",
+  "runtimeSourceHashes": {
+    "plugin/xor.js": "a2b8b64a1a2578f1d406401a3f72fd4b7c5967152e653971d532d51b3d9cb3c7",
+    "xor/lib/gate.js": "0d1f0c2199568c1b5d80f942bc09cd559f525492f670dbd20e2fc7285e616f25",
+    "xor/lib/session.js": "50fb7d2d58baf6489120750e5ffd6c62964252731101f9fa3aafc5c457415d78",
+    "xor/lib/verdict-log.js": "3898a55c0771e1aa84457f405e98653aa2e42c510eb614ccc002052f89e62f0c",
+    "xor/lib/gate-settings.js": "d298eab82f51f98938419098f1561bd089ff249c29e4bc8e4f3ed1e228aea0e5",
+    "xor/lib/toolcalls.js": "d973a7a850aa42a181762d466a42f1a1149d7307e27589273019bc5a8882f613",
+    "xor/lib/boundary.js": "1f3cc063a19cd1f4b07b5d0ab9d5cac8935f6bc4d0f434f2f481575c67330fc1",
+    "xor/lib/preference.js": "d5dc4f9baa591ead6c7c0c94ee2a5d589e3d9c810949a84bc8b600f22b967427",
+    "xor/lib/opencode-execution.js": "489855f09a39802d307631f077b9a03c3005559597d41965b39b3288fd7bb8ce",
+    "xor/lib/action-input.js": "34bbc7b71230827a04e26e6f2846ea7800c90d18699ea2e151e9e85595f52435"
+  },
+  "verifier": {
+    "path": "scripts/verify-opencode-mcp.mjs",
+    "sha256": "528d8113df79e1f3414efab98b96cb7be8be493fdb4cad79832ec786efaf1eca"
+  },
+  "modes": {
+    "direct": {
+      "verified": true,
+      "hostVersion": "2.2.5",
+      "codeModeEnabled": false,
+      "callbackInvokedManually": false,
+      "outerExecuteReceipts": 0,
+      "outcomes": {
+        "allow": {
+          "markerExists": true,
+          "mcpExecutions": 1,
+          "beforeTools": [
+            "fixture_write_marker"
+          ],
+          "afterResults": [
+            {
+              "tool": "fixture_write_marker",
+              "status": "completed"
+            }
+          ]
+        },
+        "deny": {
+          "markerExists": false,
+          "mcpExecutions": 0,
+          "beforeTools": [
+            "fixture_write_marker"
+          ],
+          "afterResults": [
+            {
+              "tool": "fixture_write_marker",
+              "status": "error"
+            }
+          ]
+        }
+      },
+      "verdicts": [
+        {
+          "tool": "fixture_write_marker",
+          "verdict": "approve",
+          "reason": "The checker approved the final decoded action",
+          "inputHash": "da0efb0ba670a076d438d7bef99c01b6d75f238ed03e5814db3ebb0dc7a47f99",
+          "argumentsRetained": true
+        },
+        {
+          "tool": "fixture_write_marker",
+          "verdict": "deny",
+          "reason": "The action was withheld by project_folder",
+          "inputHash": null,
+          "argumentsRetained": false
+        }
+      ],
+      "sourceHashes": {
+        "summary.json": "0ea47643589ffcf9295e048fa2c10ee9f8615ed5fb016e6eb28a0b78d74f2ebf",
+        "host.json": "4f7aaa6d2471079745545f6494147e3efbe337893a273cb77f3e5de061656d34",
+        "provider-requests.json": "29c5f4fcbe58712f7f81ce67dacf338472b25665ed6fd3ef9d11ce8f7c2808a5",
+        "mcp.jsonl": "da9794d2f64cdbcb64b8722acad6eff12c00569f51de7c62b217a4f1252a4113",
+        "mcp-server.mjs": "ec29920e04cc8ffc630342947f00d785fab3cadad90a01fac16f439bd283c90c"
+      }
+    },
+    "nested": {
+      "verified": true,
+      "hostVersion": "2.2.5",
+      "codeModeEnabled": true,
+      "callbackInvokedManually": false,
+      "outerExecuteReceipts": 0,
+      "outcomes": {
+        "allow": {
+          "markerExists": true,
+          "mcpExecutions": 1,
+          "beforeTools": [
+            "execute",
+            "fixture_write_marker"
+          ],
+          "afterResults": [
+            {
+              "tool": "fixture_write_marker",
+              "status": "completed"
+            },
+            {
+              "tool": "execute",
+              "status": "completed"
+            }
+          ]
+        },
+        "deny": {
+          "markerExists": false,
+          "mcpExecutions": 0,
+          "beforeTools": [
+            "execute",
+            "fixture_write_marker"
+          ],
+          "afterResults": [
+            {
+              "tool": "fixture_write_marker",
+              "status": "error"
+            },
+            {
+              "tool": "execute",
+              "status": "completed"
+            }
+          ]
+        }
+      },
+      "verdicts": [
+        {
+          "tool": "fixture_write_marker",
+          "verdict": "deny",
+          "reason": "The action was withheld by project_folder",
+          "inputHash": null,
+          "argumentsRetained": false
+        },
+        {
+          "tool": "fixture_write_marker",
+          "verdict": "approve",
+          "reason": "The checker approved the final decoded action",
+          "inputHash": "da0efb0ba670a076d438d7bef99c01b6d75f238ed03e5814db3ebb0dc7a47f99",
+          "argumentsRetained": true
+        }
+      ],
+      "sourceHashes": {
+        "summary.json": "9d8cf9fcc9c18a7bb85306e17d53dd61f220606249ba6fe406d5d76eaa389648",
+        "host.json": "cefa2822eb701a8c43ed0e4723145d698e351a21db560fa7fb6b1cc475f3457a",
+        "provider-requests.json": "2be58781e6a3b01e24b847bb4f01e7d130728db6d0dfbf5296081c7bb4422eb4",
+        "mcp.jsonl": "77b3545f6586239a8936d417ce4e92965336320460ad7360347363867231e626",
+        "mcp-server.mjs": "9b2d00067e131dece5ae5fe1bab5cd42c1fa903a0683a03afc3fbc68db8ba2f4"
+      }
+    }
+  }
+}

@@ -48,10 +48,11 @@ test('offline reviews are blind, checkpoint failures and resume only missing exa
   const first = await review(directory, 'test-reviewer', 'test-family', 1);
   assert.equal(first.status, 'incomplete');
   assert.equal(first.reviewed, 4);
-  const second = await review(directory, 'test-reviewer', 'test-family', 1);
+  const second = await review(directory, 'test-reviewer', 'test-family', 1, 2);
   assert.equal(second.status, 'complete');
   assert.equal(second.reviewed, 12);
-  assert.deepEqual(requested[2], requested[0]);
+  assert.deepEqual(requested.slice(2).flat(), requested[0]);
+  assert.ok(requested.slice(2).every((batch) => batch.length <= 2));
   const saved = JSON.parse(fs.readFileSync(path.join(directory, 'review-test-reviewer.json')));
   assert.equal(saved.errors.length, 1);
   assert.ok(saved.decisions.every((row) => Object.keys(row).sort().join(',') === 'id,inputHash,verdict'));

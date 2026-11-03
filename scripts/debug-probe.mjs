@@ -6,9 +6,10 @@ import { spawn } from 'node:child_process';
 import { createInterface } from 'node:readline';
 import { setTimeout as delay } from 'node:timers/promises';
 
-export async function probeInstalledPlugin(context, { entry, receiptFile, fixtureFile, setupOnly = false }) {
-  const receipt = { complete: false, stage: 'import', plugin: entry, loaded: false, registeredHooks: [], allowed: false, read: false, observed: false };
+export async function probeInstalledPlugin(context, { entry, receiptFile, fixtureFile, fixtureMarker, setupOnly = false }) {
+  const receipt = { version: 2, complete: false, stage: 'import', plugin: entry, loaded: false, registeredHooks: [], registeredTransforms: 0, guardedTools: [], finalExecutionGuard: false, executionPath: 'captured-transformed-definition', allowed: false, read: false, observed: false };
   const hooks = new Map();
+  const guarded = new Map();
   let dispose;
   let session;
   const save = () => {
@@ -25,6 +26,19 @@ export async function probeInstalledPlugin(context, { entry, receiptFile, fixtur
       ...context,
       tool: {
         ...context.tool,
+        async transform(callback) {
+          receipt.registeredTransforms += 1;
+          return context.tool.transform((editor) => {
+            const previous = new Map(editor.list().map((tool) => [tool.id, tool.execute]));
+            const result = callback(editor);
+            for (const tool of editor.list()) {
+              if (previous.has(tool.id) && previous.get(tool.id) !== tool.execute) guarded.set(tool.id, tool);
+            }
+            receipt.guardedTools = [...guarded.keys()];
+            save();
+            return result;
+          });
+        },
         async hook(name, callback) {
           hooks.set(name, callback);
           receipt.registeredHooks.push(name);
@@ -32,12 +46,14 @@ export async function probeInstalledPlugin(context, { entry, receiptFile, fixtur
         },
       },
     });
+    await context.tool.list();
     receipt.loaded = true;
     receipt.stage = 'session';
     save();
-    const before = hooks.get('execute.before');
     const after = hooks.get('execute.after');
-    if (!before || !after) throw new Error('The installed plugin did not register its action hooks.');
+    const definition = [...guarded.values()].find((tool) => tool.id === 'read' || tool.name === 'read');
+    if (!receipt.registeredTransforms || !definition || !after) throw new Error('The installed plugin did not register a guarded final executor and result hook.');
+    receipt.finalExecutionGuard = true;
     if (setupOnly) {
       receipt.complete = true;
       receipt.stage = 'ready';
@@ -47,24 +63,24 @@ export async function probeInstalledPlugin(context, { entry, receiptFile, fixtur
     session = await context.session.create({});
     receipt.stage = 'prompt';
     save();
-    await context.session.prompt({
+    const prompt = await context.session.prompt({
       sessionID: session.id,
       text: `Read ${path.basename(fixtureFile)} for the XOR installation diagnostic.`,
       resume: false,
     });
-    receipt.stage = 'before';
+    const messages = await context.session.context({ sessionID: session.id });
+    const user = messages.findLast((message) => (message.role || message.type || message.info?.role) === 'user');
+    const messageID = user?.id || user?.info?.id || prompt?.id;
+    if (!messageID) throw new Error('OpenCode did not expose the diagnostic user message identity.');
+    receipt.stage = 'final-executor';
     save();
-    const event = {
-      tool: 'read',
-      sessionID: session.id,
-      callID: 'xor-installation-diagnostic',
-      input: { filePath: fixtureFile },
-    };
-    await before(event);
+    const input = { path: fixtureFile };
+    const execution = { sessionID: session.id, agent: 'build', messageID, id: 'call_xor_installation_diagnostic', signal: new AbortController().signal, progress: async () => {} };
+    const result = await definition.execute(input, execution);
     receipt.allowed = true;
-    const text = fs.readFileSync(fixtureFile, 'utf8');
+    if (typeof fixtureMarker !== 'string' || !fixtureMarker || !JSON.stringify(result).includes(fixtureMarker)) throw new Error('The guarded read executor did not return the diagnostic file contents.');
     receipt.read = true;
-    await after({ ...event, status: 'completed', result: { output: text } });
+    await after({ tool: definition.id, sessionID: session.id, id: execution.id, input, status: 'completed', result });
     receipt.observed = true;
     receipt.complete = true;
     save();
@@ -88,12 +104,13 @@ export async function runProbe({ entry, root, modelRoot, command, setupOnly = fa
   const wrapper = path.join(config, 'plugins', 'xor-diagnostic');
   const fixtureFile = path.join(project, 'diagnostic.txt');
   const receiptFile = path.join(root, 'plugin-receipt.json');
+  const fixtureMarker = `xor-diagnostic-${randomBytes(16).toString('hex')}`;
   fs.mkdirSync(project, { recursive: true });
   fs.mkdirSync(wrapper, { recursive: true });
   fs.rmSync(receiptFile, { force: true });
-  fs.writeFileSync(fixtureFile, 'XOR installation diagnostic.\n');
+  fs.writeFileSync(fixtureFile, fixtureMarker + '\n');
   fs.writeFileSync(path.join(wrapper, 'package.json'), JSON.stringify({ name: 'xor-diagnostic', exports: { '.': './index.mjs' } }) + '\n');
-  fs.writeFileSync(path.join(wrapper, 'index.mjs'), `import { probeInstalledPlugin } from ${JSON.stringify(import.meta.url)}; export default { id: 'xor-diagnostic', setup(context) { setTimeout(() => { void probeInstalledPlugin(context, ${JSON.stringify({ entry, receiptFile, fixtureFile, setupOnly })}); }, 0); } };\n`);
+  fs.writeFileSync(path.join(wrapper, 'index.mjs'), `import { probeInstalledPlugin } from ${JSON.stringify(import.meta.url)}; export default { id: 'xor-diagnostic', setup(context) { setTimeout(() => { void probeInstalledPlugin(context, ${JSON.stringify({ entry, receiptFile, fixtureFile, fixtureMarker, setupOnly })}); }, 0); } };\n`);
   const password = randomBytes(32).toString('base64url');
   const env = {
     ...process.env,
@@ -129,9 +146,9 @@ export async function runProbe({ entry, root, modelRoot, command, setupOnly = fa
       if (child.exitCode !== null || child.signalCode !== null) throw new Error('The private OpenCode server exited before the diagnostic finished.');
       const receipt = fs.existsSync(receiptFile) ? JSON.parse(fs.readFileSync(receiptFile, 'utf8')) : null;
       if (receipt?.complete) {
-        if (setupOnly && receipt.loaded && !receipt.error) return { ok: true, detail: 'OpenCode loaded the plugin and registered its action hooks.' };
-        if (!setupOnly && receipt.loaded && receipt.allowed && receipt.read && receipt.observed) return { ok: true, detail: 'OpenCode loaded the installed plugin; its native action hooks allowed and observed a harmless file read.' };
-        return { ok: false, detail: 'The installed OpenCode action-hook diagnostic failed.', reason: receipt.error || 'The hook receipt is incomplete.' };
+        if (setupOnly && receipt.loaded && receipt.finalExecutionGuard && !receipt.error) return { ok: true, detail: 'OpenCode loaded the plugin and registered a guarded final executor.' };
+        if (!setupOnly && receipt.loaded && receipt.finalExecutionGuard && receipt.allowed && receipt.read && receipt.observed) return { ok: true, detail: 'OpenCode loaded the installed plugin; its captured guarded final executor completed a harmless file read. This check does not exercise agent tool selection.' };
+        return { ok: false, detail: 'The installed OpenCode final-execution diagnostic failed.', reason: receipt.error || 'The final-execution receipt is incomplete.' };
       }
       if (url) {
         const response = await fetch(new URL('/api/plugin', url), { headers: { authorization: `Basic ${Buffer.from(`opencode:${password}`).toString('base64')}` }, signal: AbortSignal.timeout(2000) }).catch(() => null);
@@ -143,7 +160,7 @@ export async function runProbe({ entry, root, modelRoot, command, setupOnly = fa
       }
       await delay(100);
     }
-    throw new Error('OpenCode did not finish loading the installed action hooks within 40 seconds.');
+    throw new Error('OpenCode did not finish loading the guarded final executor within 40 seconds.');
   } finally {
     lines.close();
     child.stdin.end();
@@ -161,7 +178,7 @@ if (process.argv[1] && pathToFileURL(path.resolve(process.argv[1])).href === imp
     process.stdout.write(JSON.stringify(result) + '\n');
     if (!result.ok) process.exitCode = 1;
   } catch (error) {
-    process.stdout.write(JSON.stringify({ ok: false, detail: 'The installed OpenCode action-hook diagnostic failed.', reason: String(error?.message || error) }) + '\n');
+    process.stdout.write(JSON.stringify({ ok: false, detail: 'The installed OpenCode final-execution diagnostic failed.', reason: String(error?.message || error) }) + '\n');
     process.exitCode = 1;
   }
 }

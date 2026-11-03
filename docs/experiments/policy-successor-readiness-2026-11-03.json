@@ -1,0 +1,370 @@
+{
+  "version": 1,
+  "status": "scoped-fitting-prepared-not-qualified",
+  "purpose": "Source-bound local readiness evidence; not a qualified export or training authorization",
+  "worktreeBase": "c0e5539ed230410ae2c9dfdeebd646ad2c008f62",
+  "existingPolicySelection": {
+    "originalIndex": {
+      "path": "/Users/quan/Repos/xor/.audit/policy-successor-2026-11-03/dataset-index-successor.json",
+      "sha256": "fd0c932fa2f7c4e665fea82d14f1caebdd209e9f092684a8415610dcbb77440a"
+    },
+    "refreshedIndex": {
+      "path": "/tmp/xor-policy-successor-readiness-output/refreshed-dataset-index.json",
+      "sha256": "6c62844752c35bf7be8cf320b9a0827389b1a2088a9f60afa8fb56beb1e79ad3"
+    },
+    "sourceAuditsRefreshed": 10,
+    "selectedCases": 336,
+    "excludedCases": 54,
+    "selectionPreserved": true,
+    "semanticExclusionsPreserved": true,
+    "historicalSourceFilesChecked": 70,
+    "historicalSourcesUnchanged": true
+  },
+  "currentDefaultStudy": {
+    "plan": {
+      "path": "/tmp/xor-policy-successor-readiness-output/current-default-study/plan.json",
+      "sha256": "9ccb871d9bcb919f1e360b457954bd98d56cd220716102983a7b80362ee1336a"
+    },
+    "snapshotManifest": {
+      "path": "/tmp/xor-policy-successor-readiness-output/current-default-review/manifest.json",
+      "sha256": "06245347b74a5c4424a48bcbe7c382781003f531ef10f6bd501e396f053bb7f7"
+    },
+    "proposalsSha256": "f90729a6fd42aba024093e920989ed22dbe4f1c35c7a934bf1257e5a3af7b115",
+    "requestsSha256": "eb5ad2b7b1ef62b13f174bc233776a3518e345e32e067a393e1d72c57cded2bb",
+    "authoredCases": 48,
+    "families": 12,
+    "authorCalls": 12,
+    "authorErrors": 0,
+    "initialBudget": {
+      "path": "/tmp/xor-policy-successor-readiness-output/current-default-budgets.json",
+      "sha256": "10c152235f7c80b4a53bf84a01d6866daf4e45721cbcc8ed1c4aa786db8085dd"
+    },
+    "twoInputReviewAllocation": {
+      "path": "/tmp/xor-policy-successor-readiness-output/current-default-review-allocation.json",
+      "sha256": "2c5a8645817fb891e8d5b75a480b1d85fff21d751c7e5117c11c2f1018d49c64"
+    },
+    "initialMalformedAttempt": {
+      "path": "/tmp/xor-policy-successor-readiness-output/initial-review-attempt/review-gemma4-31b-it.json",
+      "sha256": "b21b9d44ef12c816c51e10051f71d0b847b1e48c41ca4259dbc4757d9c82bc7d"
+    },
+    "identityRepairAllocation": {
+      "path": "/tmp/xor-policy-successor-readiness-output/current-default-repair-allocation.json",
+      "sha256": "1f86e14e3cfb408ebf1c5bab057bb298300c7c1d022686aa0f5e489489b42bd1"
+    },
+    "identityRepairRequests": {
+      "path": "/tmp/xor-policy-successor-readiness-output/current-default-repair-requests.json",
+      "sha256": "afec35aaefb2982cef8545bae6b6c574142fe5b6b60053972ff79ca3b510b976"
+    },
+    "reviewers": [
+      {
+        "model": "gemma4-31b-it",
+        "modelFamily": "gemma",
+        "status": "complete",
+        "decisions": 48,
+        "responses": 25,
+        "historicalErrorsPreserved": 1,
+        "receipt": {
+          "path": "/tmp/xor-policy-successor-readiness-output/current-default-review/review-gemma4-31b-it.json",
+          "sha256": "192af674c1481c81b85f5bb18a9a629048035068165c387ae9f8208586e9b876"
+        }
+      },
+      {
+        "model": "glm-5-3-flash",
+        "modelFamily": "glm",
+        "status": "complete",
+        "decisions": 48,
+        "responses": 24,
+        "historicalErrorsPreserved": 0,
+        "receipt": {
+          "path": "/tmp/xor-policy-successor-readiness-output/current-default-review/review-glm-5-3-flash.json",
+          "sha256": "0875180df52273a86cc9dfc388d7176bf699bead71217769090a577f108e975d"
+        }
+      }
+    ],
+    "integrity": "passed",
+    "currentProductionBuilderMatches": true,
+    "agreedCases": 32,
+    "quarantinedCases": 16,
+    "quarantinedFamilies": 4,
+    "disagreements": {
+      "path": "/tmp/xor-policy-successor-readiness-output/current-default-disagreements.json",
+      "sha256": "5a8810167d38958c47371f1f2e17652c0e2d26e0d2d2eac948331af8bb8738bb"
+    },
+    "actualExporterRefusal": {
+      "exitCode": 1,
+      "error": "No fully agreed four-case shipped-default family for opencode:shell:validation",
+      "outputCreated": false,
+      "qualifiedExport": false
+    }
+  },
+  "semanticRepairRound": {
+    "allocation": {
+      "path": "/tmp/xor-policy-successor-readiness-output/semantic-repair-round-1/allocation.json",
+      "sha256": "7f8b79f11fd889cab3ffa133ece2cf58f41ae8d70ffeb4e5aaa6d641a4daeab4"
+    },
+    "authorCalls": 8,
+    "plannedCases": 16,
+    "authoredCases": 14,
+    "authorErrors": 1,
+    "reviewRequestsMade": 14,
+    "stoppedWithoutRetries": true,
+    "stopReason": "The original eight-call allocation ended with fourteen accepted cases and one malformed response; all fourteen were subsequently independently reviewed under the separate recorded review scope. Two partial-family siblings remain unselected.",
+    "plans": [
+      {
+        "name": "read-train",
+        "plannedCases": 4,
+        "authoredCases": 4,
+        "calls": 2,
+        "errors": 0,
+        "status": "complete",
+        "plan": {
+          "path": "/tmp/xor-policy-successor-readiness-output/semantic-repair-round-1/read-train-study/plan.json",
+          "sha256": "5938629a2226395def8b964270b4c995e56fe32ac9035fa68fc937fce58de12c"
+        },
+        "snapshotManifest": {
+          "path": "/tmp/xor-policy-successor-readiness-output/semantic-repair-round-1/read-train-review/manifest.json",
+          "sha256": "eccb7c98439623d3d6164b098158cfcf12d2dcdab95ba381ec34ed268705a72c"
+        },
+        "state": {
+          "path": "/tmp/xor-policy-successor-readiness-output/semantic-repair-round-1/read-train-study/state.json",
+          "sha256": "f92ca3cbcd17bde8765ceef952a7a73bef9ba404db6f6c0e1ef626f75aadaad2"
+        }
+      },
+      {
+        "name": "shell-validation",
+        "plannedCases": 4,
+        "authoredCases": 4,
+        "calls": 2,
+        "errors": 0,
+        "status": "complete",
+        "plan": {
+          "path": "/tmp/xor-policy-successor-readiness-output/semantic-repair-round-1/shell-validation-study/plan.json",
+          "sha256": "8dbca962e59334a012803eb49cc2cd53412f40de233a7240a854cb9126553862"
+        },
+        "snapshotManifest": {
+          "path": "/tmp/xor-policy-successor-readiness-output/semantic-repair-round-1/shell-validation-review/manifest.json",
+          "sha256": "87a0ec7337fa6168922d3aba180ebc5d9bd1cf6816b1a16436675b6572bef9d0"
+        },
+        "state": {
+          "path": "/tmp/xor-policy-successor-readiness-output/semantic-repair-round-1/shell-validation-study/state.json",
+          "sha256": "49a483266a7e63063f9b698d268a07979f1f59cd42a70d849f41f6fde9d0811d"
+        }
+      },
+      {
+        "name": "write-train-test",
+        "plannedCases": 8,
+        "authoredCases": 6,
+        "calls": 4,
+        "errors": 1,
+        "status": "authoring-incomplete",
+        "plan": {
+          "path": "/tmp/xor-policy-successor-readiness-output/semantic-repair-round-1/write-train-test-study/plan.json",
+          "sha256": "6a6dd3ef38d05b4ee5505dc7c5550baba9946eddd52066e16c1106816cf72925"
+        },
+        "snapshotManifest": {
+          "path": "/tmp/xor-policy-successor-readiness-output/semantic-repair-round-1/write-train-test-review/manifest.json",
+          "sha256": "1b101bc238cbac6971d1d0384004de21b0b206f7a9af591ad9298ffd7eb64fe9"
+        },
+        "state": {
+          "path": "/tmp/xor-policy-successor-readiness-output/semantic-repair-round-1/write-train-test-study/state.json",
+          "sha256": "c62bf160b07f40f21cc8c38e4a1373c1f027149ede23aeb1cd6e444dcc907a96"
+        }
+      }
+    ],
+    "reviewedCasesPerModel": 14,
+    "independentAgreementCases": 14
+  },
+  "cpuChecks": {
+    "newDefaultTokenAudit": {
+      "receipt": {
+        "path": "/tmp/xor-policy-successor-readiness-output/audits/current-default-token-audit.json",
+        "sha256": "7e83c1112f77649b39c6d6f448596e660a911a14595321035d778a6d837c2614"
+      },
+      "cases": 48,
+      "maximumOfficialTokens": 372,
+      "maximumDirectTokens": 376,
+      "configuredMaximum": 2048,
+      "allThreeTargetsChecked": true,
+      "frozenInputsUnchanged": true
+    },
+    "newDefaultTargetSupervision": {
+      "receipt": {
+        "path": "/tmp/xor-policy-successor-readiness-output/audits/current-default-target-audit.json",
+        "sha256": "a8312225b34ba3187f0321de8608a92291c21175e6386223677bfef2c13fecf9"
+      },
+      "cases": 48,
+      "targets": 144,
+      "trainerSha256": "4cb410e44f7567260b0cc6a1b6de3bbd48307e89169341474469d598d66ebbf0",
+      "meaning": "Pure functions from the current restored trainer copy, using the pinned native archive tokenizer; not a full training-asset preflight",
+      "tooling": {
+        "path": "/tmp/xor-policy-successor-readiness-output/tooling/source-identities.json",
+        "sha256": "cef3d4667c7c17e61c9108ec0b1a3cc2e2338341f6323b051bc1e917f1d630f4"
+      }
+    },
+    "allSourceOverlap": {
+      "receipt": {
+        "path": "/tmp/xor-policy-successor-readiness-output/audits/all-source-overlap-with-current-default.json",
+        "sha256": "6ee051ec5a4fa6ffa179b7a479d462ae098950a812f22b5cf82f396f62b0abc9"
+      },
+      "cases": 438,
+      "crossSplitExactInputs": 0,
+      "crossSplitFamilies": 0,
+      "nearDuplicateCandidates": 0,
+      "meaning": "Same-tool user wording with trigram Jaccard similarity at least 0.8. Candidates require semantic inspection; this is not a proof of independent evaluation."
+    },
+    "finalCombinedExportAudited": true,
+    "finalTokens": {
+      "receipt": {
+        "path": "/tmp/xor-policy-successor-readiness-output/audits/final-fitting-token-audit.json",
+        "sha256": "cf34927708efa25e724f9556125924dac527deac5c9096bc030aeca4b15ee284"
+      },
+      "status": "complete",
+      "cases": 384,
+      "maximumOfficialTokens": 612,
+      "maximumDirectTokens": 616,
+      "configuredMaximum": 2048
+    },
+    "finalTargets": {
+      "receipt": {
+        "path": "/tmp/xor-policy-successor-readiness-output/audits/final-fitting-target-audit.json",
+        "sha256": "28537bc3034540a7baaa44d1ccdc69f0356f31786733cc731ae2e3c7ff7eb820"
+      },
+      "status": "complete-target-supervision-verified",
+      "cases": 384,
+      "targets": 1152,
+      "meaning": "Pure supervision functions from the copied current restored trainer with the pinned archive tokenizer; not full training-asset preflight."
+    },
+    "finalOverlap": {
+      "receipt": {
+        "path": "/tmp/xor-policy-successor-readiness-output/audits/final-fitting-overlap-audit.json",
+        "sha256": "4c992619f2a98b21b28a0915baaa3efa86b191ed980287f3fe71c3de2aa8ec6e"
+      },
+      "status": "exact-overlap-check-passed",
+      "cases": 384,
+      "crossSplitExactInputs": 0,
+      "crossSplitFamilies": 0,
+      "nearDuplicateCandidates": 0,
+      "meaning": "Same-tool user-prose trigram Jaccard threshold 0.8; no proof of semantic independence or blind provenance."
+    }
+  },
+  "caseBoundHumanEvidence": {
+    "receipt": {
+      "path": "/tmp/xor-policy-successor-readiness-output/provenance/human-settings-shell-decisions.json",
+      "sha256": "9a8a45e3a74ad896a715c509fc0cf4016bbabea26203fe307315ce4cb87c7f66"
+    },
+    "matchedExistingSelectedCases": 6,
+    "fullCorpusHumanVerified": false
+  },
+  "criticalCaseRosterCandidate": {
+    "receipt": {
+      "path": "/tmp/xor-policy-successor-readiness-output/critical-case-roster-candidate-final-selection.json",
+      "sha256": "fd6bd8d86bc9afea17674ac0d7568034a6c4e906a5033b676fdb73355a0a8102"
+    },
+    "cases": 238,
+    "families": 77,
+    "matchedOwnerDecisions": 6,
+    "unmatchedOwnerDecisions": 232,
+    "certifiedComplete": false,
+    "meaning": "These source-derived family filters identify review candidates, not a certified complete definition of critical safety coverage. Unmatched does not itself prove every candidate needs a new owner label.",
+    "scope": "Actual selected 384-case export"
+  },
+  "fittingExportCreated": true,
+  "trainingEligible": false,
+  "qualifiedExport": false,
+  "fullProductQualified": false,
+  "freshBlindEvaluationQualified": false,
+  "runtimeReplacementVerified": false,
+  "modelTrainingPerformed": false,
+  "packagedModelChanged": false,
+  "generatedCommandsExecuted": false,
+  "remainingRequirements": [
+    "Establish a complete critical-case human review scope and matching owner evidence; six exact owner labels and this candidate roster do not certify full human coverage.",
+    "Establish fresh blind provenance; inspected development splits cannot be relabeled blind.",
+    "Satisfy required full-catalog and runtime evidence separately; scoped preparation is not full-product qualification.",
+    "Run the required pinned training-asset preflight before any authorized training; pure tokenizer and supervision checks do not replace it.",
+    "The qualified-export prerequisite for the bounded experiment remains unmet; no training or candidate comparison ran. Subsequent model promotion requires its own frozen matched evaluation and performance gates."
+  ],
+  "protocolRecovery": {
+    "scope": "Separate final protocol recovery for one incomplete write/train family; four plain-text note cases, one author case per call, no retries",
+    "authorCalls": 4,
+    "acceptedCases": 4,
+    "authorErrors": 0,
+    "reviewedInputsPerModel": 4,
+    "reviewCallsPerModel": 2,
+    "independentAgreementCases": 4,
+    "evidence": [
+      {
+        "path": "/tmp/xor-policy-successor-readiness-output/semantic-repair-round-1/protocol-recovery/allocation.json",
+        "sha256": "e1ee5e2b490f8a549dfee5518b42fc8d59460b0c4fbd5647751090e9007daef5"
+      },
+      {
+        "path": "/tmp/xor-policy-successor-readiness-output/semantic-repair-round-1/protocol-recovery/review/manifest.json",
+        "sha256": "a432277e1f7606dfd2b132133bcbabd70db7135682007df573970816db62712a"
+      },
+      {
+        "path": "/tmp/xor-policy-successor-readiness-output/semantic-repair-round-1/protocol-recovery/review/review-gemma4-31b-it.json",
+        "sha256": "1d9c707665c598a7b3a5b5a38db1db8917ed873dda43ccec1026f6035a66a14e"
+      },
+      {
+        "path": "/tmp/xor-policy-successor-readiness-output/semantic-repair-round-1/protocol-recovery/review/review-glm-5-3-flash.json",
+        "sha256": "82821299fb5806450d342b602060c135b514d3b2bf1daa09c079e25685515c57"
+      },
+      {
+        "path": "/tmp/xor-policy-successor-readiness-output/semantic-repair-round-1/protocol-recovery/review/review-packet.json",
+        "sha256": "a65d42869b2fefbc13c60c51382ff3ab32bec6fa8ed610d4e2097c8e395831d2"
+      },
+      {
+        "path": "/tmp/xor-policy-successor-readiness-output/semantic-repair-round-1/protocol-recovery/review-request-bounds.json",
+        "sha256": "2dd8df4f6ff8b414de04173d8b7e97cb74589069f84f830147e1f9e7bab28899"
+      },
+      {
+        "path": "/tmp/xor-policy-successor-readiness-output/semantic-repair-round-1/protocol-recovery/review-scope.json",
+        "sha256": "a80bb18eb7caa10a206da8f1f1761fc2ffcc3018839139f7c8699006124a2c3f"
+      },
+      {
+        "path": "/tmp/xor-policy-successor-readiness-output/semantic-repair-round-1/protocol-recovery/study/plan.json",
+        "sha256": "2468281f675b41033abc1d4b9e0961851a372d61f6605672acf69295d3aed653"
+      }
+    ]
+  },
+  "fittingExport": {
+    "directory": "/tmp/xor-policy-successor-readiness-output/fitting",
+    "cases": 384,
+    "policyCases": 336,
+    "currentDefaultCases": 48,
+    "currentDefaultFamilies": 12,
+    "splitCounts": {
+      "train": 124,
+      "validation": 127,
+      "test": 133
+    },
+    "selection": "Eight original fully agreed families and four fully agreed replacement families; original disagreements and two partial-family siblings remain archived and unselected.",
+    "receipts": [
+      {
+        "path": "/tmp/xor-policy-successor-readiness-output/fitting/manifest.json",
+        "sha256": "6254837621fcda09861a3ff656f789d2c20d8224ed6974b8e43e939eab51b233"
+      },
+      {
+        "path": "/tmp/xor-policy-successor-readiness-output/fitting/export-manifest.json",
+        "sha256": "995f0c3b27141584490e15fa3cb0592214c49cf0b643455e41dc3a596e0929ef"
+      },
+      {
+        "path": "/tmp/xor-policy-successor-readiness-output/fitting/included-cases.json",
+        "sha256": "9662a9ad0e503c00dd6e7ff21c32f5bf900db8db42152e19f6673d0a6611636b"
+      },
+      {
+        "path": "/tmp/xor-policy-successor-readiness-output/fitting/proposals.jsonl",
+        "sha256": "28dfad3325753323a22fc39d3c8cfb0c8dcf1312d8b3b2b7b06fc4f09182088f"
+      },
+      {
+        "path": "/tmp/xor-policy-successor-readiness-output/fitting/review-packet.json",
+        "sha256": "673c49174be60fc6437c048e1e1d8f2c11e81d2d3b54182d05134b58d32292ee"
+      }
+    ],
+    "currentRootBuilderCheck": {
+      "path": "/tmp/xor-policy-successor-readiness-output/root-current-builder-check.json",
+      "sha256": "74379b7231a605b6b59c3aaccaa457f79b7fa5fde9794ef18c7b1c9c7b9693dd"
+    },
+    "sourceSpecificRawReviewsArchived": true
+  }
+}

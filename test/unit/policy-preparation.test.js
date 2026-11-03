@@ -282,3 +282,95 @@ test('source-bound semantic exclusion removes a complete family without changing
   assert.throws(() => summarize([f.reportFile], [exclusion, exclusion]), /duplicated/);
   assert.throws(() => summarize([f.reportFile], [{ ...exclusion, family: 'missing' }]), /missing/);
 });
+
+function partitionDefaults(f) {
+  const families = [...new Set(f.originals.map((row) => row.family))];
+  const retained = new Set(families.slice(0, 8));
+  const first = f.originals.filter((row) => retained.has(row.family));
+  const second = f.originals.filter((row) => !retained.has(row.family));
+  const supplement = path.join(f.root, 'default-supplement');
+  const labels = new Map(f.originals.map((row) => [row.id, row.suggestedVerdict || 'approve']));
+  snapshot(f.original, f.inventory, first, labels);
+  snapshot(supplement, f.inventory, second, labels);
+  return supplement;
+}
+
+test('separate raw default sources preserve their reviewed families and evidence without composed reviews', (t) => {
+  const f = fixture(t);
+  const supplement = partitionDefaults(f);
+  const before = inputHashes(f);
+  const manifest = preparePolicy(f.indexFile, [f.original, supplement], f.inventoryFile, f.output);
+  assert.equal(manifest.cases, 84);
+  assert.deepEqual(manifest.defaultSources, [fs.realpathSync(f.original), fs.realpathSync(supplement)]);
+  assert.equal(manifest.sources.filter((source) => source.role === 'shipped-default').length, 2);
+  assert.equal(manifest.selection.shippedDefaultCases, 48);
+  assert.equal(manifest.selection.shippedDefaultFamilies, 12);
+  assert.equal(manifest.scopedCoverage.complete, true);
+  for (const source of manifest.sources.filter((source) => source.role === 'shipped-default')) {
+    for (const [model] of modelPairs) {
+      const file = path.join(f.output, source.archive, 'snapshot', 'review-' + model + '.json');
+      assert.equal(Object.hasOwn(read(file), 'composedFrom'), false);
+      assert.equal(data.digest(fs.readFileSync(file, 'utf8')), data.digest(fs.readFileSync(path.join(source.root, 'review-' + model + '.json'), 'utf8')));
+    }
+  }
+  for (const key of ['trainingEligible', 'fullProductQualified', 'humanVerified', 'blindEvaluationQualified', 'promotionAllowed', 'runtimeReplacementVerified']) assert.equal(manifest[key], false);
+  assert.deepEqual(inputHashes(f), before);
+});
+
+test('the existing CLI source position accepts an explicit JSON array without changing single-source callers', (t) => {
+  const f = fixture(t);
+  const supplement = partitionDefaults(f);
+  const result = spawnSync(process.execPath, [script, f.indexFile, JSON.stringify([f.original, supplement]), f.inventoryFile, f.output], { encoding: 'utf8' });
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(JSON.parse(result.stdout).cases, 84);
+});
+
+test('every default source is protected from output replacement and duplicate aliases are rejected', (t) => {
+  const f = fixture(t);
+  const supplement = partitionDefaults(f);
+  assert.throws(() => preparePolicy(f.indexFile, [f.original, supplement], f.inventoryFile, path.join(supplement, 'fitting')), /inside a source/);
+  assert.equal(fs.existsSync(path.join(supplement, 'fitting')), false);
+  assert.throws(() => preparePolicy(f.indexFile, [f.original, path.join(f.original, '.')], f.inventoryFile, f.output), /directories must be nonempty and unique/);
+  assert.equal(fs.existsSync(f.output), false);
+});
+
+test('a duplicate default family across distinct sources fails even when its visible inputs differ', (t) => {
+  const f = fixture(t);
+  const family = f.originals[0].family;
+  const extra = f.originals.filter((row) => row.family === family).map((row) => ({ ...row, id: 'case-' + data.digest(row.id + ':extra').slice(0, 24), userMessage: row.userMessage + ' This is a separate request.' }));
+  const supplement = path.join(f.root, 'duplicate-family');
+  snapshot(supplement, f.inventory, extra, new Map(extra.map((row) => [row.id, row.suggestedVerdict || 'approve'])));
+  assert.throws(() => preparePolicy(f.indexFile, [f.original, supplement], f.inventoryFile, f.output), /default family is reused/);
+  assert.equal(fs.existsSync(f.output), false);
+});
+
+test('duplicate exact default inputs cannot hide behind different source case and family identities', (t) => {
+  const f = fixture(t);
+  const family = f.originals[0].family;
+  const extra = f.originals.filter((row) => row.family === family).map((row) => ({ ...row, id: 'case-' + data.digest(row.id + ':extra').slice(0, 24), family: 'family-' + data.digest(row.family + ':extra').slice(0, 24) }));
+  const supplement = path.join(f.root, 'duplicate-input');
+  snapshot(supplement, f.inventory, extra, new Map(extra.map((row) => [row.id, row.suggestedVerdict || 'approve'])));
+  assert.throws(() => preparePolicy(f.indexFile, [f.original, supplement], f.inventoryFile, f.output), /Duplicate visible checker input/);
+  assert.equal(fs.existsSync(f.output), false);
+});
+
+test('a default family crossing splits between sources fails before selection', (t) => {
+  const f = fixture(t);
+  const family = f.originals[0].family;
+  const extra = f.originals.filter((row) => row.family === family).map((row) => ({ ...row, id: 'case-' + data.digest(row.id + ':crossed').slice(0, 24), split: 'validation', userMessage: row.userMessage + ' A separate validation request.' }));
+  const supplement = path.join(f.root, 'crossed-family');
+  snapshot(supplement, f.inventory, extra, new Map(extra.map((row) => [row.id, row.suggestedVerdict || 'approve'])));
+  assert.throws(() => preparePolicy(f.indexFile, [f.original, supplement], f.inventoryFile, f.output), /Family crosses dataset splits/);
+  assert.equal(fs.existsSync(f.output), false);
+});
+
+test('each supplied default source requires complete exact-input independent evidence', (t) => {
+  const f = fixture(t);
+  const supplement = partitionDefaults(f);
+  const file = path.join(supplement, 'review-glm-5-3-flash.json');
+  const review = read(file);
+  review.decisions[0].inputHash = '0'.repeat(64);
+  write(file, review);
+  assert.throws(() => preparePolicy(f.indexFile, [f.original, supplement], f.inventoryFile, f.output), /Source integrity failed/);
+  assert.equal(fs.existsSync(f.output), false);
+});

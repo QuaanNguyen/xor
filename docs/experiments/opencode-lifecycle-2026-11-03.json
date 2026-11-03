@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "checkedAt": "2026-11-03",
+  "status": "verified-for-listed-scenarios",
+  "reproduce": "node scripts/verify-opencode-lifecycle.mjs --opencode /opt/homebrew/bin/opencode --model-root <installed-gate-root> --output <new-evidence-directory>",
+  "hostVersion": "2.2.5",
+  "toolSelection": "A local deterministic OpenAI-compatible response fixture supplied fixed agent read and harmless shell-marker calls. No external language model was used.",
+  "checker": "The pinned native Needle runner checked each proposed action.",
+  "modelSha256": "e1c8a7c8b01b3e041f19ae1d0ec68fbfc92ab01f929f93f360fbd90580146a13",
+  "runner": {
+    "platform": "darwin-arm64",
+    "sha256": "342fa2c6f140e702354a99c4201c9057535ec908eed35c7382e911a19d1d2724"
+  },
+  "actualHostHooks": true,
+  "callbackInvokedManually": false,
+  "actualPayloadKeys": [
+    "tool",
+    "sessionID",
+    "agent",
+    "messageID",
+    "id",
+    "input"
+  ],
+  "toolExecuteAvailable": false,
+  "markerObserved": true,
+  "outcomes": {
+    "normalReadCompleted": true,
+    "interruptedShellCompleted": false,
+    "interruptedShellMarkerExists": false,
+    "interruptionEvent": "session.execution.interrupted",
+    "interruptionReason": "user",
+    "oneMillisecondDeadlineShellCompleted": false,
+    "deadlineShellMarkerExists": false,
+    "effectiveDeadlineMs": 1,
+    "toolRegistryReloadOverlappedPendingCall": true,
+    "readCompletedAfterRegistryReload": true,
+    "fullPluginModuleReloadTested": false
+  },
+  "verdictReceipts": {
+    "count": 4,
+    "approved": 2,
+    "denied": 2,
+    "deniedArgumentsRetained": false
+  },
+  "sourceHashes": {
+    "scripts/verify-opencode-lifecycle.mjs": "42544001ede3cd25ea5b0285b3e73dffca20bd113e67cc09cf099933e3926892",
+    "plugin/xor.js": "bddff2f11ef1b67ce6d558cf7e5d59013c338c446f15a09155391637dfbc2233",
+    "xor/lib/gate.js": "0d1f0c2199568c1b5d80f942bc09cd559f525492f670dbd20e2fc7285e616f25",
+    "xor/lib/session.js": "95a7e06b9d3369dd339552f9827b1120f2c3cef951048b74c876d806d54f009f",
+    "xor/lib/verdict-log.js": "3898a55c0771e1aa84457f405e98653aa2e42c510eb614ccc002052f89e62f0c",
+    "xor/lib/gate-settings.js": "d298eab82f51f98938419098f1561bd089ff249c29e4bc8e4f3ed1e228aea0e5"
+  },
+  "localEvidence": {
+    "directory": "/private/tmp/xor-post-pr98-host-lifecycle-repeat",
+    "hostReceiptSha256": "265f992a443e24498d94fc76fb67c8865d75360ff5146a91deeebdfd9b92a6d4",
+    "summarySha256": "4d431a18c17a10a75b9ccec2accec3194145759e9ec658794a210fd37e0bf23c"
+  },
+  "limitations": [
+    "The test exercises a tool registry reload while checking a call. It does not establish behavior during full plugin-module replacement.",
+    "Direct or nested MCP, schedules, and goal sessions are not tested."
+  ]
+}

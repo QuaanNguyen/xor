@@ -116,6 +116,22 @@ It preserves the index's exclusions and every selected family's original split.
 node scripts/prepare-policy-finetune.js /absolute/path/to/dataset-index.json xor/prototype/output/v3-integrated-2026-10-23 docs/checker-tool-inventory.json /tmp/new-policy-fitting-export
 ```
 
+A single reviewed default-source directory remains supported.
+The same CLI argument also accepts a JSON array of directories when complete families come from separate reviewed sources.
+
+```sh
+node scripts/prepare-policy-finetune.js /absolute/path/to/dataset-index.json '["/absolute/path/to/first-default-source","/absolute/path/to/second-default-source"]' docs/checker-tool-inventory.json /tmp/new-policy-fitting-export
+```
+
+The preparer normalizes that argument once into a nonempty ordered list of unique canonical directories.
+This list is the single internal contract for both single-source and multiple-source preparation.
+Every listed source must pass its own frozen-input, checked-schema, and exact independent-review validation.
+The preparer retains the existing requirement of one fully agreed four-case family for each scoped tool and split, including the exact current shipped Preference and all three verdicts.
+It rejects duplicate input identities, duplicate visible inputs, and families reused or crossed between source directories before selecting any default family.
+It protects every source directory from output replacement and archives every source's raw review evidence and hashes.
+It does not invent a combined review or relabel disputed siblings.
+Output manifests record the source list and source-specific evidence while keeping fitting, human, blind, full-product, and promotion qualification separate.
+
 The recorded November 2 export contains 306 examples: 100 training, 100 validation, and 106 test cases.
 Its scope is the four checked OpenCode tool contracts used by the policy study.
 The export archives source receipts and writes a selected audit view for overlap checks.

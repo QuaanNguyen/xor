@@ -1,0 +1,122 @@
+{
+  "schemaVersion": 1,
+  "checkedAt": "2026-11-03",
+  "status": "verified-for-listed-registered-tool-scenarios",
+  "hostVersion": "2.2.5",
+  "toolSelection": "A local deterministic response fixture selected fixed read and harmless marker actions. Native Needle judged final decoded actions in the product execution guard.",
+  "checker": "The installed pinned native Needle model checked the final decoded registered actions.",
+  "modelSha256": "e1c8a7c8b01b3e041f19ae1d0ec68fbfc92ab01f929f93f360fbd90580146a13",
+  "sourceHashes": {
+    "scripts/verify-opencode-lifecycle.mjs": "2aa3510bfba545584a98677a2c0ad5b4912219624c08bace9e60588dea705c89",
+    "plugin/xor.js": "a2b8b64a1a2578f1d406401a3f72fd4b7c5967152e653971d532d51b3d9cb3c7",
+    "xor/lib/gate.js": "0d1f0c2199568c1b5d80f942bc09cd559f525492f670dbd20e2fc7285e616f25",
+    "xor/lib/session.js": "50fb7d2d58baf6489120750e5ffd6c62964252731101f9fa3aafc5c457415d78",
+    "xor/lib/verdict-log.js": "3898a55c0771e1aa84457f405e98653aa2e42c510eb614ccc002052f89e62f0c",
+    "xor/lib/gate-settings.js": "d298eab82f51f98938419098f1561bd089ff249c29e4bc8e4f3ed1e228aea0e5",
+    "xor/lib/opencode-execution.js": "489855f09a39802d307631f077b9a03c3005559597d41965b39b3288fd7bb8ce",
+    "xor/lib/action-input.js": "34bbc7b71230827a04e26e6f2846ea7800c90d18699ea2e151e9e85595f52435",
+    "xor/lib/toolcalls.js": "d973a7a850aa42a181762d466a42f1a1149d7307e27589273019bc5a8882f613",
+    "xor/lib/boundary.js": "1f3cc063a19cd1f4b07b5d0ab9d5cac8935f6bc4d0f434f2f481575c67330fc1"
+  },
+  "verificationScripts": {
+    "scripts/verify-opencode-final-input.mjs": "f0b6f72292a5a51327bfbe921170d15fdf534d8e7a9f2a277b52e9ccb6af7047",
+    "scripts/verify-opencode-lifecycle.mjs": "2aa3510bfba545584a98677a2c0ad5b4912219624c08bace9e60588dea705c89"
+  },
+  "rewrite": {
+    "laterHookChangedReadToShell": true,
+    "rewrittenShellMarkerExists": false,
+    "deniedReceiptNamesActualShell": true,
+    "deniedArgumentsHashMatchesActualDecodedShell": true,
+    "benignReadMarkerObserved": true,
+    "benignShellMarkerObserved": true,
+    "unsupportedFieldsDiscardedBeforeChecking": true
+  },
+  "finalVerdictReceipts": [
+    {
+      "verdict": "approve",
+      "tool": "shell",
+      "arguments": {
+        "command": "printf benign > benign-marker.txt"
+      },
+      "argumentsHash": "3108d8ba4d0c8ef938f96241b9f17b1212762a165122d39c536f764abbbe244e",
+      "inputHash": "a4a927600103ac9d81316bf6fa260f536e6d1f7992ef84f447d5e23408da5c6c",
+      "modelSha256": "e1c8a7c8b01b3e041f19ae1d0ec68fbfc92ab01f929f93f360fbd90580146a13"
+    },
+    {
+      "verdict": "deny",
+      "tool": "shell",
+      "argumentsHash": "589a3ca9ada997589f59751d83be642e9ae5408fb3ee563b6e6d25b9649dc652",
+      "inputHash": "9f1077f49f4180226c69f49e8355adc35c766f090c6390aeff299c82311e8382",
+      "modelSha256": "e1c8a7c8b01b3e041f19ae1d0ec68fbfc92ab01f929f93f360fbd90580146a13"
+    },
+    {
+      "verdict": "approve",
+      "tool": "read",
+      "arguments": {
+        "path": "allowed.txt"
+      },
+      "argumentsHash": "e4f18e17fc27d4addabe0b80f77617148e01fa3af62310ef0d7eaa2613573048",
+      "inputHash": "3f2e6c03797dac16cc12332e571c4b39a0aa9522f7dcf0ed7c4ca1264602c526",
+      "modelSha256": "e1c8a7c8b01b3e041f19ae1d0ec68fbfc92ab01f929f93f360fbd90580146a13"
+    }
+  ],
+  "lifecycle": {
+    "normalReadCompleted": true,
+    "interruptedShellCompleted": false,
+    "interruptedShellMarkerExists": false,
+    "interruptionEvent": "session.execution.interrupted",
+    "interruptionReason": "user",
+    "oneMillisecondDeadlineShellCompleted": false,
+    "deadlineShellMarkerExists": false,
+    "effectiveDeadlineMs": 1,
+    "toolRegistryReloadOverlappedPendingCall": true,
+    "readCompletedAfterRegistryReload": true,
+    "fullPluginModuleReloadTested": false
+  },
+  "lifecycleVerdictReceipts": {
+    "count": 4,
+    "approved": 2,
+    "denied": 2,
+    "deniedArgumentsRetained": false
+  },
+  "locationReload": {
+    "status": "observed-with-checker-phase-limit",
+    "responseStatus": 204,
+    "oldGenerationDisposed": true,
+    "newGuardedGenerationReady": true,
+    "markerExists": false,
+    "finalReceiptVerdicts": [
+      "approve"
+    ],
+    "checkerCancellationVerified": false,
+    "limitation": "The native checker approved before old-plugin disposal. The marker remained absent across reload, but this run does not establish cancellation of a still-running checker during full location reload."
+  },
+  "evidence": {
+    "rewrite": {
+      "directory": "/private/tmp/xor-final-execution-rewrite-frozen",
+      "hostSha256": "77c870a3fc97898b217a7f8ce8066af220444ab46f8de617a03f97615a159eb7",
+      "summarySha256": "1b2163a2b6b154756d99da9645dcadf0dcc83cd26dda168a50672074aea95467"
+    },
+    "lifecycle": {
+      "directory": "/private/tmp/xor-final-execution-lifecycle-frozen",
+      "hostSha256": "a396422551a5f1b5f5058a6c868192fab701bc281be871fe5473c5228d0932bd",
+      "summarySha256": "3a0d9355d27b635a6076cc56c4f745776f31695f58e8ff3c0c64919998adb549"
+    },
+    "locationReload": {
+      "directory": "/tmp/xor-final-execution-location-reload-authorized",
+      "summarySha256": "d0ccb097ebfa8cf4b052e91fc9b3abe29da8a4b40479d8f217d392eaba72ce2e",
+      "scriptSha256": "0eac092d45e2652ba56c963f4db730ab16ab16c8e36d72cce4069b8da4d76dfd"
+    }
+  },
+  "limitations": [
+    "The synthetic outer execute operation is not a registered definition and is not covered by this final executor guard.",
+    "An arbitrary privileged native plugin can replace an implementation or perform side effects outside the registry.",
+    "Direct and nested MCP results are recorded in their own verification receipt.",
+    "Model qualification and replacement of existing deterministic checks remain incomplete."
+  ],
+  "runner": {
+    "platform": "darwin-arm64",
+    "sha256": "342fa2c6f140e702354a99c4201c9057535ec908eed35c7382e911a19d1d2724",
+    "manifestSourceSha256": "299b314e7ce2a1785e8d00797a78358382a9e7f6e0a77e6a9cb925b3cd056305"
+  }
+}

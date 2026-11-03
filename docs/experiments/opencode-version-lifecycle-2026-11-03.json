@@ -1,0 +1,101 @@
+{
+  "checkedAt": "2026-11-03",
+  "status": "verified-for-listed-lifecycle-scenarios",
+  "actualHostHooks": true,
+  "callbackInvokedManually": false,
+  "toolSelection": "Local deterministic provider fixture. No external language model.",
+  "nativeCheckerModelSha256": "e1c8a7c8b01b3e041f19ae1d0ec68fbfc92ab01f929f93f360fbd90580146a13",
+  "sourceHashes": {
+    "scripts/verify-opencode-lifecycle.mjs": "42544001ede3cd25ea5b0285b3e73dffca20bd113e67cc09cf099933e3926892",
+    "plugin/xor.js": "bddff2f11ef1b67ce6d558cf7e5d59013c338c446f15a09155391637dfbc2233",
+    "xor/lib/gate.js": "0d1f0c2199568c1b5d80f942bc09cd559f525492f670dbd20e2fc7285e616f25",
+    "xor/lib/session.js": "95a7e06b9d3369dd339552f9827b1120f2c3cef951048b74c876d806d54f009f",
+    "xor/lib/verdict-log.js": "3898a55c0771e1aa84457f405e98653aa2e42c510eb614ccc002052f89e62f0c",
+    "xor/lib/gate-settings.js": "d298eab82f51f98938419098f1561bd089ff249c29e4bc8e4f3ed1e228aea0e5"
+  },
+  "versions": [
+    {
+      "version": "2.2.0",
+      "officialAsset": "https://github.com/anomalyco/opencode/releases/download/v2.2.0/opencode-darwin-arm64.zip",
+      "verifiedArchiveSha256": "c71b1cd96541539ad38e2a75377d2f43d2a27567289a14371a182e9a0800db3d",
+      "binarySha256": "0614b30fd17c27258b16cd6ea9ab03e1160fa9897e4cefd2d9a5d86f71a0af11",
+      "summarySha256": "7307a57023b20cb1e463a09bfa9e18026a1fb6de78116ed64e50b87ce18f30fb",
+      "outcomes": {
+        "normalReadCompleted": true,
+        "interruptedShellCompleted": false,
+        "interruptedShellMarkerExists": false,
+        "interruptionEvent": "session.execution.interrupted",
+        "interruptionReason": "user",
+        "oneMillisecondDeadlineShellCompleted": false,
+        "deadlineShellMarkerExists": false,
+        "effectiveDeadlineMs": 1,
+        "toolRegistryReloadOverlappedPendingCall": true,
+        "readCompletedAfterRegistryReload": true,
+        "fullPluginModuleReloadTested": false
+      },
+      "verdictReceipts": {
+        "count": 4,
+        "approved": 2,
+        "denied": 2,
+        "deniedArgumentsRetained": false
+      }
+    },
+    {
+      "version": "2.2.1",
+      "officialAsset": "https://github.com/anomalyco/opencode/releases/download/v2.2.1/opencode-darwin-arm64.zip",
+      "verifiedArchiveSha256": "9df6ca3d031565c61080c717374ba846d238ec5b1c411eebe6b1b85835998ffe",
+      "binarySha256": "7cd7cda88168b29cdfbac704c056a9a3bc6e0e57c6c56cb593835639983e0d0c",
+      "summarySha256": "f03b3db7fdae4d71c2247599d57e4d1748fb7c4a07e1d909b614a0e1dbf34f9c",
+      "outcomes": {
+        "normalReadCompleted": true,
+        "interruptedShellCompleted": false,
+        "interruptedShellMarkerExists": false,
+        "interruptionEvent": "session.execution.interrupted",
+        "interruptionReason": "user",
+        "oneMillisecondDeadlineShellCompleted": false,
+        "deadlineShellMarkerExists": false,
+        "effectiveDeadlineMs": 1,
+        "toolRegistryReloadOverlappedPendingCall": true,
+        "readCompletedAfterRegistryReload": true,
+        "fullPluginModuleReloadTested": false
+      },
+      "verdictReceipts": {
+        "count": 4,
+        "approved": 2,
+        "denied": 2,
+        "deniedArgumentsRetained": false
+      }
+    },
+    {
+      "version": "2.2.2",
+      "officialAsset": "https://github.com/anomalyco/opencode/releases/download/v2.2.2/opencode-darwin-arm64.zip",
+      "verifiedArchiveSha256": "c1c901a6379d667b7a30a3eea5a8f6e93416dba43e889e834771f6fb174f35c9",
+      "binarySha256": "149708831fbbc06ae4190af4c7d8e1c784eaa4d9ff5352d89d8bef06907d7405",
+      "summarySha256": "da8bc3c2f5e53e95d52c6c1103571d4bde1c3ac6036040470ecd8a6ae91b01eb",
+      "outcomes": {
+        "normalReadCompleted": true,
+        "interruptedShellCompleted": false,
+        "interruptedShellMarkerExists": false,
+        "interruptionEvent": "session.execution.interrupted",
+        "interruptionReason": "user",
+        "oneMillisecondDeadlineShellCompleted": false,
+        "deadlineShellMarkerExists": false,
+        "effectiveDeadlineMs": 1,
+        "toolRegistryReloadOverlappedPendingCall": true,
+        "readCompletedAfterRegistryReload": true,
+        "fullPluginModuleReloadTested": false
+      },
+      "verdictReceipts": {
+        "count": 4,
+        "approved": 2,
+        "denied": 2,
+        "deniedArgumentsRetained": false
+      }
+    }
+  ],
+  "limitations": [
+    "These runs precede the final decoded-executor migration.",
+    "Full plugin-module replacement, direct and nested MCP, schedules, and goal sessions are not established.",
+    "These integration checks do not qualify model-only policy decisions or model replacement."
+  ]
+}
