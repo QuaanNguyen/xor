@@ -36,6 +36,8 @@ function sendOne(control, root, id) {
       finish(false);
     });
     socket.once('data', (result) => finish(result.toString() === 'ok'));
+    socket.once('end', () => finish(false));
+    socket.once('close', () => finish(false));
     socket.once('connect', () => socket.end(JSON.stringify(control) + '\n'));
   });
 }
@@ -52,7 +54,7 @@ async function sendControl(control, root = defaultConfigRoot()) {
   return results.some(Boolean);
 }
 
-function startControlServer(onControl, root = defaultConfigRoot()) {
+function startControlServer(onControl, root = defaultConfigRoot(), onError = () => {}) {
   const id = randomUUID();
   const socket = controlSocketPath(root, id);
   const registry = path.join(controlDirectory(root), id);
@@ -61,7 +63,7 @@ function startControlServer(onControl, root = defaultConfigRoot()) {
   let closed = false;
   let settleReady;
   const ready = new Promise((resolve) => { settleReady = resolve; });
-  const server = net.createServer((connection) => {
+  const server = net.createServer({ allowHalfOpen: true }, (connection) => {
     connections.add(connection);
     connection.unref();
     connection.setTimeout(1000, () => connection.destroy());
@@ -74,18 +76,28 @@ function startControlServer(onControl, root = defaultConfigRoot()) {
       if (input.length > 4096) connection.destroy();
     });
     connection.on('end', () => {
-      let accepted = false;
-      try { accepted = onControl(JSON.parse(input)) === true; } catch {}
-      connection.end(accepted ? 'ok' : 'denied');
+      Promise.resolve().then(() => onControl(JSON.parse(input)))
+        .then((accepted) => { if (!connection.destroyed) connection.end(accepted === true ? 'ok' : 'denied'); })
+        .catch(() => { if (!connection.destroyed) connection.end('denied'); });
     });
   });
-  server.on('error', () => settleReady(false));
+  server.unref();
+  server.on('error', (error) => {
+    settleReady(false);
+    onError(error);
+  });
   server.listen(socket, () => {
     if (closed) return;
-    if (process.platform !== 'win32') fs.chmodSync(socket, 0o600);
-    fs.writeFileSync(registry, '', { mode: 0o600 });
-    server.unref();
-    settleReady(true);
+    try {
+      if (process.platform !== 'win32') fs.chmodSync(socket, 0o600);
+      fs.writeFileSync(registry, '', { mode: 0o600 });
+      settleReady(true);
+    } catch (error) {
+      server.close();
+      if (process.platform !== 'win32') { try { fs.unlinkSync(socket); } catch {} }
+      settleReady(false);
+      onError(error);
+    }
   });
   return {
     ready,

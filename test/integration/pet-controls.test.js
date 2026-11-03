@@ -12,7 +12,7 @@ const test = require('node:test');
 const { defaultConfig, readConfig, writeConfig } = require('../../xor/lib/config');
 const { parseSizeArgument } = require('../../events/size-command');
 const { migrate } = require('../../scripts/migrate');
-const { clampScale } = require('../../pet/geometry');
+const { clampScale, renderScale, boundsFor } = require('../../pet/geometry');
 
 const project = path.resolve(__dirname, '../..');
 
@@ -96,6 +96,7 @@ test('live plugin sessions broadcast off, on, decimal size, and off while action
       });
       child.kill = () => { child.stopped = true; child.emit('exit', 0); };
       children.push(child);
+      queueMicrotask(() => child.emit('spawn'));
       return child;
     };
     for (let i = 0; i < 2; i++) {
@@ -139,8 +140,108 @@ test('an idle plugin with pet mode off exits without a lingering control server'
       timeout: 3000,
     });
     assert.equal(result.status, 0, result.stderr || result.error?.message);
-    assert.deepEqual(fs.readdirSync(path.join(root, 'pet-controls')), []);
+    assert.equal(fs.existsSync(path.join(root, 'pet-controls')), false);
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+
+test('arbitrary finite requested percentages render within physical display dimensions', () => {
+  const area = { width: 1920, height: 1080 };
+  for (const requested of [Number.MIN_VALUE, 1e-200, 0.875, 2.505, Number.MAX_VALUE]) {
+    const scale = renderScale(requested, area);
+    const bounds = boundsFor({ x: 0, y: 0, width: 340, height: 380 }, scale);
+    assert.ok(Object.values(bounds).every(Number.isFinite));
+    assert.ok(bounds.width >= 1 && bounds.width <= area.width);
+    assert.ok(bounds.height >= 1 && bounds.height <= area.height);
+  }
+  assert.equal(renderScale(2.505, area), 2.505);
+});
+
+test('unavailable optional control storage cannot prevent gate startup', async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'xor-pet-storage-'));
+  try {
+    const config = path.join(root, 'not-a-directory');
+    fs.writeFileSync(config, 'unavailable');
+    for (const forced of ['0', '1']) {
+      const result = spawnSync(process.execPath, ['--input-type=module', '-e', "import { xor } from './plugin/xor.js'; const hook = await xor({ directory: process.cwd() }, { gate: async () => ({ verdict: 'allow' }) }); await hook['tool.execute.before']({ tool: 'read' }, { args: { filePath: 'README.md' } }); console.log('gate operational'); hook.dispose();"], {
+        cwd: project,
+        env: { ...process.env, XOR_CONFIG_ROOT: config, XOR_NO_PET: forced },
+        encoding: 'utf8',
+        timeout: 3000,
+      });
+      assert.equal(result.status, 0, result.stderr || result.error?.message);
+      assert.match(result.stdout, /gate operational/);
+    }
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('pet controls report failed process startup without claiming application', async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'xor-pet-launch-'));
+  const { EventBus } = require('../../events');
+  const { createPetController } = require('../../pet/controller');
+  const { sendControl } = require('../../pet/control');
+  const errors = [];
+  const controller = createPetController({
+    bus: new EventBus(),
+    root,
+    launch: () => {
+      const child = new EventEmitter();
+      child.stdin = new PassThrough();
+      child.kill = () => {};
+      queueMicrotask(() => child.emit('error', new Error('Cannot start the pet host')));
+      return child;
+    },
+    onError: (error) => errors.push(error.message),
+  });
+  try {
+    assert.equal(await controller.ready, true);
+    writeConfig({ ...defaultConfig(), pet: { enabled: true, scale: 1 } }, root);
+    assert.equal(await sendControl({ action: 'reload' }, root), false);
+    assert.deepEqual(errors, ['Cannot start the pet host']);
+  } finally {
+    controller.close();
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('asynchronous control registration failures stay inside the optional pet controller', async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'xor-pet-registration-'));
+  const { EventBus } = require('../../events');
+  const { createPetController } = require('../../pet/controller');
+  const errors = [];
+  const controller = createPetController({ bus: new EventBus(), root, launch: () => null, onError: (error) => errors.push(error.code) });
+  try {
+    const registry = path.join(root, 'pet-controls');
+    fs.rmdirSync(registry);
+    fs.writeFileSync(registry, 'unavailable');
+    assert.equal(await controller.ready, false);
+    assert.deepEqual(errors, ['ENOTDIR']);
+  } finally {
+    controller.close();
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('a disconnected pet controller cannot leave a command waiting indefinitely', { timeout: 2000 }, async () => {
+  const net = require('node:net');
+  const { randomUUID } = require('node:crypto');
+  const { controlSocketPath, sendControl } = require('../../pet/control');
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'xor-pet-disconnect-'));
+  const id = randomUUID();
+  const socket = controlSocketPath(root, id);
+  const server = net.createServer((connection) => connection.once('data', () => connection.destroy()));
+  try {
+    fs.mkdirSync(path.join(root, 'pet-controls'));
+    fs.writeFileSync(path.join(root, 'pet-controls', id), '');
+    await new Promise((resolve, reject) => { server.once('error', reject); server.listen(socket, resolve); });
+    assert.equal(await sendControl({ action: 'reload' }, root), false);
+  } finally {
+    server.close();
+    fs.rmSync(root, { recursive: true, force: true });
+    try { fs.unlinkSync(socket); } catch {}
   }
 });

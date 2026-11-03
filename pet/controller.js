@@ -6,6 +6,8 @@ const { startControlServer } = require('./control');
 function createPetController({ bus, launch, root, onError = () => {} }) {
   let child = null;
   let closed = false;
+  let queue = Promise.resolve();
+  let server = null;
 
   function stop() {
     const previous = child;
@@ -14,7 +16,34 @@ function createPetController({ bus, launch, root, onError = () => {} }) {
     previous?.kill();
   }
 
-  function refresh() {
+  function start() {
+    return new Promise((resolve) => {
+      try {
+        child = launch();
+        if (!child) return resolve(false);
+        const current = child;
+        current.once('spawn', () => resolve(!closed && child === current));
+        current.once('exit', (code) => {
+          if (child === current) {
+            child = null;
+            if (code !== 0) onError(new Error(`The pet process exited with status ${code}. Run xor debug.`));
+          }
+          resolve(false);
+        });
+        current.once('error', (error) => {
+          if (child === current) child = null;
+          onError(error);
+          resolve(false);
+        });
+      } catch (error) {
+        child = null;
+        onError(error);
+        resolve(false);
+      }
+    });
+  }
+
+  async function refresh() {
     if (closed) return false;
     const loaded = readConfig(root);
     if (loaded.error) {
@@ -23,20 +52,13 @@ function createPetController({ bus, launch, root, onError = () => {} }) {
       return false;
     }
     const { enabled, scale } = loaded.config.pet;
-    if (!enabled || process.env.XOR_NO_PET === '1') {
+    if (!enabled) {
       stop();
       return true;
     }
-    if (!child) {
-      child = launch();
-      if (!child) return false;
-      const current = child;
-      current.once('exit', () => { if (child === current) child = null; });
-      current.once('error', (error) => {
-        if (child === current) child = null;
-        onError(error);
-      });
-    }
+    if (process.env.XOR_NO_PET === '1') return false;
+    if (!child && !await start()) return false;
+    if (closed) return false;
     bus.emit({
       type: 'control', status: 'ok', petState: 'calm', summary: `Pet size ${scale * 100}%`,
       detail: { action: 'size', scale, percent: scale * 100 },
@@ -44,17 +66,29 @@ function createPetController({ bus, launch, root, onError = () => {} }) {
     return true;
   }
 
+  function reload() {
+    const next = queue.then(refresh).catch((error) => { onError(error); return false; });
+    queue = next;
+    return next;
+  }
+
   bus.sink = (event) => {
     if (child?.stdin?.writable && !child.stdin.destroyed) child.stdin.write(JSON.stringify(event) + '\n');
   };
-  const server = startControlServer((control) => control?.action === 'reload' && refresh(), root);
-  refresh();
+  if (process.env.XOR_NO_PET !== '1') {
+    try {
+      server = startControlServer((control) => control?.action === 'reload' ? reload() : false, root, onError);
+    } catch (error) {
+      onError(error);
+    }
+    void reload();
+  }
   return {
-    ready: server.ready,
+    ready: server?.ready || Promise.resolve(false),
     close() {
       if (closed) return;
       closed = true;
-      server.close();
+      server?.close();
       stop();
       bus.sink = null;
     },

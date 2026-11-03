@@ -17,6 +17,14 @@ function clampScale(s) {
   return Number.isFinite(n) && n > 0 ? n : DEFAULT_SCALE;
 }
 
+function renderScale(scale, area, height = BASE_H) {
+  const width = Number.isFinite(area?.width) && area.width > 0 ? area.width : BASE_W;
+  const availableHeight = Number.isFinite(area?.height) && area.height > 0 ? area.height : height;
+  const minimum = 1 / Math.min(BASE_W, height);
+  const maximum = Math.min(width / BASE_W, availableHeight / height);
+  return Math.max(minimum, Math.min(clampScale(scale), maximum));
+}
+
 /** New size at this scale, anchored on the current bottom-right corner. */
 function boundsFor(prev, scale) {
   const width = Math.max(1, Math.round(BASE_W * scale));
@@ -100,4 +108,4 @@ function fitScale(scale, area) {
 }
 
 module.exports = { BASE_W, BASE_H, SCALES, DEFAULT_SCALE,
-  clampScale, boundsFor, keepOnScreen, keepVisibleOnScreen, visibleBounds, dragOrigin, fitScale };
+  clampScale, renderScale, boundsFor, keepOnScreen, keepVisibleOnScreen, visibleBounds, dragOrigin, fitScale };

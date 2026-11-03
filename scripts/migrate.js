@@ -32,13 +32,26 @@ function writeJson(file, value) {
   fs.renameSync(temp, file);
 }
 
+function mergeDoneCriteria(groups) {
+  const criteria = new Map();
+  for (const group of groups) {
+    for (const criterion of group) {
+      const previous = criteria.get(criterion.id);
+      if (previous && JSON.stringify(previous) !== JSON.stringify(criterion)) throw new Error(`Completion checks have conflicting definitions for '${criterion.id}'. Nothing was changed.`);
+      criteria.set(criterion.id, criterion);
+    }
+  }
+  return [...criteria.values()];
+}
+
 function retiredDoneCriteria(protocols) {
-  const first = protocols.find(({ source }) => source.exists);
-  if (!first) return [];
-  const criteria = first.source.value.done_criteria;
-  if (criteria === undefined) return [];
-  if (!Array.isArray(criteria)) throw new Error(`done_criteria in ${first.file} must be an array. Nothing was changed.`);
-  return criteria;
+  const groups = protocols.filter(({ source }) => source.exists).map(({ file, source }) => {
+    const criteria = source.value.done_criteria;
+    if (criteria === undefined) return [];
+    if (!Array.isArray(criteria)) throw new Error(`done_criteria in ${file} must be an array. Nothing was changed.`);
+    return criteria;
+  });
+  return mergeDoneCriteria(groups);
 }
 
 function preservedInstructions(sources) {
@@ -82,9 +95,10 @@ function migratePreference(opts = {}) {
   const previousConfig = { ...config, value: Object.fromEntries(Object.entries(config.value || {}).filter(([key]) => !['schema_version', 'pet'].includes(key))) };
   const instructions = preservedInstructions([...protocols, { source: owner }, { source: previousConfig }]);
   if (instructions) next.text += '\n\nContinue to enforce these previous owner instructions:\n' + instructions;
-  if (!next.done_criteria?.length && doneCriteria.length) {
-    next.done_criteria = doneCriteria;
-    report.carriedDoneCriteria = doneCriteria.length;
+  if ((!sourcePreference.exists || !next.done_criteria.length) && doneCriteria.length) {
+    const previousCount = next.done_criteria.length;
+    next.done_criteria = mergeDoneCriteria([next.done_criteria, doneCriteria]);
+    report.carriedDoneCriteria = next.done_criteria.length - previousCount;
   }
   const needsFolderPreference = preference.exists || protocols.some(({ source }) => source.exists) || Boolean(instructions);
   if (needsFolderPreference && (!preference.exists || report.carriedDoneCriteria || JSON.stringify(preference.value) !== JSON.stringify(next))) {
