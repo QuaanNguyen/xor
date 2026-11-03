@@ -6,7 +6,8 @@ const { connection, request, safeError } = require('../../analysis/needle-judge-
 const { REVIEW_INSTRUCTIONS, REVIEW_INSTRUCTION_HASH, digest, reviewPacket } = require('./checker-data');
 const { seedReview } = require('./seed-checker-reviews');
 
-async function review(directory, model, modelFamily, concurrency = 3) {
+async function review(directory, model, modelFamily, concurrency = 3, batchSize = 8) {
+  if (!Number.isSafeInteger(batchSize) || batchSize < 1 || batchSize > 8) throw new Error('Review batch size must be an integer between one and eight');
   const conn = connection();
   const contents = fs.readFileSync(path.join(directory, 'proposals.jsonl'), 'utf8');
   const manifest = JSON.parse(fs.readFileSync(path.join(directory, 'manifest.json')));
@@ -23,7 +24,7 @@ async function review(directory, model, modelFamily, concurrency = 3) {
   if (decisions.size !== saved.decisions.length || saved.decisions.some((row) => !packets.some((packet) => packet.id === row.id && packet.inputHash === row.inputHash))) throw new Error('Saved review is duplicated or stale');
   const batches = [];
   const missing = packets.filter((packet) => !decisions.has(packet.id));
-  for (let start = 0; start < missing.length; start += 8) batches.push(missing.slice(start, start + 8));
+  for (let start = 0; start < missing.length; start += batchSize) batches.push(missing.slice(start, start + batchSize));
   const save = () => {
     saved.decisions = packets.map((packet) => decisions.get(packet.id)).filter(Boolean);
     saved.expected = packets.length;
@@ -72,9 +73,9 @@ async function review(directory, model, modelFamily, concurrency = 3) {
 }
 
 if (require.main === module) {
-  const [directory, model, modelFamily] = process.argv.slice(2);
-  if (!directory || !model || !modelFamily) throw new Error('Usage: review-checker-data.js <directory> <model> <model-family>');
-  review(path.resolve(directory), model, modelFamily).then((result) => { console.log(JSON.stringify(result)); if (result.status !== 'complete') process.exitCode = 1; }).catch((error) => { console.error(error.message); process.exitCode = 1; });
+  const [directory, model, modelFamily, batchSize] = process.argv.slice(2);
+  if (!directory || !model || !modelFamily) throw new Error('Usage: review-checker-data.js <directory> <model> <model-family> [batch-size]');
+  review(path.resolve(directory), model, modelFamily, 3, batchSize === undefined ? 8 : Number(batchSize)).then((result) => { console.log(JSON.stringify(result)); if (result.status !== 'complete') process.exitCode = 1; }).catch((error) => { console.error(error.message); process.exitCode = 1; });
 }
 
 module.exports = { review };
