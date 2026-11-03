@@ -115,3 +115,9 @@ Existing deterministic restrictions remain active.
 
 The [successor fitting report](policy-successor-readiness.md) records the 384-case scoped export and its remaining qualification requirements.
 Preparation checks do not authorize the dependent training experiment.
+
+## Review trail
+
+The [decision log](../.audit/post-pr98.tsv) preserves the ordered experiments, failed observations, corrections, and evidence pointers.
+The [workflow](../.audit/post-pr98.todo.md) records the completion predicate and remaining requirements.
+Final local validation passes 340 Node tests, five Python input-integrity tests, syntax checks, package contents, and the saved runtime-evidence audit.
