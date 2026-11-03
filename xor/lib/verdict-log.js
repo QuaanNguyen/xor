@@ -13,7 +13,7 @@ function recordVerdict({ sessionID, callID, agentVersion, tool, args, preference
   const encoded = JSON.stringify(args);
   const argumentsHash = hash(encoded);
   const requestHash = hash(userMessage || '');
-  const id = hash(JSON.stringify([sessionID, callID, tool, argumentsHash, preferenceHash, requestHash, requestVersion || null, inputHash || null]));
+  const id = hash(JSON.stringify([sessionID, callID, tool, argumentsHash, preferenceHash, requestHash, requestVersion || null, inputHash || null, modelSha256 || null, verdict]));
   const row = {
     version: 1,
     id,

@@ -19,7 +19,7 @@ This follow-up extends the existing implementations instead of adding another se
 | Verify OpenCode compatibility | [87](https://github.com/QuaanNguyen/xor/issues/87) | Real lifecycle fixtures pass on official 2.2.0, 2.2.1, 2.2.2, and installed 2.2.5. Registered final actions and direct and nested MCP have observed checks. | Image, scheduling, goal sessions, and the complete native ask experience retain their specific runtime requirements. |
 | Cover supported tool contracts | [72](https://github.com/QuaanNguyen/xor/issues/72) | The existing inventory now has six additional source-derived image and schedule contracts with native and Code Mode names distinguished. | Other entries retain their earlier inspection dates. Reviewed decision coverage, held-out per-tool results, dynamic catalogs, and unsupported contracts remain incomplete. |
 | Finish free-text Preference adoption | [70](https://github.com/QuaanNguyen/xor/issues/70) | Free-text Preferences, migration, V3 requests, all three verdict tools, and editing are implemented. | Qualified rebuilt data and each harness's required ask experience remain. Current OpenCode ask withholds and hands back rather than proving a native confirmation prompt. |
-| Qualify the policy dataset | [90](https://github.com/QuaanNguyen/xor/issues/90), closed | The settings-shell contrast has independent reviews and six exact owner labels. Preparation validates their frozen identities. | Full-corpus human coverage, fresh blind provenance, full catalog coverage, and a qualified export remain missing. Closure does not satisfy them. |
+| Qualify the policy dataset | [90](https://github.com/QuaanNguyen/xor/issues/90), closed | The settings-shell contrast has six exact owner labels. A separate scoped export prepares 384 cases with current-default contrasts, complete target checks, and preserved source identities. | Full-corpus human coverage, fresh blind provenance, full catalog coverage, and a qualified export remain missing. Closure does not satisfy them. |
 | Train from a qualified dataset | [91](https://github.com/QuaanNguyen/xor/issues/91) | Existing bounded training and repeated native development evidence remain preserved. | The qualified-export prerequisite remains unsatisfied. The original frozen blind split remains unscored. No new training is claimed here. |
 | Replace runtime policy checks | [92](https://github.com/QuaanNguyen/xor/issues/92) | Checks and missing trusted observations are inventoried. New model-only challenge failures reinforce the replacement requirement. | A reviewed trusted-input contract and successful independent replacement evidence are required before removing a check. |
 | Make fresh installation permissive | [94](https://github.com/QuaanNguyen/xor/issues/94) | The exact permissive default ships and supported actions remain model checked. | Trusted restrictions remain until replacement qualifies. Qualified default-Preference coverage and broader observed behavior remain required. |
@@ -59,7 +59,7 @@ The runtime uploads nothing.
 
 Each final checked action has a separate JSON receipt.
 Its stable session and call identity, exact arguments, Preference, user request, and complete production-input identity suppress duplicate observations.
-Changed checked input gets a different receipt.
+Changed checked input, model, or verdict gets a different receipt.
 A host without stable call identity cannot release a recorded action while logging is required.
 The record includes agent version, selected model digest, argument size and hash, decision, and available timing and production-input metadata.
 A deterministic refusal before model startup does not invent a model answer or input hash.
@@ -112,3 +112,6 @@ It is a same-artifact correctness replay, not a comparison of different models o
 The [settings-shell human receipt](experiments/human-settings-shell-decisions-2026-11-03.json) covers only the six cases the owner labelled.
 The [replacement audit](model-policy-replacement.md) retains the missing trusted facts and qualification requirements.
 Existing deterministic restrictions remain active.
+
+The [successor fitting report](policy-successor-readiness.md) records the 384-case scoped export and its remaining qualification requirements.
+Preparation checks do not authorize the dependent training experiment.

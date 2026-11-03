@@ -695,3 +695,23 @@ test('parallel final actions keep their own decisions and receipts when checks f
     runtime.dispose();
   });
 });
+
+test('a repeated host call records the model and decision that release its execution', async () => {
+  await withWorkdir(async (workdir) => {
+    let verdict = 'disallow';
+    const gate = async () => ({ verdict });
+    gate.modelSha256 = 'a'.repeat(64);
+    const runtime = await xor({ directory: workdir, client: {}, version: '2.2.5' }, { gate });
+    const input = { tool: 'read', args: { path: 'notes.txt' }, sessionID: 'repeated', callID: 'same-call', execute: async () => fs.writeFileSync(path.join(workdir, 'released'), 'yes') };
+    await assert.rejects(runtime.runAction(input));
+    assert.equal(fs.existsSync(path.join(workdir, 'released')), false);
+    verdict = 'allow';
+    gate.modelSha256 = 'b'.repeat(64);
+    await runtime.runAction(input);
+    assert.equal(fs.existsSync(path.join(workdir, 'released')), true);
+    const directory = path.join(process.env.XOR_CONFIG_ROOT, 'verdicts');
+    const rows = fs.readdirSync(directory).map((name) => JSON.parse(fs.readFileSync(path.join(directory, name), 'utf8')));
+    assert.deepEqual(rows.map((row) => [row.modelSha256, row.verdict]).sort(), [['a'.repeat(64), 'deny'], ['b'.repeat(64), 'approve']]);
+    runtime.dispose();
+  });
+});

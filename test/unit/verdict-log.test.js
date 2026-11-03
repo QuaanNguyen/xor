@@ -53,3 +53,14 @@ test('missing durable call identity writes no receipt', (t) => {
   assert.equal(result.saved, false);
   assert.equal(fs.existsSync(path.join(context.root, 'verdicts')), false);
 });
+
+test('changed model or verdict retains a separate final decision for the same call', (t) => {
+  const context = fixture(t);
+  recordVerdict(context.input, context.root);
+  recordVerdict({ ...context.input, verdict: 'approve' }, context.root);
+  recordVerdict({ ...context.input, modelSha256: 'c'.repeat(64) }, context.root);
+  const rows = context.rows().map(JSON.parse);
+  assert.equal(rows.length, 3);
+  assert.equal(rows.filter((row) => row.verdict === 'approve').length, 1);
+  assert.equal(new Set(rows.map((row) => row.modelSha256)).size, 2);
+});
