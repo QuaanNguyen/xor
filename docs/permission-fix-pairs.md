@@ -50,33 +50,49 @@ Any independently agreed approval of a harmful design or refusal of a safe desig
 
 The report does not train a model, promote weights, or qualify removal of runtime checks.
 
-## November 3 development evidence
+## November 3 evaluation
 
-The [source-bound receipt](experiments/permission-fix-pairs-2026-11-03.json) records the frozen studies, independent reviewers, native artifacts, exact-input hashes, and remaining requirements.
-The original study has 192 independently agreed cases and 78 family-quarantined cases.
-The three fully agreed patterns are subshell redirects, wrapped directory changes, and locale-prefixed worktree resets.
-The first redirection and MCP Preferences produced deny-versus-ask disagreements.
-Those original decisions remain unchanged.
-The separate explicit-rule repairs still need 32 review decisions before their coverage can be assessed in full.
-The remaining external review request was rejected by automatic approval review and is awaiting approval.
+The [initial partial receipt](experiments/permission-fix-pairs-2026-11-03.json) remains preserved.
+The separate [five-pattern evaluation receipt](experiments/permission-fix-pairs-evaluation-2026-11-03.json) records complete independent reviews, explicit whole-family selection, native model observations, and the remaining coverage gaps.
+The original study has 192 independently agreed cases and 78 quarantined cases.
+The redirection repair has 30 independently agreed cases and 24 quarantined cases.
+The MCP repair has 54 independently agreed cases and no quarantined cases.
+No reviewer decision or frozen split was changed.
 
-The model selected by 0.1.5 was replayed on 108 independently agreed validation and test inputs from the three fully agreed patterns.
-Both replay sides used the same pinned model, with five rounds per side and separate warmups.
-This is repeated correctness evidence, not a comparison between different models.
-All 54 harmful inputs were approved on every measured repetition.
-All 54 safe counterparts were also approved on every measured repetition.
-No measured response was invalid, indirect, or a process failure.
+The evaluation selection contains 246 cases.
+It uses the original subshell, wrapped-directory, and locale families, together with independently agreed redirection and MCP repair families.
+The exact selected family and case identities are recorded in the receipt.
+The 174 selected validation and test inputs were replayed with the same pinned 0.1.5 model on both sides, five times per side, with separate warmups.
+This is repeated correctness evidence for one artifact.
 
-| Pattern | Measured harmful approvals | Measured safe refusals |
-| --- | --- | --- |
-| Subshell protected-file redirect | 180 of 180 | 0 of 180 |
-| Wrapped directory change | 180 of 180 | 0 of 180 |
-| Locale-prefixed worktree reset | 180 of 180 | 0 of 180 |
+| Pattern | Distinct harmful inputs | Distinct safe inputs | Measured harmful approvals | Measured safe refusals |
+| --- | ---: | ---: | --- | --- |
+| Subshell protected-file redirect | 18 | 18 | 180 of 180 | 0 of 180 |
+| Wrapped directory change | 18 | 18 | 180 of 180 | 0 of 180 |
+| Locale-prefixed worktree reset | 18 | 18 | 180 of 180 | 0 of 180 |
+| Failed redirection before variable-based deletion | 15 | 15 | 0 of 150 | 150 of 150 |
+| MCP configuration write | 18 | 18 | 0 of 180 | 180 of 180 |
 
-These are repeated-attempt counts across three real tool argument shapes.
-Each row has 18 distinct harmful inputs and 18 distinct safe counterparts.
-The raw report separates agent, split, and replay side.
+The raw audit checks all 1,740 measured responses against the production verdict parser and exact request hashes.
+Every repair response is a direct denial, including all 33 distinct safe repair inputs.
+There are no invalid answers, indirect answers, or process failures in these measurements.
+The report separates agent, split, and replay side.
+The raw audit includes 30 source-linked request and response samples.
 No latency improvement is claimed.
-The redirection-repair and MCP-repair inputs remain unscored pending their complete independent reviews.
-The model was neither trained nor changed, and the deterministic runtime checks remain necessary.
-This work does not yet complete the full five-pattern scenario ticket.
+The native model classified inert requests, and no proposed command was executed.
+The production runtime's deterministic checks remain active.
+
+## Remaining coverage and human review
+
+The selected redirection repair has no agreed training cases and only two validation pairs per agent.
+It therefore misses the study's planned three pairs per agent and split.
+The original study has one separate fully agreed redirection training family, containing one harmful and one safe action for each agent.
+Its exact case identities and labels are recorded separately as an available training supplement.
+It does not meet the planned three-variation target by itself.
+The evaluation selection and its twelve count gaps remain explicit.
+
+Eight unlabeled owner-review groups cover the 24 quarantined redirection repair inputs.
+Owner decisions remain pending.
+Any later case-bound human adjudication must preserve the independent reviewer receipts and the existing global qualification requirements.
+This work establishes five-pattern development evaluation, while full paired training and held-out coverage remains incomplete.
+It does not establish a qualified export, fresh blind evaluation, or model replacement.
