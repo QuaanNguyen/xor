@@ -28,6 +28,18 @@ async function withWorkdir(run) {
   }
 }
 
+function toolHost(registered) {
+  const definitions = new Map(['read', 'edit', 'shell', 'opencode.worktree_remove'].map((id) => [id, { id, name: id, execute: async () => undefined }]));
+  registered.execute = (event) => definitions.get(event.tool).execute(event.input, { sessionID: event.sessionID, id: event.id || event.callID || 'fixture-call', signal: event.signal });
+  return {
+    hook: async (name, callback) => { registered[name] = callback; return { dispose() {} }; },
+    transform: async (callback) => {
+      callback({ list: () => [...definitions.values()], update: (id, change) => change(definitions.get(id)) });
+      return { dispose() {} };
+    },
+  };
+}
+
 function gateDouble(respond = () => ({ verdict: 'allow' })) {
   const calls = [];
   const gate = async (input) => {
@@ -57,7 +69,7 @@ test('a folder without a Preference uses the shipped default and writes nothing'
       { sessionID: 'one' },
       { message: {}, parts: [{ type: 'text', text: 'fix the parser' }, { type: 'text', text: 'injected', synthetic: true }] },
     );
-    await hooks['tool.execute.before']({ tool: 'read', sessionID: 'one' }, { args: { filePath: 'src/parser.js' } });
+    await hooks.runAction({ callID: 'fixture-call', ...({ tool: 'read', sessionID: 'one' }), ...({ args: { filePath: 'src/parser.js' } }), execute: async () => undefined });
 
     assert.equal(gate.calls.length, 1);
     assert.equal(gate.calls[0].userMessage, 'fix the parser');
@@ -72,7 +84,7 @@ test('a partial Preference keeps the shipped text for its missing fields', async
     writePreference(workdir, { purpose: 'Documentation only.', ask: 'pushing or deploying' });
     const gate = gateDouble();
     const hooks = await xor({ directory: workdir, client: {} }, { gate });
-    await hooks['tool.execute.before']({ tool: 'read', sessionID: 'one' }, { args: { filePath: 'README.md' } });
+    await hooks.runAction({ callID: 'fixture-call', ...({ tool: 'read', sessionID: 'one' }), ...({ args: { filePath: 'README.md' } }), execute: async () => undefined });
 
     const { preference } = gate.calls[0];
     assert.match(preference.text, /Documentation only/);
@@ -85,12 +97,12 @@ test('an unreadable or invalid Preference blocks the session until a person fixe
   await withWorkdir(async (workdir) => {
     const gate = gateDouble();
     const hooks = await xor({ directory: workdir, client: {} }, { gate });
-    const before = hooks['tool.execute.before'];
+    const runtime = hooks;
 
     for (const broken of ['{', '[]', JSON.stringify({ read_paths: ['**'] }), JSON.stringify({ allow: 7 })]) {
       writePreference(workdir, broken);
       await assert.rejects(
-        before({ tool: 'read', sessionID: 'one' }, { args: { filePath: 'README.md' } }),
+        runtime.runAction({ callID: 'fixture-call', ...({ tool: 'read', sessionID: 'one' }), ...({ args: { filePath: 'README.md' } }), execute: async () => undefined }),
         (error) => {
           assert.match(error.message, /Governing rule: preference_validity/);
           assert.match(error.message, /Fix the Preference at/);
@@ -101,7 +113,7 @@ test('an unreadable or invalid Preference blocks the session until a person fixe
     assert.equal(gate.calls.length, 0);
 
     writePreference(workdir, { purpose: 'Fixed by the owner.' });
-    await before({ tool: 'read', sessionID: 'one' }, { args: { filePath: 'README.md' } });
+    await runtime.runAction({ callID: 'fixture-call', ...({ tool: 'read', sessionID: 'one' }), ...({ args: { filePath: 'README.md' } }), execute: async () => undefined });
     assert.match(gate.calls.at(-1).preference.text, /Fixed by the owner/);
   });
 });
@@ -127,8 +139,8 @@ test('a retired Protocol only contributes done criteria while no Preference exis
         },
       }, { gate });
 
-      await hooks['tool.execute.before']({ tool: 'edit', sessionID: 'one' }, { args: { filePath: 'src/parser.js', oldString: 'a', newString: 'b' } });
-      await hooks['tool.execute.before']({ tool: 'bash', sessionID: 'one' }, { args: { command: 'node --version' } });
+      await hooks.runAction({ callID: 'fixture-call', ...({ tool: 'edit', sessionID: 'one' }), ...({ args: { filePath: 'src/parser.js', oldString: 'a', newString: 'b' } }), execute: async () => undefined });
+      await hooks.runAction({ callID: 'fixture-call', ...({ tool: 'bash', sessionID: 'one' }), ...({ args: { command: 'node --version' } }), execute: async () => undefined });
       assert.equal(gate.calls.length, 2);
       assert.deepEqual(gate.calls[0].preference.done_criteria.map(({ id }) => id), ['parser-exists']);
 
@@ -184,7 +196,7 @@ test('the plugin remediates completion claims and resets after a Preference corr
 
     await hooks['chat.message']({ sessionID: 'two' }, { parts: [{ type: 'text', text: prompts[2].body.parts[0].text }] });
     await assert.rejects(
-      hooks['tool.execute.before']({ tool: 'edit', sessionID: 'two' }, { args: { filePath: 'src/parser.js' } }),
+      hooks.runAction({ callID: 'fixture-call', ...({ tool: 'edit', sessionID: 'two' }), ...({ args: { filePath: 'src/parser.js' } }), execute: async () => undefined }),
       /stopped this session/i,
     );
 
@@ -192,7 +204,7 @@ test('the plugin remediates completion claims and resets after a Preference corr
     fs.writeFileSync(path.join(workdir, 'src', 'parser.js'), 'export const parser = true;\n');
     writePreference(workdir, { done_criteria: [{ id: 'parser-exists', checks: [{ type: 'file_exists', path: 'src/parser.js' }] }] });
 
-    await hooks['tool.execute.before']({ tool: 'edit', sessionID: 'two' }, { args: { filePath: 'src/parser.js' } });
+    await hooks.runAction({ callID: 'fixture-call', ...({ tool: 'edit', sessionID: 'two' }), ...({ args: { filePath: 'src/parser.js' } }), execute: async () => undefined });
     assert.equal(gate.calls.at(-1).userMessage, '', 'xor feedback is not treated as the owner speaking');
   });
 });
@@ -201,20 +213,20 @@ test('a Preference change made during an agent tool run is quarantined', async (
   await withWorkdir(async (workdir) => {
     writePreference(workdir, { purpose: 'First purpose.' });
     const hooks = await xor({ directory: workdir, client: {} }, { gate: gateDouble() });
-    const before = hooks['tool.execute.before'];
+    const runtime = hooks;
     const after = hooks['tool.execute.after'];
 
-    await before({ tool: 'bash', sessionID: 'three' }, { args: { command: 'node script.js' } });
+    await runtime.runAction({ callID: 'fixture-call', ...({ tool: 'bash', sessionID: 'three' }), ...({ args: { command: 'node script.js' } }), execute: async () => undefined });
     writePreference(workdir, { purpose: 'Rewritten by a script.' });
     await after({ tool: 'bash', sessionID: 'three' }, { output: '' });
 
     await assert.rejects(
-      before({ tool: 'edit', sessionID: 'three' }, { args: { filePath: 'lib/a.js' } }),
+      runtime.runAction({ callID: 'fixture-call', ...({ tool: 'edit', sessionID: 'three' }), ...({ args: { filePath: 'lib/a.js' } }), execute: async () => undefined }),
       /changed during an agent tool/i,
     );
 
     writePreference(workdir, { purpose: 'Corrected by the owner.' });
-    await before({ tool: 'edit', sessionID: 'three' }, { args: { filePath: 'lib/a.js' } });
+    await runtime.runAction({ callID: 'fixture-call', ...({ tool: 'edit', sessionID: 'three' }), ...({ args: { filePath: 'lib/a.js' } }), execute: async () => undefined });
   });
 });
 
@@ -233,7 +245,7 @@ test('the latest user message is read from the session when the hook missed it',
         },
       },
     }, { gate });
-    await hooks['tool.execute.before']({ tool: 'read', sessionID: 'four' }, { args: { filePath: 'README.md' } });
+    await hooks.runAction({ callID: 'fixture-call', ...({ tool: 'read', sessionID: 'four' }), ...({ args: { filePath: 'README.md' } }), execute: async () => undefined });
     assert.equal(gate.calls[0].userMessage, 'second request');
   });
 });
@@ -244,7 +256,7 @@ test('without a retrieved Gate every call is refused with the install remedy', a
     try {
       const hooks = await xor({ directory: workdir, client: {} });
       await assert.rejects(
-        hooks['tool.execute.before']({ tool: 'read', sessionID: 'five' }, { args: { filePath: 'README.md' } }),
+        hooks.runAction({ callID: 'fixture-call', ...({ tool: 'read', sessionID: 'five' }), ...({ args: { filePath: 'README.md' } }), execute: async () => undefined }),
         (error) => {
           assert.match(error.message, /Governing rule: gate_unavailable/);
           assert.match(error.message, /(?:xor|xor) install/);
@@ -270,11 +282,7 @@ test('OpenCode V2 applies the xor to live tool input', async () => {
         app: { version: "2.0.32" },
         location: { directory: workdir },
         session: { context: async () => [] },
-        tool: {
-          hook: async (name, callback) => {
-            registered[name] = callback;
-          },
-        },
+        tool: toolHost(registered),
         event: {
           subscribe() {
             return (async function* () {})();
@@ -282,7 +290,7 @@ test('OpenCode V2 applies the xor to live tool input', async () => {
         },
       });
       await assert.rejects(
-        registered['execute.before']({
+        registered.execute({
           tool: 'edit',
           sessionID: 'session-v2',
           agent: 'build',
@@ -293,7 +301,7 @@ test('OpenCode V2 applies the xor to live tool input', async () => {
         /Decided by: folder boundary/i,
       );
       await assert.rejects(
-        registered['execute.before']({
+        registered.execute({
           tool: 'read',
           sessionID: 'session-v2',
           id: 'call-2',
@@ -334,12 +342,12 @@ test('OpenCode V2 tagged messages preserve user intent and completion evidence',
             { type: 'text', text: 'I fixed the output.' },
           ] },
         ] },
-        tool: { hook: async (name, callback) => { registered[name] = callback; } },
+        tool: toolHost(registered),
         event: { subscribe: async function* () {
           yield { type: 'session.idle', sessionID: 'current' };
         } },
       }, { gate });
-      await registered['execute.before']({ tool: 'read', sessionID: 'current', input: { path: 'output.txt' } });
+      await registered.execute({ tool: 'read', sessionID: 'current', input: { path: 'output.txt' } });
       assert.equal(gate.calls[0].userMessage, 'Read output.txt.');
       await new Promise((resolve) => setImmediate(resolve));
       const events = fs.readFileSync(eventsFile, 'utf8').trim().split('\n').map(JSON.parse);
@@ -357,11 +365,11 @@ test('retired restrictions withhold tools until the owner migrates them', async 
     writeRetiredProtocol(workdir, '.opencode/protocol.json', { task: 'Documentation only.', write_paths: ['docs/**'], deny_commands: ['git push'] });
     const gate = gateDouble();
     const hooks = await xor({ directory: workdir, client: {} }, { gate });
-    await assert.rejects(hooks['tool.execute.before']({ tool: 'edit', sessionID: 'one' }, { args: { path: 'src/parser.js', oldString: 'a', newString: 'b' } }), /migrate/);
+    await assert.rejects(hooks.runAction({ callID: 'fixture-call', ...({ tool: 'edit', sessionID: 'one' }), ...({ args: { path: 'src/parser.js', oldString: 'a', newString: 'b' } }), execute: async () => undefined }), /migrate/);
     assert.equal(gate.calls.length, 0);
     const { migrate } = await import('../../scripts/migrate.js');
     migrate({ workdir, configRoot: path.join(workdir, 'owner-config'), ownerPolicyPath: path.join(workdir, 'owner-policy.json') });
-    await hooks['tool.execute.before']({ tool: 'read', sessionID: 'one' }, { args: { path: 'docs/parser.md' } });
+    await hooks.runAction({ callID: 'fixture-call', ...({ tool: 'read', sessionID: 'one' }), ...({ args: { path: 'docs/parser.md' } }), execute: async () => undefined });
     assert.match(gate.calls[0].preference.text, /Documentation only/);
     assert.match(gate.calls[0].preference.text, /docs\/\*\*/);
     assert.match(gate.calls[0].preference.text, /git push/);
@@ -373,7 +381,7 @@ test('V2 namespaced worktree removal cannot delete the Preference directory', as
     writePreference(workdir, { text: 'Keep the project instructions intact.' });
     const gate = gateDouble();
     const hooks = await xor({ directory: workdir, client: {} }, { gate });
-    await assert.rejects(hooks['tool.execute.before']({ tool: 'opencode.worktree_remove', sessionID: 'one' }, { args: { directory: '.xor', force: true } }), /Governing rule: preference/);
+    await assert.rejects(hooks.runAction({ callID: 'fixture-call', ...({ tool: 'opencode.worktree_remove', sessionID: 'one' }), ...({ args: { directory: '.xor', force: true } }), execute: async () => undefined }), /Governing rule: preference/);
     assert.equal(gate.calls.length, 0);
   });
 });
@@ -406,7 +414,7 @@ test('auto-accept preserves each parallel refusal, owner question and allowed ca
           location: { directory: workdir },
           session: { context: async () => [] },
           permission: nativePermission,
-          tool: { hook: async (name, callback) => { registered[name] = callback; } },
+          tool: toolHost(registered),
         }, { gate });
         const calls = [
           { callID: 'protected', tool: 'edit', input: { path: '.xor/preference.json', oldString: 'a', newString: 'b' } },
@@ -415,7 +423,7 @@ test('auto-accept preserves each parallel refusal, owner question and allowed ca
           { callID: 'allowed', tool: 'read', input: { path: 'README.md' } },
         ];
         const results = await Promise.allSettled(calls.map(async (call) => {
-          await registered['execute.before']({ ...call, sessionID: 'parallel' });
+          await registered.execute({ ...call, sessionID: 'parallel' });
           if (!autoAccept) await nativePermission.assert();
           executed.push(call.callID);
           await registered['execute.after']({ ...call, sessionID: 'parallel', result: 'done' });
@@ -453,7 +461,7 @@ test('disposing the plugin cancels pending checks even if a custom gate later ap
       return new Promise((resolve) => { finish = resolve; });
     };
     const hooks = await xor({ directory: workdir, client: {} }, { gate });
-    const pending = hooks['tool.execute.before']({ tool: 'read', sessionID: 'cancelled' }, { args: { path: 'notes.txt' } });
+    const pending = hooks.runAction({ callID: 'fixture-call', ...({ tool: 'read', sessionID: 'cancelled' }), ...({ args: { path: 'notes.txt' } }), execute: async () => undefined });
     const rejected = assert.rejects(pending, /cancelled/);
     const signal = await checking;
     hooks.dispose();
@@ -473,7 +481,7 @@ test('session deletion cancels an active check even when the Preference becomes 
       entered(signal);
       return new Promise((resolve) => { finish = resolve; });
     } });
-    const pending = hooks['tool.execute.before']({ tool: 'read', sessionID: 'deleted' }, { args: { path: 'notes.txt' } });
+    const pending = hooks.runAction({ callID: 'fixture-call', ...({ tool: 'read', sessionID: 'deleted' }), ...({ args: { path: 'notes.txt' } }), execute: async () => undefined });
     const rejected = assert.rejects(pending, /cancelled/);
     const signal = await checking;
     writePreference(workdir, '{');
@@ -497,7 +505,7 @@ test('final verdict logging excludes denied arguments and survives retry and plu
     const input = { tool: 'shell', sessionID: 'logged', callID: 'one' };
     const output = { args: { command: 'echo FAKE_PRIVATE_TOKEN_12' } };
     const directory = path.join(process.env.XOR_CONFIG_ROOT, 'verdicts');
-    const pending = hooks['tool.execute.before'](input, output);
+    const pending = hooks.runAction({ callID: 'fixture-call', ...(input), ...(output), execute: async () => undefined });
     const rejected = assert.rejects(pending, /refused/);
     await checking;
     assert.equal(fs.existsSync(directory), false);
@@ -505,7 +513,7 @@ test('final verdict logging excludes denied arguments and survives retry and plu
     await rejected;
     hooks.dispose();
     const reloaded = await xor({ directory: workdir, client: {}, version: '2.2.5' }, { gate: async () => ({ verdict: 'disallow' }) });
-    await assert.rejects(reloaded['tool.execute.before'](input, output), /refused/);
+    await assert.rejects(reloaded.runAction({ callID: 'fixture-call', ...(input), ...(output), execute: async () => undefined }), /refused/);
     reloaded.dispose();
     const files = fs.readdirSync(directory);
     assert.equal(files.length, 1);
@@ -524,7 +532,7 @@ test('owners can turn verdict logging off without skipping the checker', async (
     fs.writeFileSync(path.join(workdir, '.xor', 'settings.json'), JSON.stringify({ verdict_logging: false }));
     const gate = gateDouble();
     const hooks = await xor({ directory: workdir, client: {}, version: '2.2.5' }, { gate });
-    await hooks['tool.execute.before']({ tool: 'read', sessionID: 'off', callID: 'one' }, { args: { path: 'notes.txt' } });
+    await hooks.runAction({ callID: 'fixture-call', ...({ tool: 'read', sessionID: 'off', callID: 'one' }), ...({ args: { path: 'notes.txt' } }), execute: async () => undefined });
     assert.equal(gate.calls.length, 1);
     assert.equal(fs.existsSync(path.join(process.env.XOR_CONFIG_ROOT, 'verdicts')), false);
     hooks.dispose();
@@ -548,10 +556,10 @@ test('a waiting call logs the same Preference that its checker receives after an
     } } };
     const gate = gateDouble();
     const hooks = await xor({ directory: workdir, client, version: '2.2.5' }, { gate });
-    const first = hooks['tool.execute.before']({ tool: 'read', sessionID: 'race', callID: 'first' }, { args: { path: 'first.txt' } });
+    const first = hooks.runAction({ callID: 'fixture-call', ...({ tool: 'read', sessionID: 'race', callID: 'first' }), ...({ args: { path: 'first.txt' } }), execute: async () => undefined });
     await waiting;
     writePreference(workdir, { text: 'Read new rules.' });
-    await hooks['tool.execute.before']({ tool: 'read', sessionID: 'race', callID: 'second' }, { args: { path: 'second.txt' } });
+    await hooks.runAction({ callID: 'fixture-call', ...({ tool: 'read', sessionID: 'race', callID: 'second' }), ...({ args: { path: 'second.txt' } }), execute: async () => undefined });
     resume();
     await first;
     const directory = path.join(process.env.XOR_CONFIG_ROOT, 'verdicts');
@@ -573,7 +581,7 @@ test('OpenCode execution interruption and failure events cancel active checks', 
         entered(signal);
         return new Promise((resolve) => { finish = resolve; });
       } });
-      const pending = hooks['tool.execute.before']({ tool: 'read', sessionID: type }, { args: { path: 'notes.txt' } });
+      const pending = hooks.runAction({ callID: 'fixture-call', ...({ tool: 'read', sessionID: type }), ...({ args: { path: 'notes.txt' } }), execute: async () => undefined });
       const rejected = assert.rejects(pending, /cancelled/);
       const signal = await checking;
       await hooks.event({ event: { type, properties: { sessionID: type } } });
@@ -583,4 +591,73 @@ test('OpenCode execution interruption and failure events cancel active checks', 
       hooks.dispose();
     });
   }
+});
+
+test('execution receives only the private argument snapshot checked by the model', async () => {
+  await withWorkdir(async (workdir) => {
+    let entered;
+    const checking = new Promise(resolve => { entered = resolve; });
+    let finish;
+    const gate = gateDouble(async () => { entered(); return new Promise(resolve => { finish = resolve; }); });
+    const runtime = await xor({ directory: workdir, client: {} }, { gate });
+    const args = { path: 'original.txt' };
+    let executed;
+    const pending = runtime.runAction({ tool: 'read', args, sessionID: 'snapshot', callID: 'one', execute: checked => { executed = checked; return 'completed'; } });
+    await checking;
+    args.path = 'changed.txt';
+    finish({ verdict: 'allow' });
+    assert.equal(await pending, 'completed');
+    assert.deepEqual(executed, { path: 'original.txt' });
+    assert.deepEqual(gate.calls[0].call.args, executed);
+    runtime.dispose();
+  });
+});
+
+test('an approval that cannot be saved never reaches the original executor', async () => {
+  await withWorkdir(async (workdir) => {
+    fs.mkdirSync(process.env.XOR_CONFIG_ROOT, { recursive: true });
+    fs.writeFileSync(path.join(process.env.XOR_CONFIG_ROOT, 'verdicts'), 'not a directory');
+    let executed = false;
+    const runtime = await xor({ directory: workdir, client: {} }, { gate: gateDouble() });
+    await assert.rejects(runtime.runAction({ tool: 'read', args: { path: 'notes.txt' }, sessionID: 'disk', callID: 'one', execute: () => { executed = true; } }), /final verdict could not be saved.*verdict_logging/);
+    assert.equal(executed, false);
+    runtime.dispose();
+  });
+});
+
+test('unsupported decoded input is refused without invoking the checker or executor', async () => {
+  await withWorkdir(async (workdir) => {
+    const gate = gateDouble();
+    let executed = false;
+    const runtime = await xor({ directory: workdir, client: {} }, { gate });
+    await assert.rejects(runtime.runAction({ tool: 'read', args: { path: new URL('file:///tmp/example') }, sessionID: 'unsupported', callID: 'one', execute: () => { executed = true; } }), /plain JSON/);
+    assert.equal(executed, false);
+    assert.equal(gate.calls.length, 0);
+    runtime.dispose();
+  });
+});
+
+test('a host without final executor transforms cannot activate the plugin', async () => {
+  await withWorkdir(async (workdir) => {
+    await assert.rejects(pluginModule.default.setup({ app: { version: '2.2.5' }, location: { directory: workdir }, tool: { hook: async () => undefined } }), /decoded tool execution transforms/);
+  });
+});
+
+test('native namespaced worktree actions preserve owner-folder boundaries', async () => {
+  await withWorkdir(async (workdir) => {
+    const gate = gateDouble();
+    const runtime = await xor({ directory: workdir, client: {} }, { gate });
+    let executed = false;
+    for (const [tool, args, rule] of [
+      ['opencode_worktree_remove', { directory: '.xor', force: true }, 'preference'],
+      ['opencode_worktree_create', { name: 'repair' }, 'tool_contract'],
+    ]) {
+      await assert.rejects(runtime.runAction({ tool, args, sessionID: 'native-worktree', callID: tool, execute: () => { executed = true; } }), new RegExp('Governing rule: ' + rule));
+    }
+    assert.equal(executed, false);
+    assert.equal(gate.calls.length, 0);
+    const receipts = fs.readdirSync(path.join(process.env.XOR_CONFIG_ROOT, 'verdicts')).map(file => JSON.parse(fs.readFileSync(path.join(process.env.XOR_CONFIG_ROOT, 'verdicts', file), 'utf8')));
+    assert.deepEqual(receipts.map(row => row.tool).sort(), ['opencode_worktree_create', 'opencode_worktree_remove']);
+    runtime.dispose();
+  });
 });

@@ -43,7 +43,7 @@ const URL_RE = /\bhttps?:\/\/[^\s'"`)>\]}]+/gi;
 const HOSTISH_RE = /\b(?:\d{1,3}\.){3}\d{1,3}(?::\d+)?\b/g;
 
 function canonicalToolName(tool) {
-  return String(tool).toLowerCase().replace(/^opencode\./, '').replace(/[^a-z_]/g, '');
+  return String(tool).toLowerCase().replace(/^opencode[._]/, '').replace(/[^a-z_]/g, '');
 }
 
 function safeParse(s) {

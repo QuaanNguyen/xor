@@ -42,6 +42,8 @@ const { createNeedleGate } = require(path.join(xorLibDir, "gate.js"));
 
 const { readGateSettings } = require(path.join(xorLibDir, 'gate-settings.js'));
 const { recordVerdict } = require(path.join(xorLibDir, 'verdict-log.js'));
+const { snapshotActionInput } = require(path.join(xorLibDir, 'action-input.js'));
+const { installExecutionGuard } = require(path.join(xorLibDir, 'opencode-execution.js'));
 
 const { assertOpenCodeVersion } = require(path.join(xorLibDir, "opencode-version.js"));
 
@@ -436,32 +438,41 @@ export const xor = async ({ client, directory, version }, options = {}) => {
       rememberUserMessage(input?.sessionID, userText(output?.parts));
     },
 
-    "tool.execute.before": async (input, output) => {
+    runAction: async (input) => {
       if (ended) throw new Error('xor is stopped. Reload the plugin before running tools.');
+      const execute = input.execute;
+      if (typeof execute !== 'function') throw new Error('xor requires the final tool executor.');
       const tool = input.tool || "";
-      const args = structuredClone(output?.args || input.args || {});
+      const args = snapshotActionInput(input.args === undefined ? {} : input.args);
       const next = refreshPreference();
       if (!next.valid) throw new Error(sessionBlockedMessage(tool, args, blockedReason(next)));
+      const settings = readGateSettings(workdir);
+      if (settings.verdictLogging && (!input.sessionID || !input.callID)) throw new Error('xor needs a stable OpenCode session and call identity to save a final verdict. Upgrade OpenCode or set verdict_logging to false in .xor/settings.json.');
       const state = stateFor(input.sessionID, next);
       const controller = new AbortController();
       const signal = input.signal ? AbortSignal.any([controller.signal, input.signal]) : controller.signal;
       state.activeChecks.add(controller);
       try {
         const userMessage = await latestUserMessage(input.sessionID);
-        const checkedPreference = structuredClone(state.xor.preference);
-        const out = await state.xor.proposedAction({
-          tool,
-          args,
-          signal,
-          userMessage,
-        });
-        publish(out);
-        if (input.callID && readGateSettings(workdir).verdictLogging) {
+        const current = refreshPreference();
+        if (!current.valid) throw new Error(sessionBlockedMessage(tool, args, blockedReason(current)));
+        syncPreference(state, current);
+        const checkedPreference = snapshotActionInput(state.xor.preference);
+        let out = await state.xor.proposedAction({ tool, args, signal, userMessage, preference: checkedPreference });
+        if (signal.aborted && out.decision === 'allow') {
           const detail = out.events.at(-1)?.detail || {};
+          out = {
+            decision: 'disallow',
+            message: 'xor withheld this action because its check was cancelled.',
+            review: { ...out.review, rule: 'gate_no_verdict' },
+            events: [...out.events.slice(0, -1), { type: 'excursion', status: 'block', petState: 'refused', tool, summary: 'cancelled action', reason: 'the Gate check was cancelled', rule: 'gate_no_verdict', detail }],
+          };
+        }
+        if (settings.verdictLogging) {
           const verdict = { allow: 'approve', disallow: 'deny', ask: 'ask' }[out.decision];
-          const rule = out.events.at(-1)?.rule || 'gate';
+          const review = out.review;
           try {
-            recordVerdict({
+            const saved = recordVerdict({
               sessionID: input.sessionID,
               callID: input.callID,
               agentVersion: version,
@@ -470,17 +481,20 @@ export const xor = async ({ client, directory, version }, options = {}) => {
               userMessage,
               preference: checkedPreference,
               verdict,
-              reason: verdict === 'approve' ? 'The checker approved the action' : `The action was withheld by ${rule}`,
+              reason: verdict === 'approve' ? 'The checker approved the final decoded action' : `The action was withheld by ${review.rule}`,
               modelSha256: gate.modelSha256,
-              inputHash: detail.inputHash,
-              requestVersion: detail.requestVersion,
-              timing: { timeoutMs: detail.timeoutMs ?? null, queueMs: detail.queueMs ?? null, checkerMs: detail.checkerMs ?? null },
+              inputHash: review.inputHash,
+              requestVersion: review.requestVersion,
+              timing: { timeoutMs: review.timeoutMs ?? null, queueMs: review.queueMs ?? null, checkerMs: review.checkerMs ?? null },
             });
+            if (!saved.saved && !saved.duplicate) throw new Error(saved.reason);
           } catch (error) {
-            console.error('[xor] Verdict could not be saved:', error.message);
+            throw new Error('xor withheld this action because its final verdict could not be saved. Fix the XOR verdict directory or set verdict_logging to false in .xor/settings.json. ' + error.message);
           }
         }
+        publish(out);
         if (out.decision !== "allow") throw new Error(out.message);
+        return await execute(args, signal);
       } finally {
         state.activeChecks.delete(controller);
       }
@@ -606,12 +620,13 @@ export default {
     assertOpenCodeVersion(ctx.app?.version);
     const directory = ctx.location?.directory || ctx.location?.project?.directory || process.cwd();
     const hooks = await xor({ client: v2Client(ctx), directory, version: ctx.app?.version }, options);
-    await ctx.tool.hook("execute.before", async (event) => {
-      await hooks["tool.execute.before"](
-        { tool: event.tool, sessionID: event.sessionID, callID: event.callID || event.id, signal: event.signal },
-        { args: toolInput(event) },
-      );
-    });
+    let executionGuard;
+    try {
+      executionGuard = await installExecutionGuard(ctx, hooks);
+    } catch (error) {
+      hooks.dispose();
+      throw error;
+    }
     await ctx.tool.hook("execute.after", async (event) => {
       const failed = event.status === "error" || event.error;
       await hooks["tool.execute.after"](
@@ -635,6 +650,7 @@ export default {
     }
     return () => {
       controller.abort();
+      executionGuard.dispose();
       hooks.dispose();
     };
   },

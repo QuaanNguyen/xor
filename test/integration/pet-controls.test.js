@@ -112,11 +112,11 @@ test('live plugin sessions broadcast off, on, decimal size, and off while action
     assert.match(await petCommand(root, '250.5'), /250.5%/);
     await new Promise((resolve) => setImmediate(resolve));
     assert.equal(events.filter((event) => event.detail?.scale === 2.505).length, 2);
-    for (const hook of hooks) await hook['tool.execute.before']({ tool: 'read', sessionID: 'test' }, { args: { filePath: path.join(root, 'input.txt') } });
+    for (const hook of hooks) await hook.runAction({ callID: 'fixture-call', ...({ tool: 'read', sessionID: 'test' }), ...({ args: { filePath: path.join(root, 'input.txt') } }), execute: async () => undefined });
     assert.equal(decisions, 2);
     assert.match(await petCommand(root, 'off'), /Applied to active sessions/);
     assert.ok(children.every((child) => child.stopped));
-    for (const hook of hooks) await hook['tool.execute.before']({ tool: 'read', sessionID: 'test' }, { args: { filePath: path.join(root, 'input.txt') } });
+    for (const hook of hooks) await hook.runAction({ callID: 'fixture-call', ...({ tool: 'read', sessionID: 'test' }), ...({ args: { filePath: path.join(root, 'input.txt') } }), execute: async () => undefined });
     assert.equal(decisions, 4);
     await petCommand(root, 'reset');
     assert.deepEqual(readConfig(root).config.pet, { enabled: false, scale: 1 });
@@ -168,8 +168,9 @@ test('unavailable optional control storage cannot prevent gate startup', async (
     fs.mkdirSync(path.join(workdir, '.xor'), { recursive: true });
     fs.writeFileSync(path.join(workdir, '.xor', 'preference.json'), JSON.stringify({ text: 'Permit reading the requested local fixture.' }));
     fs.writeFileSync(path.join(workdir, 'fixture.txt'), 'Local fixture.');
+    fs.writeFileSync(path.join(workdir, '.xor', 'settings.json'), JSON.stringify({ verdict_logging: false }));
     for (const forced of ['0', '1']) {
-      const result = spawnSync(process.execPath, ['--input-type=module', '-e', `import { xor } from ${JSON.stringify(pathToFileURL(path.join(project, 'plugin/xor.js')).href)}; const hook = await xor({ directory: process.cwd() }, { gate: async () => ({ verdict: 'allow' }) }); await hook['tool.execute.before']({ tool: 'read' }, { args: { filePath: 'fixture.txt' } }); console.log('gate operational'); hook.dispose();`], {
+      const result = spawnSync(process.execPath, ['--input-type=module', '-e', `import { xor } from ${JSON.stringify(pathToFileURL(path.join(project, 'plugin/xor.js')).href)}; const hook = await xor({ directory: process.cwd() }, { gate: async () => ({ verdict: 'allow' }) }); await hook.runAction({ callID: 'fixture-call', ...({ tool: 'read', sessionID: 'pet-storage' }), ...({ args: { filePath: 'fixture.txt' } }), execute: async () => undefined }); console.log('gate operational'); hook.dispose();`], {
         cwd: workdir,
         env: { ...process.env, XOR_CONFIG_ROOT: config, XOR_NO_PET: forced },
         encoding: 'utf8',
