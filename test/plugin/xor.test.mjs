@@ -661,3 +661,37 @@ test('native namespaced worktree actions preserve owner-folder boundaries', asyn
     runtime.dispose();
   });
 });
+
+test('parallel final actions keep their own decisions and receipts when checks finish in reverse order', async () => {
+  await withWorkdir(async (workdir) => {
+    const count = 12;
+    const releases = new Map();
+    let entered;
+    const allEntered = new Promise((resolve) => { entered = resolve; });
+    const gate = async ({ call }) => new Promise((resolve) => {
+      releases.set(call.args.path, resolve);
+      if (releases.size === count) entered();
+    });
+    const runtime = await xor({ directory: workdir, client: {}, version: '2.2.5' }, { gate });
+    const expected = ['allow', 'disallow', 'ask'];
+    const pending = Array.from({ length: count }, (_, index) => runtime.runAction({
+      tool: 'read', args: { path: `notes-${index}.txt` }, sessionID: 'parallel-final', callID: `call-${index}`,
+      execute: async () => { fs.writeFileSync(path.join(workdir, `marker-${index}`), 'ran'); },
+    }).then(() => 'allow', () => 'withheld'));
+    await allEntered;
+    for (let index = count - 1; index >= 0; index -= 1) releases.get(`notes-${index}.txt`)({ verdict: expected[index % expected.length] });
+    const outcomes = await Promise.all(pending);
+    const directory = path.join(process.env.XOR_CONFIG_ROOT, 'verdicts');
+    const rows = fs.readdirSync(directory).map((file) => JSON.parse(fs.readFileSync(path.join(directory, file), 'utf8')));
+    const byHash = new Map(rows.map((row) => [row.argumentsHash, row]));
+    assert.equal(rows.length, count);
+    for (let index = 0; index < count; index += 1) {
+      const allowed = index % expected.length === 0;
+      assert.equal(outcomes[index], allowed ? 'allow' : 'withheld');
+      assert.equal(fs.existsSync(path.join(workdir, `marker-${index}`)), allowed);
+      const hash = createHash('sha256').update(JSON.stringify({ path: `notes-${index}.txt` })).digest('hex');
+      assert.equal(byHash.get(hash).verdict, ['approve', 'deny', 'ask'][index % expected.length]);
+    }
+    runtime.dispose();
+  });
+});

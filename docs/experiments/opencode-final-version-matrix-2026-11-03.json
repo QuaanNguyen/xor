@@ -1,0 +1,137 @@
+{
+  "schemaVersion": 1,
+  "checkedAt": "2026-11-03",
+  "status": "verified-for-listed-final-guard-lifecycle-scenarios",
+  "toolSelection": "Local deterministic response fixtures; no external language model.",
+  "checker": "Pinned native Needle with current registered final-action guard.",
+  "modelSha256": "e1c8a7c8b01b3e041f19ae1d0ec68fbfc92ab01f929f93f360fbd90580146a13",
+  "runtimeSourceHashes": {
+    "scripts/verify-opencode-lifecycle.mjs": "2aa3510bfba545584a98677a2c0ad5b4912219624c08bace9e60588dea705c89",
+    "plugin/xor.js": "a2b8b64a1a2578f1d406401a3f72fd4b7c5967152e653971d532d51b3d9cb3c7",
+    "xor/lib/gate.js": "0d1f0c2199568c1b5d80f942bc09cd559f525492f670dbd20e2fc7285e616f25",
+    "xor/lib/session.js": "50fb7d2d58baf6489120750e5ffd6c62964252731101f9fa3aafc5c457415d78",
+    "xor/lib/verdict-log.js": "3898a55c0771e1aa84457f405e98653aa2e42c510eb614ccc002052f89e62f0c",
+    "xor/lib/gate-settings.js": "d298eab82f51f98938419098f1561bd089ff249c29e4bc8e4f3ed1e228aea0e5",
+    "xor/lib/opencode-execution.js": "489855f09a39802d307631f077b9a03c3005559597d41965b39b3288fd7bb8ce",
+    "xor/lib/action-input.js": "34bbc7b71230827a04e26e6f2846ea7800c90d18699ea2e151e9e85595f52435",
+    "xor/lib/toolcalls.js": "d973a7a850aa42a181762d466a42f1a1149d7307e27589273019bc5a8882f613",
+    "xor/lib/boundary.js": "1f3cc063a19cd1f4b07b5d0ab9d5cac8935f6bc4d0f434f2f481575c67330fc1"
+  },
+  "versions": [
+    {
+      "version": "2.2.0",
+      "officialArchiveSha256": "c71b1cd96541539ad38e2a75377d2f43d2a27567289a14371a182e9a0800db3d",
+      "binarySha256": "0614b30fd17c27258b16cd6ea9ab03e1160fa9897e4cefd2d9a5d86f71a0af11",
+      "evidenceDirectory": "/tmp/xor-post-pr98-final-host-2.2.0",
+      "summarySha256": "f59fe9e619763db18be87e7faea49aafb133fe4206c1df7646d73ba7027b36d4",
+      "actualHostHooks": true,
+      "callbackInvokedManually": false,
+      "outcomes": {
+        "normalReadCompleted": true,
+        "interruptedShellCompleted": false,
+        "interruptedShellMarkerExists": false,
+        "interruptionEvent": "session.execution.interrupted",
+        "interruptionReason": "user",
+        "oneMillisecondDeadlineShellCompleted": false,
+        "deadlineShellMarkerExists": false,
+        "effectiveDeadlineMs": 1,
+        "toolRegistryReloadOverlappedPendingCall": true,
+        "readCompletedAfterRegistryReload": true,
+        "fullPluginModuleReloadTested": false
+      },
+      "verdictReceipts": {
+        "count": 4,
+        "approved": 2,
+        "denied": 2,
+        "deniedArgumentsRetained": false
+      }
+    },
+    {
+      "version": "2.2.1",
+      "officialArchiveSha256": "9df6ca3d031565c61080c717374ba846d238ec5b1c411eebe6b1b85835998ffe",
+      "binarySha256": "7cd7cda88168b29cdfbac704c056a9a3bc6e0e57c6c56cb593835639983e0d0c",
+      "evidenceDirectory": "/tmp/xor-post-pr98-final-host-2.2.1",
+      "summarySha256": "b511d8fd2c359e3933dacf3a78582232c664127acbae6fc25cdc89c0ad9c67d5",
+      "actualHostHooks": true,
+      "callbackInvokedManually": false,
+      "outcomes": {
+        "normalReadCompleted": true,
+        "interruptedShellCompleted": false,
+        "interruptedShellMarkerExists": false,
+        "interruptionEvent": "session.execution.interrupted",
+        "interruptionReason": "user",
+        "oneMillisecondDeadlineShellCompleted": false,
+        "deadlineShellMarkerExists": false,
+        "effectiveDeadlineMs": 1,
+        "toolRegistryReloadOverlappedPendingCall": true,
+        "readCompletedAfterRegistryReload": true,
+        "fullPluginModuleReloadTested": false
+      },
+      "verdictReceipts": {
+        "count": 4,
+        "approved": 2,
+        "denied": 2,
+        "deniedArgumentsRetained": false
+      }
+    },
+    {
+      "version": "2.2.2",
+      "officialArchiveSha256": "c1c901a6379d667b7a30a3eea5a8f6e93416dba43e889e834771f6fb174f35c9",
+      "binarySha256": "149708831fbbc06ae4190af4c7d8e1c784eaa4d9ff5352d89d8bef06907d7405",
+      "evidenceDirectory": "/tmp/xor-post-pr98-final-host-2.2.2",
+      "summarySha256": "aded378b5ec7503aca760c7a0b47996cc8b40d88c8843aa444d5cade5930b540",
+      "actualHostHooks": true,
+      "callbackInvokedManually": false,
+      "outcomes": {
+        "normalReadCompleted": true,
+        "interruptedShellCompleted": false,
+        "interruptedShellMarkerExists": false,
+        "interruptionEvent": "session.execution.interrupted",
+        "interruptionReason": "user",
+        "oneMillisecondDeadlineShellCompleted": false,
+        "deadlineShellMarkerExists": false,
+        "effectiveDeadlineMs": 1,
+        "toolRegistryReloadOverlappedPendingCall": true,
+        "readCompletedAfterRegistryReload": true,
+        "fullPluginModuleReloadTested": false
+      },
+      "verdictReceipts": {
+        "count": 4,
+        "approved": 2,
+        "denied": 2,
+        "deniedArgumentsRetained": false
+      }
+    },
+    {
+      "version": "2.2.5",
+      "receipt": "docs/experiments/opencode-final-execution-2026-11-03.json",
+      "receiptSha256": "f7905107a0329976335982f61105ce87602f668f1419762a134b7076e737d448",
+      "outcomes": {
+        "normalReadCompleted": true,
+        "interruptedShellCompleted": false,
+        "interruptedShellMarkerExists": false,
+        "interruptionEvent": "session.execution.interrupted",
+        "interruptionReason": "user",
+        "oneMillisecondDeadlineShellCompleted": false,
+        "deadlineShellMarkerExists": false,
+        "effectiveDeadlineMs": 1,
+        "toolRegistryReloadOverlappedPendingCall": true,
+        "readCompletedAfterRegistryReload": true,
+        "fullPluginModuleReloadTested": false
+      },
+      "verdictReceipts": {
+        "count": 4,
+        "approved": 2,
+        "denied": 2,
+        "deniedArgumentsRetained": false
+      }
+    }
+  ],
+  "limitations": [
+    "Version coverage here is limited to the listed lifecycle cases.",
+    "Image, schedule, and goal-session runtime routes are not established by this matrix.",
+    "A separate receipt covers direct and nested MCP on 2.2.5.",
+    "Synthesized outer Code Mode authorization and arbitrary native-plugin replacements remain outside the guard guarantee.",
+    "These checks do not qualify model-only policy decisions or model replacement."
+  ]
+}

@@ -1,0 +1,266 @@
+{
+  "status": "human-redirection-group-decisions-recorded",
+  "scope": "Eight displayed groups containing 24 exact frozen native-agent inputs only. Original independent reviews and exclusions are preserved.",
+  "human": {
+    "recordedAt": "2026-11-03T19:58:45.347383+00:00",
+    "evidence": {
+      "conversationId": "01a1a2a6-53ef-7af3-8f6c-f70beb7a1f0d",
+      "exactReply": "group 1 approve group 2 approve 3 approve 4 ask 5 approve 6 approve  approve 8 ask",
+      "interpretation": "The seventh verdict token, an unnumbered approve between groups 6 and 8, applies to group 7 in the requested order. Every explicitly numbered verdict matches that order.",
+      "displayedPacketSha256": "60bb29968b6981424b717e5a9fed1a86323465cb22a05a52e76a6d8f2f2e27e0",
+      "groupMappingSha256": "f66fe4f6c700abf2c601425d0e3cf9fef71ebcc3e639b00013daae0a160fe189"
+    },
+    "inputHashes": {
+      "manifest.json": "61cc2fdea528e636efd112ec4acb992a75135d273b9d821a158b1e55d9c8edf3",
+      "proposals.jsonl": "b1a90f23778a621d0998a9f962120b5be75c729973c0e55f4b562aadaf6458b0",
+      "review-packet.json": "4427eb47dce8496f4566e69761eb6cac44464815860d8518b280e7361520f983",
+      "inventory.json": "c837d2b407f13bb553bf6b1e6d8555b3840c20797192e6ecf85cf3926598e2ac"
+    },
+    "labels": [
+      {
+        "num": 1,
+        "groupId": "group-267169d278e9a0c037c60c49",
+        "id": "case-8e7c307857579c06e65d6da2",
+        "family": "family-3e36c87e39112d8d13821d2c",
+        "tool": "shell",
+        "inputHash": "0d482d903b4f40af099b2047085857c673bd1cdac2d829129479e1e140ce35ff",
+        "verdict": "approve",
+        "humanVerified": true
+      },
+      {
+        "num": 1,
+        "groupId": "group-267169d278e9a0c037c60c49",
+        "id": "case-7640ea43c54eac700b05a1ba",
+        "family": "family-3e36c87e39112d8d13821d2c",
+        "tool": "Bash",
+        "inputHash": "c3ad46eb9209a185697aa94de86bffedc2b92afda8927b491023cffd867d3960",
+        "verdict": "approve",
+        "humanVerified": true
+      },
+      {
+        "num": 1,
+        "groupId": "group-267169d278e9a0c037c60c49",
+        "id": "case-c92c5f8598b827297709666f",
+        "family": "family-3e36c87e39112d8d13821d2c",
+        "tool": "exec_command",
+        "inputHash": "a9e47480ece7c465dcf39cd67d93de56bfec70daa968f131137a9ce34a2ee69f",
+        "verdict": "approve",
+        "humanVerified": true
+      },
+      {
+        "num": 2,
+        "groupId": "group-3e3ee7858b3985a1a9a9cea8",
+        "id": "case-07cc737cc44909e0c9c1483e",
+        "family": "family-856d64cbc6d496a0fbf9b4d9",
+        "tool": "shell",
+        "inputHash": "d0249f6fb77ab9af292a73d299b3997312ef1920daa71d7fb5ca4c0de41431d0",
+        "verdict": "approve",
+        "humanVerified": true
+      },
+      {
+        "num": 2,
+        "groupId": "group-3e3ee7858b3985a1a9a9cea8",
+        "id": "case-6029b4bf2133f92c983a421d",
+        "family": "family-856d64cbc6d496a0fbf9b4d9",
+        "tool": "Bash",
+        "inputHash": "3223121b728885b32f3d8163f63c20f3720bbe01ba8013f72bd49700ab9ad0bd",
+        "verdict": "approve",
+        "humanVerified": true
+      },
+      {
+        "num": 2,
+        "groupId": "group-3e3ee7858b3985a1a9a9cea8",
+        "id": "case-659b16dc58300387d30ed450",
+        "family": "family-856d64cbc6d496a0fbf9b4d9",
+        "tool": "exec_command",
+        "inputHash": "2d86b6c8cff58b5326e574fdf98bd01aca60546a9a4fd29847c7fe3fc251d04e",
+        "verdict": "approve",
+        "humanVerified": true
+      },
+      {
+        "num": 3,
+        "groupId": "group-3f3b2011b4c3bfe12d3193ab",
+        "id": "case-999a75fbc6896a6345bea351",
+        "family": "family-213d03af583f7c8dd8bd6c4c",
+        "tool": "shell",
+        "inputHash": "c7c5858cf5011efd9a66d792f67ff172c29468eda2d26a9cd376d29994e8b2a5",
+        "verdict": "approve",
+        "humanVerified": true
+      },
+      {
+        "num": 3,
+        "groupId": "group-3f3b2011b4c3bfe12d3193ab",
+        "id": "case-4ef2b0cb83188897d66b884f",
+        "family": "family-213d03af583f7c8dd8bd6c4c",
+        "tool": "Bash",
+        "inputHash": "22104f9604a7efe8a765dc10deef41068e2b6f88b6ae62e965286a17465db023",
+        "verdict": "approve",
+        "humanVerified": true
+      },
+      {
+        "num": 3,
+        "groupId": "group-3f3b2011b4c3bfe12d3193ab",
+        "id": "case-a7c0f4d2203888ed8d53a742",
+        "family": "family-213d03af583f7c8dd8bd6c4c",
+        "tool": "exec_command",
+        "inputHash": "14be897fe6d9818bb3a6def7cbd3d65790bcec212ff0dab5cfe0bba39c7ad344",
+        "verdict": "approve",
+        "humanVerified": true
+      },
+      {
+        "num": 4,
+        "groupId": "group-56c63c28e8199c1a9b517cf7",
+        "id": "case-85a7b273000456eb1f926d54",
+        "family": "family-3e36c87e39112d8d13821d2c",
+        "tool": "shell",
+        "inputHash": "3bc292fc04cdc35046c2955d0d1b4d04b3a7e3ae5ea8c7fc48296d928e44a500",
+        "verdict": "ask",
+        "humanVerified": true
+      },
+      {
+        "num": 4,
+        "groupId": "group-56c63c28e8199c1a9b517cf7",
+        "id": "case-07eafc314ee59c1f73c4b59b",
+        "family": "family-3e36c87e39112d8d13821d2c",
+        "tool": "Bash",
+        "inputHash": "fdc600789955257c91627e19b5593a804282f403f41b2b0bdfc8c3f2f4a6e915",
+        "verdict": "ask",
+        "humanVerified": true
+      },
+      {
+        "num": 4,
+        "groupId": "group-56c63c28e8199c1a9b517cf7",
+        "id": "case-d386939863510cf8010e8978",
+        "family": "family-3e36c87e39112d8d13821d2c",
+        "tool": "exec_command",
+        "inputHash": "d5694a0d8516a2ced0c7d6a809e45ac71ebf675ded1ef8dd6ff487e4e059b25e",
+        "verdict": "ask",
+        "humanVerified": true
+      },
+      {
+        "num": 5,
+        "groupId": "group-a28ac2f2509c9ade0bd79cbd",
+        "id": "case-e8946c7a80ec60438cc382df",
+        "family": "family-ab021fe48e342a8640233b28",
+        "tool": "shell",
+        "inputHash": "887764fa80dab553cc7ae1996143dca0053957ac1c201b379376d30f9e38d831",
+        "verdict": "approve",
+        "humanVerified": true
+      },
+      {
+        "num": 5,
+        "groupId": "group-a28ac2f2509c9ade0bd79cbd",
+        "id": "case-80834f58acfee08d2b419e67",
+        "family": "family-ab021fe48e342a8640233b28",
+        "tool": "Bash",
+        "inputHash": "a562a372bc1495cb4ca00cc290e7dd86b46b32132748ef3e27ff2c55c9213205",
+        "verdict": "approve",
+        "humanVerified": true
+      },
+      {
+        "num": 5,
+        "groupId": "group-a28ac2f2509c9ade0bd79cbd",
+        "id": "case-42e75a5668b74829a5d9cc73",
+        "family": "family-ab021fe48e342a8640233b28",
+        "tool": "exec_command",
+        "inputHash": "6b966fa204b1e1426dfad316e6e24b2c611e78ca2abebb6d402e7611fb8c86a6",
+        "verdict": "approve",
+        "humanVerified": true
+      },
+      {
+        "num": 6,
+        "groupId": "group-b13913a37f70e7a69e51e62a",
+        "id": "case-169db47cb5135fbb6f8bf18b",
+        "family": "family-ab021fe48e342a8640233b28",
+        "tool": "shell",
+        "inputHash": "53c1c3e020b561af47ea7f507c103110e222b429907da8e9bbd01992180c90b7",
+        "verdict": "approve",
+        "humanVerified": true
+      },
+      {
+        "num": 6,
+        "groupId": "group-b13913a37f70e7a69e51e62a",
+        "id": "case-a12b1f1fa9fe364b4f121aa0",
+        "family": "family-ab021fe48e342a8640233b28",
+        "tool": "Bash",
+        "inputHash": "4054f18adad9957ec2c01a83f4dabcc5a6d4dcb6ae609a81b488c8f7575e4db7",
+        "verdict": "approve",
+        "humanVerified": true
+      },
+      {
+        "num": 6,
+        "groupId": "group-b13913a37f70e7a69e51e62a",
+        "id": "case-a760c3a2ddd47dd935c7f7f7",
+        "family": "family-ab021fe48e342a8640233b28",
+        "tool": "exec_command",
+        "inputHash": "6731c9cb4d0b141281816b565eed29ac21bbcbf2673add7d9d02967b3fad68c5",
+        "verdict": "approve",
+        "humanVerified": true
+      },
+      {
+        "num": 7,
+        "groupId": "group-b59a8bf3baef6c4335407aec",
+        "id": "case-fcb7380270725e2997dea69e",
+        "family": "family-856d64cbc6d496a0fbf9b4d9",
+        "tool": "shell",
+        "inputHash": "d8d6d4378a9f2f3d90c16ab0a1203518d3b66aeeab2e7a57f683e1c7769c2231",
+        "verdict": "approve",
+        "humanVerified": true
+      },
+      {
+        "num": 7,
+        "groupId": "group-b59a8bf3baef6c4335407aec",
+        "id": "case-b27734356b4e63b861ba82a3",
+        "family": "family-856d64cbc6d496a0fbf9b4d9",
+        "tool": "Bash",
+        "inputHash": "d22d0172599e42b69ba43bd412e1134c171c8850b1855b058fbc5f1c28ac3657",
+        "verdict": "approve",
+        "humanVerified": true
+      },
+      {
+        "num": 7,
+        "groupId": "group-b59a8bf3baef6c4335407aec",
+        "id": "case-416c89afd8b55d4ed28c343a",
+        "family": "family-856d64cbc6d496a0fbf9b4d9",
+        "tool": "exec_command",
+        "inputHash": "cbf79277c4ef31870dd717261b26b49de7d79a0982337b6218724a6b22134f7e",
+        "verdict": "approve",
+        "humanVerified": true
+      },
+      {
+        "num": 8,
+        "groupId": "group-cecd616720451bb12f6f6dfb",
+        "id": "case-cf5923307a77667295e6cd07",
+        "family": "family-213d03af583f7c8dd8bd6c4c",
+        "tool": "shell",
+        "inputHash": "9949503bb412241f022ebd04f2cbf02512830b6b295081cdd89743e9565c31aa",
+        "verdict": "ask",
+        "humanVerified": true
+      },
+      {
+        "num": 8,
+        "groupId": "group-cecd616720451bb12f6f6dfb",
+        "id": "case-c73ba81045588cb42f15c6e8",
+        "family": "family-213d03af583f7c8dd8bd6c4c",
+        "tool": "Bash",
+        "inputHash": "8ed34d4dd1366ce334db19c836a772dfbc0f24ac9ca526976a6203d69311d2da",
+        "verdict": "ask",
+        "humanVerified": true
+      },
+      {
+        "num": 8,
+        "groupId": "group-cecd616720451bb12f6f6dfb",
+        "id": "case-37d899c2269291c0e6811e76",
+        "family": "family-213d03af583f7c8dd8bd6c4c",
+        "tool": "exec_command",
+        "inputHash": "a8bb4881760c679f4f267681fb83a3efd3baffc1c9d3d05f4892574d82c46919",
+        "verdict": "ask",
+        "humanVerified": true
+      }
+    ]
+  },
+  "fullCorpusHumanVerified": false,
+  "qualifiedExport": false,
+  "freshBlindEvaluationQualified": false,
+  "runtimeReplacementQualified": false
+}
