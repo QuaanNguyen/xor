@@ -52,3 +52,55 @@ The saved release report records five new unsafe approvals, an unscored frozen t
 Packaging and CLI tests do not change those results.
 Existing checks cannot be called replaced or their tickets closed until their required evaluation evidence exists.
 Missing model artifacts, invalid verdicts, timeouts, and malformed settings remain runtime errors regardless of policy ownership.
+
+## Implementation results
+
+Folder/global editing, override removal, cancellation, live reload, and migration preservation are implemented.
+The built-in Preference uses the exact previously reviewed wording: "Act like a normal harness. Follow the user's request without adding restrictions."
+The model still checks actions with that Preference.
+The remaining trusted runtime restrictions mean the broader fresh-installation behavior still depends on the replacement work.
+
+Packed npm local and global installations now run setup and preserve saved owner settings during repeated installation.
+Installation verifies the staged plugin's actual startup and action-hook registration before replacing a working installation.
+An OpenCode configuration listing alone does not establish plugin startup.
+The explicit install command remains available for repair and for package managers that block lifecycle scripts.
+Npm 12 requires its package-specific script permission.
+Development and release verification install dependencies without running product setup.
+
+The pet defaults off and supports global on/off, arbitrary positive finite decimal percentages, and reset.
+Controls reach concurrent plugin sessions and do not stop action checking.
+Unrepresentable window dimensions are constrained to the physical display while the requested percentage remains saved.
+Native macOS compilation and live on/off/87.5-percent controls passed in an isolated installed preview.
+The desktop automation surface could not expose the unbundled native companion for visual inspection.
+
+Diagnostics check OpenCode compatibility, effective Preference source, installed plugin files, pinned artifacts, native approve/deny/ask decisions, installed action hooks, and enabled pet readiness.
+The integration probe uses a private OpenCode server and a real session without starting an external language model.
+It invokes the installed registered action hooks, reads a harmless fixture under the built-in Preference, and observes the result hook.
+It does not claim to test agent-generated tool selection.
+The probe canonicalizes temporary paths to account for macOS aliases.
+
+## Dataset progress and remaining qualification
+
+The [successor receipt](experiments/model-policy-successor-2026-11-03.json) records six independently agreed examples and repairs the missing owner-settings shell contrast.
+It preserves the previous selected cases and source-bound exclusions.
+A prior ambiguous attempt remains quarantined.
+The full evidence is retained locally under `.audit/policy-successor-2026-11-03` in the source checkout.
+Raw scenario datasets are not added to source control.
+No generated command was executed, and no new model was trained.
+The packaged 0.1.5 weights remain unchanged.
+
+The [replacement audit](model-policy-replacement.md) records the existing native comparison, new dataset coverage, missing trusted facts, and unresolved qualification.
+Human verification and a qualified export remain required for the dataset ticket.
+The comparison ticket retains its qualified-export prerequisite.
+Independent model-only replacement evaluation, fresh blind evidence, and resolution of the five newly unsafe approvals remain required before removing runtime checks.
+The broader permissive fresh-installation ticket remains linked to that replacement work.
+
+## Verification
+
+The full repository suite passed 276 tests.
+Syntax, package contents, and the generated runtime-evidence audit passed.
+The policy-replacement audit returned its expected incomplete-qualification status after verifying the repaired contrast and saved native counterexamples.
+Its regression tests reject mismatched review inputs and unsupported qualification claims.
+The exact packed package installed locally and globally in an isolated profile with OpenCode 2.2.5 and the pinned public model and runner.
+The installed diagnostic returned PASS for required checks and SKIP for the disabled pet.
+No merge, npm publication, or personal installation update was performed.

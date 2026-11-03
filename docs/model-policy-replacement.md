@@ -5,7 +5,7 @@ The release exception changes the packaged model, not the dataset, runtime, or r
 
 ## Reproduce the audit
 
-Run `node scripts/audit-policy-replacement.js` after adding the script to the repository.
+Run `node scripts/audit-policy-replacement.js`.
 The command rebuilds exact-case decision counts from the public release report, inventories the checked runtime sources, and verifies the compact settings-shell successor receipt.
 Exit 2 means requirements remain incomplete.
 Exit 1 means evidence or source assumptions changed and need investigation.
@@ -82,7 +82,7 @@ The host must still parse requests and responses and handle a model that cannot 
 
 | Ticket | Evidence-backed progress | Requirements still open |
 | --- | --- | --- |
-| Preference policy training, #89 | Expanded V3 policy families, exact permissive examples, approve/deny/ask coverage, and a saved detailed-gap report exist | Include the relevant tooling and case-bound evidence in the PR before declaring this ticket complete |
+| Preference policy training, #89 | Expanded V3 policy families, exact permissive examples, approve/deny/ask coverage, and a saved detailed-gap report exist | Tooling and case-bound coverage evidence are included in the PR; this expansion does not qualify removal of runtime checks |
 | Qualified policy dataset, #90 | Frozen independent reviews, exclusions, selected exports, and integrity evidence exist | The owner-settings shell training contrast is repaired in the new successor, but case-bound human verification and qualified export prerequisites remain |
 | Train and compare, #91 | Bounded training, identities, native repeated decisions, failure categories, and timing limitations exist | The required qualified-export dependency is unsatisfied; the frozen test split is unscored and replacement qualification is false |
 | Replace runtime checks, #92 | The checks are inventoried and real model-only regressions are saved | Trusted missing facts, fresh exact-input reviews, independent model-only evaluation passing replacement requirements, and actual OpenCode end-to-end observation before removing each check |

@@ -25,7 +25,10 @@ test('packed npm local and global installations run setup and preserve owner set
   const bin = path.join(root, 'bin');
   for (const directory of [pack, project, bin]) fs.mkdirSync(directory);
   const command = path.join(bin, process.platform === 'win32' ? 'opencode.cmd' : 'opencode');
-  fs.writeFileSync(command, process.platform === 'win32' ? '@echo off\r\necho opencode v2.2.5\r\n' : '#!/bin/sh\nprintf "opencode v2.2.5\\n"\n', { mode: 0o755 });
+  const openCodeFixture = path.resolve(__dirname, '../fixtures/fake-opencode.js');
+  fs.writeFileSync(command, process.platform === 'win32'
+    ? `@echo off\r\n"${process.execPath}" "${openCodeFixture}" %*\r\n`
+    : `#!/bin/sh\nexec "${process.execPath}" "${openCodeFixture}" "$@"\n`, { mode: 0o755 });
   const fixture = fakeGateManifest(path.join(root, 'artifacts'));
   const env = {
     ...process.env,
@@ -49,9 +52,9 @@ test('packed npm local and global installations run setup and preserve owner set
   const tarball = path.join(pack, (Array.isArray(report) ? report[0] : Object.values(report)[0]).filename);
   fs.writeFileSync(path.join(project, 'package.json'), JSON.stringify({ private: true, ...(scriptPolicy ? { allowScripts: { ['file:' + tarball]: true } } : {}) }));
   for (const args of [
-    ['install', '--offline', '--ignore-scripts=false', tarball],
-    ['install', '--global', '--offline', '--ignore-scripts=false', '--prefix', path.join(root, 'prefix'), tarball],
-    ['rebuild', '--offline', '--ignore-scripts=false', '@quaannguyen/xor'],
+    ['install', '--ignore-scripts=false', tarball],
+    ['install', '--global', '--ignore-scripts=false', '--prefix', path.join(root, 'prefix'), tarball],
+    ['rebuild', '--ignore-scripts=false', '@quaannguyen/xor'],
   ]) {
     const installEnv = scriptPolicy && args.includes('--global') ? { ...env, npm_config_allow_scripts: 'file:' + tarball } : env;
     const result = run(args, project, installEnv);

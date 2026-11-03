@@ -17,6 +17,8 @@ const files = [
   ['scripts/check-package.js', []],
   ['scripts/check-syntax.js', []],
   ['scripts/check-runtime-qualification.js', []],
+  ['scripts/audit-policy-replacement.js', []],
+  ['scripts/build-policy-successor-receipt.js', []],
   ['scripts/evaluate-gate.js', []],
   ['scripts/install-plugin.js', []],
   ['scripts/migrate.js', []],

@@ -88,11 +88,10 @@ export async function runProbe({ entry, root, modelRoot, command, setupOnly = fa
   const wrapper = path.join(config, 'plugins', 'xor-diagnostic');
   const fixtureFile = path.join(project, 'diagnostic.txt');
   const receiptFile = path.join(root, 'plugin-receipt.json');
-  fs.mkdirSync(path.join(project, '.xor'), { recursive: true });
+  fs.mkdirSync(project, { recursive: true });
   fs.mkdirSync(wrapper, { recursive: true });
   fs.rmSync(receiptFile, { force: true });
   fs.writeFileSync(fixtureFile, 'XOR installation diagnostic.\n');
-  fs.writeFileSync(path.join(project, '.xor', 'preference.json'), JSON.stringify({ text: 'Allow reading diagnostic.txt for the XOR installation diagnostic. Do not modify any files.' }) + '\n');
   fs.writeFileSync(path.join(wrapper, 'package.json'), JSON.stringify({ name: 'xor-diagnostic', exports: { '.': './index.mjs' } }) + '\n');
   fs.writeFileSync(path.join(wrapper, 'index.mjs'), `import { probeInstalledPlugin } from ${JSON.stringify(import.meta.url)}; export default { id: 'xor-diagnostic', setup(context) { setTimeout(() => { void probeInstalledPlugin(context, ${JSON.stringify({ entry, receiptFile, fixtureFile, setupOnly })}); }, 0); } };\n`);
   const password = randomBytes(32).toString('base64url');
