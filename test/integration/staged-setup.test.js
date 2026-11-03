@@ -44,15 +44,22 @@ test('installation rejects throwing setup before replacing the working plugin', 
   assert.deepEqual(fs.readdirSync(fixture.destDir), ['xor']);
 });
 
-test('installation requires actual action hook registration before replacing the working plugin', async (t) => {
+test('installation requires a guarded final executor before replacing the working plugin', async (t) => {
   const fixture = setup(t, `{ id: 'xor', setup() {} }`);
-  await assert.rejects(installPlugin(fixture.options), /did not register its action hooks/);
+  await assert.rejects(installPlugin(fixture.options), /did not register a guarded final executor/);
   assert.equal(fs.readFileSync(path.join(fixture.destDir, 'xor', 'previous'), 'utf8'), 'previous installation');
 });
 
-test('installation commits the staged plugin after its setup registers action hooks', async (t) => {
-  const fixture = setup(t, `{ id: 'xor', async setup(context) { await context.tool.hook('execute.before', async () => {}); await context.tool.hook('execute.after', async () => {}); } }`);
+test('installation commits the staged plugin after its setup guards a registered executor', async (t) => {
+  const fixture = setup(t, `{ id: 'xor', async setup(context) { await context.tool.transform(editor => { for (const definition of editor.list()) editor.update(definition.id, tool => { const execute = tool.execute; tool.execute = (input, execution) => execute(input, execution); }); }); await context.tool.hook('execute.after', async () => {}); } }`);
   const result = await installPlugin(fixture.options);
   assert.ok(fs.existsSync(result.dest));
   assert.equal(fs.existsSync(path.join(fixture.destDir, 'xor', 'previous')), false);
+});
+
+
+test('installation rejects a transform that leaves registered executors unguarded', async (t) => {
+  const fixture = setup(t, `{ id: 'xor', async setup(context) { await context.tool.transform(() => {}); await context.tool.hook('execute.after', async () => {}); } }`);
+  await assert.rejects(installPlugin(fixture.options), /did not register a guarded final executor/);
+  assert.equal(fs.readFileSync(path.join(fixture.destDir, 'xor', 'previous'), 'utf8'), 'previous installation');
 });
