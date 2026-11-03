@@ -157,7 +157,7 @@ function createNeedleGate(opts = {}) {
     const signal = input.signal ? AbortSignal.any([lifetime.signal, input.signal]) : lifetime.signal;
     const started = performance.now();
     const result = await runNeedle(ready.runner, args, signal, settings.timeoutMs);
-    const timing = { timeoutMs: settings.timeoutMs, checkerMs: performance.now() - started };
+    const timing = { timeoutMs: settings.timeoutMs, checkerMs: performance.now() - started, inputHash: crypto.createHash('sha256').update(JSON.stringify(request)).digest('hex'), requestVersion: GATE_REQUEST_VERSION };
     if (result.error) return { verdict: null, reason: result.error, ...timing };
     return {
       verdict: verdictFrom(result.response),
@@ -177,6 +177,7 @@ function createNeedleGate(opts = {}) {
     return next;
   }
 
+  gate.modelSha256 = manifest.weights.sha256;
   gate.dispose = () => {
     lifetime.abort();
     if (toolDir) fs.rmSync(toolDir, { recursive: true, force: true });

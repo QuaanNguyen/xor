@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "sourceHashes": {
+    "scripts/verify-input-overflow.js": "09003bd20fd91f4a7f6f2654cd2177e6a4b97109a4b52fb2cb454d3b60ac98c0",
+    "xor/lib/gate.js": "0d1f0c2199568c1b5d80f942bc09cd559f525492f670dbd20e2fc7285e616f25",
+    "xor/lib/session.js": "95a7e06b9d3369dd339552f9827b1120f2c3cef951048b74c876d806d54f009f",
+    "xor/lib/toolcalls.js": "c191f7e30e26259183ce8ab63c5988846531079df250fe0089c7fb749663011f"
+  },
+  "runnerSha256": "342fa2c6f140e702354a99c4201c9057535ec908eed35c7382e911a19d1d2724",
+  "modelSha256": "e1c8a7c8b01b3e041f19ae1d0ec68fbfc92ab01f929f93f360fbd90580146a13",
+  "platform": "darwin-arm64",
+  "inputHash": "727fb99992666e36b94ee7c46eff1b74c24720ed1782b2a0804ee1321b797247",
+  "queryCharacters": 60230,
+  "completeCommandPreserved": true,
+  "decision": "disallow",
+  "markerCreated": false,
+  "reason": "input exceeds the context window (12080 tokens, 7938 available)",
+  "generatedCommandsExecuted": false
+}

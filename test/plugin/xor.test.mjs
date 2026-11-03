@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -14,11 +15,15 @@ process.env.XOR_NO_PET = '1';
 
 async function withWorkdir(run) {
   const previousListeners = new Set(process.listeners('beforeExit'));
+  const previousConfigRoot = process.env.XOR_CONFIG_ROOT;
   const workdir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'xor-plugin-')));
+  process.env.XOR_CONFIG_ROOT = path.join(workdir, 'owner-settings');
   try {
     return await run(workdir);
   } finally {
     for (const listener of process.listeners('beforeExit')) if (!previousListeners.has(listener)) listener();
+    if (previousConfigRoot === undefined) delete process.env.XOR_CONFIG_ROOT;
+    else process.env.XOR_CONFIG_ROOT = previousConfigRoot;
     fs.rmSync(workdir, { recursive: true, force: true });
   }
 }
@@ -280,7 +285,6 @@ test('OpenCode V2 applies the xor to live tool input', async () => {
         registered['execute.before']({
           tool: 'edit',
           sessionID: 'session-v2',
-          callID: 'call-1',
           agent: 'build',
           messageID: 'msg-1',
           id: 'call-1',
@@ -292,11 +296,12 @@ test('OpenCode V2 applies the xor to live tool input', async () => {
         registered['execute.before']({
           tool: 'read',
           sessionID: 'session-v2',
-          callID: 'call-2',
+          id: 'call-2',
           input: { path: 'README.md' },
         }),
         /gate_unavailable/i,
       );
+      assert.equal(fs.readdirSync(path.join(process.env.XOR_CONFIG_ROOT, 'verdicts')).length, 2);
       cleanup();
     } finally {
       delete process.env.XOR_GATE_ROOT;
@@ -478,4 +483,104 @@ test('session deletion cancels an active check even when the Preference becomes 
     await rejected;
     hooks.dispose();
   });
+});
+
+test('final verdict logging excludes denied arguments and survives retry and plugin reload', async () => {
+  await withWorkdir(async (workdir) => {
+    let entered;
+    const checking = new Promise((resolve) => { entered = resolve; });
+    let finish;
+    const hooks = await xor({ directory: workdir, client: {}, version: '2.2.5' }, { gate: async () => {
+      entered();
+      return new Promise((resolve) => { finish = resolve; });
+    } });
+    const input = { tool: 'shell', sessionID: 'logged', callID: 'one' };
+    const output = { args: { command: 'echo FAKE_PRIVATE_TOKEN_12' } };
+    const directory = path.join(process.env.XOR_CONFIG_ROOT, 'verdicts');
+    const pending = hooks['tool.execute.before'](input, output);
+    const rejected = assert.rejects(pending, /refused/);
+    await checking;
+    assert.equal(fs.existsSync(directory), false);
+    finish({ verdict: 'disallow', reason: 'FAKE_PRIVATE_TOKEN_12' });
+    await rejected;
+    hooks.dispose();
+    const reloaded = await xor({ directory: workdir, client: {}, version: '2.2.5' }, { gate: async () => ({ verdict: 'disallow' }) });
+    await assert.rejects(reloaded['tool.execute.before'](input, output), /refused/);
+    reloaded.dispose();
+    const files = fs.readdirSync(directory);
+    assert.equal(files.length, 1);
+    const contents = fs.readFileSync(path.join(directory, files[0]), 'utf8');
+    assert.equal(contents.includes('FAKE_PRIVATE_TOKEN_12'), false);
+    const row = JSON.parse(contents);
+    assert.equal(row.agentVersion, '2.2.5');
+    assert.equal(row.verdict, 'deny');
+    assert.equal(Object.hasOwn(row, 'arguments'), false);
+  });
+});
+
+test('owners can turn verdict logging off without skipping the checker', async () => {
+  await withWorkdir(async (workdir) => {
+    fs.mkdirSync(path.join(workdir, '.xor'));
+    fs.writeFileSync(path.join(workdir, '.xor', 'settings.json'), JSON.stringify({ verdict_logging: false }));
+    const gate = gateDouble();
+    const hooks = await xor({ directory: workdir, client: {}, version: '2.2.5' }, { gate });
+    await hooks['tool.execute.before']({ tool: 'read', sessionID: 'off', callID: 'one' }, { args: { path: 'notes.txt' } });
+    assert.equal(gate.calls.length, 1);
+    assert.equal(fs.existsSync(path.join(process.env.XOR_CONFIG_ROOT, 'verdicts')), false);
+    hooks.dispose();
+  });
+});
+
+test('a waiting call logs the same Preference that its checker receives after another call reloads it', async () => {
+  await withWorkdir(async (workdir) => {
+    writePreference(workdir, { text: 'Read old rules.' });
+    let started;
+    const waiting = new Promise((resolve) => { started = resolve; });
+    let resume;
+    let messages = 0;
+    const client = { session: { messages: async () => {
+      messages += 1;
+      if (messages === 1) {
+        started();
+        await new Promise((resolve) => { resume = resolve; });
+      }
+      return [{ info: { role: 'user' }, parts: [{ type: 'text', text: 'Read notes.' }] }];
+    } } };
+    const gate = gateDouble();
+    const hooks = await xor({ directory: workdir, client, version: '2.2.5' }, { gate });
+    const first = hooks['tool.execute.before']({ tool: 'read', sessionID: 'race', callID: 'first' }, { args: { path: 'first.txt' } });
+    await waiting;
+    writePreference(workdir, { text: 'Read new rules.' });
+    await hooks['tool.execute.before']({ tool: 'read', sessionID: 'race', callID: 'second' }, { args: { path: 'second.txt' } });
+    resume();
+    await first;
+    const directory = path.join(process.env.XOR_CONFIG_ROOT, 'verdicts');
+    const rows = fs.readdirSync(directory).map((file) => JSON.parse(fs.readFileSync(path.join(directory, file), 'utf8')));
+    const checked = gate.calls.find((call) => call.call.args.path === 'first.txt');
+    const receipt = rows.find((row) => row.arguments.path === 'first.txt');
+    assert.equal(receipt.preferenceHash, createHash('sha256').update(JSON.stringify(checked.preference)).digest('hex'));
+    hooks.dispose();
+  });
+});
+
+test('OpenCode execution interruption and failure events cancel active checks', async () => {
+  for (const type of ['session.execution.interrupted', 'session.execution.failed']) {
+    await withWorkdir(async (workdir) => {
+      let entered;
+      const checking = new Promise((resolve) => { entered = resolve; });
+      let finish;
+      const hooks = await xor({ directory: workdir, client: {} }, { gate: async ({ signal }) => {
+        entered(signal);
+        return new Promise((resolve) => { finish = resolve; });
+      } });
+      const pending = hooks['tool.execute.before']({ tool: 'read', sessionID: type }, { args: { path: 'notes.txt' } });
+      const rejected = assert.rejects(pending, /cancelled/);
+      const signal = await checking;
+      await hooks.event({ event: { type, properties: { sessionID: type } } });
+      assert.equal(signal.aborted, true);
+      finish({ verdict: 'allow' });
+      await rejected;
+      hooks.dispose();
+    });
+  }
 });

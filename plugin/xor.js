@@ -40,6 +40,9 @@ const { createPetController } = require(path.join(repoRoot, "pet/controller.js")
 const { createLivePreference } = require(path.join(xorLibDir, "preference.js"));
 const { createNeedleGate } = require(path.join(xorLibDir, "gate.js"));
 
+const { readGateSettings } = require(path.join(xorLibDir, 'gate-settings.js'));
+const { recordVerdict } = require(path.join(xorLibDir, 'verdict-log.js'));
+
 const { assertOpenCodeVersion } = require(path.join(xorLibDir, "opencode-version.js"));
 
 function targetOf(tool, args) {
@@ -182,7 +185,7 @@ function launchPet() {
   return child;
 }
 
-export const xor = async ({ client, directory }, options = {}) => {
+export const xor = async ({ client, directory, version }, options = {}) => {
   const workdir = directory || process.cwd();
   const livePreference = createLivePreference({ workdir });
   const gate = typeof options?.gate === "function" ? options.gate : (typeof options?.verifier === "function" ? options.verifier : createNeedleGate({ workdir }));
@@ -436,7 +439,7 @@ export const xor = async ({ client, directory }, options = {}) => {
     "tool.execute.before": async (input, output) => {
       if (ended) throw new Error('xor is stopped. Reload the plugin before running tools.');
       const tool = input.tool || "";
-      const args = output?.args || input.args || {};
+      const args = structuredClone(output?.args || input.args || {});
       const next = refreshPreference();
       if (!next.valid) throw new Error(sessionBlockedMessage(tool, args, blockedReason(next)));
       const state = stateFor(input.sessionID, next);
@@ -444,13 +447,39 @@ export const xor = async ({ client, directory }, options = {}) => {
       const signal = input.signal ? AbortSignal.any([controller.signal, input.signal]) : controller.signal;
       state.activeChecks.add(controller);
       try {
+        const userMessage = await latestUserMessage(input.sessionID);
+        const checkedPreference = structuredClone(state.xor.preference);
         const out = await state.xor.proposedAction({
           tool,
           args,
           signal,
-          userMessage: await latestUserMessage(input.sessionID),
+          userMessage,
         });
         publish(out);
+        if (input.callID && readGateSettings(workdir).verdictLogging) {
+          const detail = out.events.at(-1)?.detail || {};
+          const verdict = { allow: 'approve', disallow: 'deny', ask: 'ask' }[out.decision];
+          const rule = out.events.at(-1)?.rule || 'gate';
+          try {
+            recordVerdict({
+              sessionID: input.sessionID,
+              callID: input.callID,
+              agentVersion: version,
+              tool,
+              args,
+              userMessage,
+              preference: checkedPreference,
+              verdict,
+              reason: verdict === 'approve' ? 'The checker approved the action' : `The action was withheld by ${rule}`,
+              modelSha256: gate.modelSha256,
+              inputHash: detail.inputHash,
+              requestVersion: detail.requestVersion,
+              timing: { timeoutMs: detail.timeoutMs ?? null, queueMs: detail.queueMs ?? null, checkerMs: detail.checkerMs ?? null },
+            });
+          } catch (error) {
+            console.error('[xor] Verdict could not be saved:', error.message);
+          }
+        }
         if (out.decision !== "allow") throw new Error(out.message);
       } finally {
         state.activeChecks.delete(controller);
@@ -494,7 +523,7 @@ export const xor = async ({ client, directory }, options = {}) => {
       }
       const status = (event.properties || event.data || event).status;
       const statusType = typeof status === "string" ? status : status?.type;
-      if (event.type === "session.error" || ["stopped", "stop", "cancelled", "canceled", "error"].includes(statusType)) {
+      if (["session.error", "session.execution.interrupted", "session.execution.failed"].includes(event.type) || ["stopped", "stop", "cancelled", "canceled", "error"].includes(statusType)) {
         const existing = sessions.get(sessionID || "plugin");
         for (const controller of existing?.activeChecks || []) controller.abort();
       }
@@ -576,17 +605,17 @@ export default {
   async setup(ctx, options = {}) {
     assertOpenCodeVersion(ctx.app?.version);
     const directory = ctx.location?.directory || ctx.location?.project?.directory || process.cwd();
-    const hooks = await xor({ client: v2Client(ctx), directory }, options);
+    const hooks = await xor({ client: v2Client(ctx), directory, version: ctx.app?.version }, options);
     await ctx.tool.hook("execute.before", async (event) => {
       await hooks["tool.execute.before"](
-        { tool: event.tool, sessionID: event.sessionID, callID: event.callID, signal: event.signal },
+        { tool: event.tool, sessionID: event.sessionID, callID: event.callID || event.id, signal: event.signal },
         { args: toolInput(event) },
       );
     });
     await ctx.tool.hook("execute.after", async (event) => {
       const failed = event.status === "error" || event.error;
       await hooks["tool.execute.after"](
-        { tool: event.tool, sessionID: event.sessionID, callID: event.callID, args: toolInput(event) },
+        { tool: event.tool, sessionID: event.sessionID, callID: event.callID || event.id, args: toolInput(event) },
         failed
           ? { error: event.error }
           : { output: typeof event.result === "string" ? event.result : event.result?.output || event.output || "" },

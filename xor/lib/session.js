@@ -166,7 +166,7 @@ function createSession(opts = {}) {
     if (event.signal?.aborted) judgment = { ...judgment, verdict: null, reason: 'the Gate check was cancelled' };
     const verdict = judgment?.verdict ?? null;
     const gateTiming = {};
-    for (const key of ['timeoutMs', 'queueMs', 'checkerMs']) {
+    for (const key of ['timeoutMs', 'queueMs', 'checkerMs', 'inputHash', 'requestVersion']) {
       if (judgment?.[key] !== undefined) gateTiming[key] = judgment[key];
     }
 
